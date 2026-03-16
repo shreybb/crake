@@ -125,9 +125,11 @@ for _k, _v in _DEFAULTS.items():
     if _k not in st.session_state:
         st.session_state[_k] = _v
 
-# ── Sidebar — saved conversations ────────────────────────────────────────────
+# ── Sidebar — only render when there are saved conversations ─────────────────
 conversations = _load_saved_conversations()
-to_load = render_sidebar_history(conversations)
+to_load = None
+if conversations:
+    to_load = render_sidebar_history(conversations)
 if to_load:
     _restore_conversation(to_load)
     st.rerun()

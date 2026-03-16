@@ -232,12 +232,40 @@ html, body, [class*="css"], .stApp {
     background-clip: text;
 }
 .crake-intro-sub {
-    font-size: 17px;
+    font-size: 16px;
     color: #3A7080;
     line-height: 1.68;
-    max-width: 520px;
+    max-width: 560px;
     margin: 0 auto;
+    text-align: center;
     font-family: 'Outfit', sans-serif;
+}
+
+/* ── Intro command table ── */
+.crake-cmd-table {
+    width: 100%;
+    max-width: 560px;
+    margin: 0 auto;
+    border-collapse: collapse;
+}
+.crake-cmd-table td {
+    padding: 7px 0;
+    vertical-align: middle;
+    border-bottom: 1px solid #112030;
+}
+.crake-cmd-table tr:last-child td { border-bottom: none; }
+.crake-cmd-table .cmd-key {
+    font-family: 'Fira Code', monospace;
+    font-size: 12.5px;
+    color: #00E5A0;
+    white-space: nowrap;
+    padding-right: 24px;
+    width: 1%;
+}
+.crake-cmd-table .cmd-desc {
+    font-family: 'Outfit', sans-serif;
+    font-size: 13.5px;
+    color: #3A7080;
 }
 .crake-step-card {
     background: #070D15;

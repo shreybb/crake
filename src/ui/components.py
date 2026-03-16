@@ -124,54 +124,42 @@ _EXAMPLES = [
 ]
 
 
+_COMMANDS_TABLE = [
+    ("/genesearch &lt;query&gt;",  "Find a gene sequence by natural language or species name"),
+    ("/fetch &lt;accession&gt;",   "Retrieve a sequence directly by NCBI accession"),
+    ("/load &lt;path&gt;",         "Import a local .dna, .gb, or .fasta file"),
+    ("/suggest &lt;host&gt;",      "Get vector backbone and part recommendations for a host"),
+    ("/targets &lt;method&gt;",    "Find CRISPR PAM sites or restriction enzyme cut sites"),
+    ("/optimize &lt;host&gt;",     "Codon-optimise the loaded sequence for expression"),
+    ("/primers [fwd] [rev]",       "Design PCR primers, optionally with overhangs"),
+    ("/assemble &lt;method&gt;",   "Simulate Gibson or restriction-ligation assembly"),
+    ("/validate",                  "Check ORFs, GC content, and restriction map"),
+    ("/export &lt;name&gt;",       "Write GenBank, FASTA, SVG map, CSV, and protocol"),
+]
+
+
 def render_intro() -> None:
-    """Full-width welcome screen shown before any conversation starts."""
+    """Minimal, uniform welcome screen shown before any conversation starts."""
+    rows = "".join(
+        f'<tr>'
+        f'<td class="cmd-key">{cmd}</td>'
+        f'<td class="cmd-desc">{desc}</td>'
+        f'</tr>'
+        for cmd, desc in _COMMANDS_TABLE
+    )
     st.markdown(
         '<div class="crake-intro-wrap">'
         '  <div class="crake-intro-glow"></div>'
         '  <div class="crake-intro-hero">'
-        '    <div class="crake-intro-eyebrow">✦ AI-powered synthetic biology</div>'
-        '    <div class="crake-intro-title">End-to-end <span>plasmid</span><br>design, automated.</div>'
+        '    <div class="crake-intro-title"><span>Crake</span></div>'
         '    <p class="crake-intro-sub">'
-        '      From gene discovery to a lab-ready construct — sequence search, codon optimisation,'
-        '      CRISPR targeting, primer design, assembly simulation, and export. All in one conversation.'
+        '      AI-assisted plasmid design. From sequence discovery to a lab-ready construct.'
         '    </p>'
         '  </div>'
-        '</div>',
-        unsafe_allow_html=True,
-    )
-
-    # Pipeline steps
-    st.markdown('<div style="padding:0 48px"><div class="crake-section-label">How it works</div></div>', unsafe_allow_html=True)
-    cols = st.columns(4, gap="small")
-    for col, (num, icon, title, desc, cmd) in zip(cols, _STEPS):
-        with col:
-            st.markdown(
-                f'<div class="crake-step-card">'
-                f'  <div class="crake-step-num">STEP {num}</div>'
-                f'  <span class="crake-step-icon">{icon}</span>'
-                f'  <div class="crake-step-title">{title}</div>'
-                f'  <div class="crake-step-desc">{desc}</div>'
-                f'  <span class="crake-step-cmd">{cmd}</span>'
-                f'</div>',
-                unsafe_allow_html=True,
-            )
-
-    st.markdown('<div style="border-top:1px solid #112030;margin:40px 0 32px"></div>', unsafe_allow_html=True)
-
-    # Examples
-    st.markdown('<div style="padding:0 48px"><div class="crake-section-label">Try an example</div>', unsafe_allow_html=True)
-    chips = "".join(
-        f'<span class="crake-example-chip"><code>{cmd}</code>{label}</span>'
-        for label, cmd in _EXAMPLES
-    )
-    st.markdown(f'<div style="padding:0 48px">{chips}</div>', unsafe_allow_html=True)
-
-    st.markdown(
-        '<div class="crake-intro-footer">'
-        'Type any command in the chat below &nbsp;·&nbsp; '
-        '<span>try <code style="color:#00E5A0;background:transparent;border:none;font-size:11.5px;">/genesearch</code> '
-        'or just describe what you want in plain English</span>'
+        f'  <table class="crake-cmd-table">{rows}</table>'
+        '  <div class="crake-intro-footer" style="margin-top:32px;">'
+        '    <span>Type a command above, or describe what you want in plain English</span>'
+        '  </div>'
         '</div>',
         unsafe_allow_html=True,
     )
