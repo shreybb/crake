@@ -1,0 +1,33 @@
+{
+  "e_coli": {
+    "rrnB_T1T2": {
+      "description": "Strong dual transcription terminator from E. coli rrnB operon. Used in pET vectors.",
+      "strength": "strong",
+      "host": "e_coli"
+    },
+    "T7_Te": {
+      "description": "T7 phage Te terminator. Used downstream of T7-driven genes.",
+      "strength": "strong",
+      "host": "e_coli"
+    }
+  },
+  "plant": {
+    "NOS": {
+      "description": "Nopaline synthase terminator from A. tumefaciens Ti plasmid. Standard plant terminator; ~260 bp.",
+      "sequence_length_bp": 260,
+      "strength": "moderate",
+      "host": ["plant_nuclear"],
+      "notes": "Most common plant terminator; used in pBI121, pCAMBIA vectors"
+    },
+    "OCS": {
+      "description": "Octopine synthase terminator from A. tumefaciens. Slightly stronger than NOS.",
+      "strength": "moderate",
+      "host": ["plant_nuclear"]
+    },
+    "35S": {
+      "description": "CaMV 35S 3' UTR/terminator region.",
+      "strength": "moderate",
+      "host": ["plant_nuclear"]
+    }
+  }
+}

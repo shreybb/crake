@@ -1,0 +1,73 @@
+{
+  "e_coli": {
+    "pET-28a": {
+      "description": "T7-promoter expression vector with N-terminal 6xHis tag and kanamycin resistance",
+      "size_bp": 5369,
+      "selection": "kanamycin",
+      "promoter": "T7",
+      "ori": "pBR322",
+      "host": "e_coli",
+      "addgene": null,
+      "genbank": "EF442785"
+    },
+    "pUC19": {
+      "description": "High-copy cloning vector with lacZ MCS and ampicillin resistance",
+      "size_bp": 2686,
+      "selection": "ampicillin",
+      "promoter": "lac",
+      "ori": "pMB1",
+      "host": "e_coli",
+      "genbank": "L09137"
+    },
+    "pACYC184": {
+      "description": "Medium-copy compatible vector (p15A ori); useful for two-plasmid systems",
+      "size_bp": 4245,
+      "selection": "chloramphenicol",
+      "ori": "p15A",
+      "host": "e_coli",
+      "genbank": "X06403"
+    }
+  },
+  "plant_binary": {
+    "pCAMBIA1305.1": {
+      "description": "Binary vector with GUS-PLUS reporter under CaMV35S; hygromycin plant selection, kanamycin bacterial selection",
+      "size_bp": 12362,
+      "plant_selection": "hygromycin",
+      "bacterial_selection": "kanamycin",
+      "promoter": "CaMV35S",
+      "t_dna_borders": true,
+      "host": ["agrobacterium", "plant_nuclear"],
+      "addgene": null,
+      "notes": "T-DNA contains GUS reporter + NOS terminator"
+    },
+    "pCAMBIA1300": {
+      "description": "Binary vector backbone without reporter; hygromycin plant selection",
+      "size_bp": 10770,
+      "plant_selection": "hygromycin",
+      "bacterial_selection": "kanamycin",
+      "t_dna_borders": true,
+      "host": ["agrobacterium", "plant_nuclear"]
+    },
+    "pBI121": {
+      "description": "Classic binary vector with GUS + NOS terminator under CaMV35S; kanamycin selection",
+      "size_bp": 14752,
+      "plant_selection": "kanamycin (NPTII)",
+      "bacterial_selection": "kanamycin",
+      "promoter": "CaMV35S",
+      "terminator": "NOS",
+      "t_dna_borders": true,
+      "host": ["agrobacterium", "plant_nuclear"],
+      "genbank": "AF485783"
+    },
+    "pK2GW7": {
+      "description": "Gateway-compatible binary vector; 35S promoter, spectinomycin bacterial selection",
+      "size_bp": 10648,
+      "plant_selection": "kanamycin (NPTII)",
+      "bacterial_selection": "spectinomycin",
+      "promoter": "CaMV35S",
+      "gateway_compatible": true,
+      "t_dna_borders": true,
+      "host": ["agrobacterium", "plant_nuclear"]
+    }
+  }
+}

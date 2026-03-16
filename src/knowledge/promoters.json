@@ -1,0 +1,68 @@
+{
+  "e_coli": {
+    "T7": {
+      "description": "Bacteriophage T7 RNA polymerase promoter. Strongest bacterial promoter; requires T7 RNAP (e.g. BL21(DE3) strain). Inducible by IPTG.",
+      "sequence": "TAATACGACTCACTATA",
+      "consensus": "TAATACGACTCACTATA",
+      "inducible": true,
+      "inducer": "IPTG",
+      "strength": "very_high",
+      "host": "e_coli"
+    },
+    "trc": {
+      "description": "Hybrid trp/lac promoter. Strong constitutive/IPTG-inducible. Requires lacI repressor.",
+      "sequence": "TTGACAATTAATCATCGGCTCGTATAATGTGTGG",
+      "inducible": true,
+      "inducer": "IPTG",
+      "strength": "high",
+      "host": "e_coli"
+    },
+    "lac": {
+      "description": "Classic lac operon promoter. IPTG-inducible, weak without lacUV5 mutation.",
+      "inducible": true,
+      "inducer": "IPTG",
+      "strength": "medium",
+      "host": "e_coli"
+    },
+    "araBAD": {
+      "description": "Arabinose-inducible promoter. Tightly regulated; repressed by glucose.",
+      "inducible": true,
+      "inducer": "arabinose",
+      "strength": "medium",
+      "host": "e_coli"
+    }
+  },
+  "plant": {
+    "CaMV35S": {
+      "description": "Cauliflower Mosaic Virus 35S promoter. Constitutive, high expression in most dicots. Weak in monocots.",
+      "sequence_note": "Full-length 35S is ~946 bp; double 35S (d35S) gives 2x expression",
+      "constitutive": true,
+      "strength": "high",
+      "host": ["plant_nuclear"],
+      "expression_breadth": "broad_dicot",
+      "monocot_suitable": false
+    },
+    "FMV35S": {
+      "description": "Figwort Mosaic Virus 35S promoter. Constitutive; better monocot expression than CaMV35S.",
+      "constitutive": true,
+      "strength": "high",
+      "host": ["plant_nuclear"],
+      "monocot_suitable": true
+    },
+    "Ubi1": {
+      "description": "Maize Ubiquitin-1 promoter. Strong constitutive expression in monocots (maize, wheat, rice). Preferred for biolistics.",
+      "constitutive": true,
+      "strength": "high",
+      "host": ["plant_nuclear"],
+      "monocot_suitable": true,
+      "notes": "Often paired with Ubi1 intron for enhanced expression"
+    },
+    "NOS": {
+      "description": "Nopaline synthase promoter from A. tumefaciens. Weak constitutive expression in plants; mainly used for selectable markers.",
+      "constitutive": true,
+      "strength": "low",
+      "host": ["plant_nuclear"],
+      "typical_use": "selectable_marker_expression"
+    }
+  }
+}

@@ -1,0 +1,32 @@
+[project]
+name = "crake"
+version = "0.1.0"
+description = "AI-assisted plasmid design with Benchling integration"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "anthropic>=0.84.0",
+    "biopython>=1.86",
+    "dna-features-viewer>=3.1.2",
+    "dnachisel>=3.2.16",
+    "pandas>=2.3.3",
+    "primer3-py>=2.3.0",
+    "pydna>=5.5.3",
+    "snapgene-reader>=0.1.23",
+    "streamlit>=1.55.0",
+    "streamlit-seqviz>=0.0.5",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=9.0.2"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+[dependency-groups]
+dev = [
+    "pytest-mock>=3.15.1",
+]

@@ -1,0 +1,117 @@
+#!/usr/bin/env python3
+"""
+Design PCR primers for a template sequence.
+
+Usage:
+    python src/tools/primer_design.py --template ATCG... [--overhang-f GCGC] [--overhang-r TATA]
+    python src/tools/primer_design.py --template ATCG... --method gibson --backbone-end XXXX --backbone-start YYYY
+
+Outputs JSON with forward and reverse primers, Tm values.
+"""
+from __future__ import annotations
+import argparse
+import json
+import sys
+
+import primer3
+
+
+def design_primers(
+    template: str,
+    overhang_fwd: str = "",
+    overhang_rev: str = "",
+    product_min_size: int = 100,
+    product_max_size: int | None = None,
+    opt_tm: float = 60.0,
+) -> dict:
+    """Design primers for a template, optionally with Gibson assembly overhangs."""
+    product_max_size = product_max_size or len(template) + 50
+
+    result = primer3.design_primers(
+        seq_args={
+            "SEQUENCE_ID": "target",
+            "SEQUENCE_TEMPLATE": template,
+        },
+        global_args={
+            "PRIMER_OPT_SIZE": 20,
+            "PRIMER_MIN_SIZE": 18,
+            "PRIMER_MAX_SIZE": 27,
+            "PRIMER_OPT_TM": opt_tm,
+            "PRIMER_MIN_TM": opt_tm - 5,
+            "PRIMER_MAX_TM": opt_tm + 5,
+            "PRIMER_MIN_GC": 40.0,
+            "PRIMER_MAX_GC": 65.0,
+            "PRIMER_PRODUCT_SIZE_RANGE": [[product_min_size, product_max_size]],
+            "PRIMER_NUM_RETURN": 3,
+        },
+    )
+
+    pairs = []
+    num_returned = result.get("PRIMER_PAIR_NUM_RETURNED", 0)
+    for i in range(num_returned):
+        fwd_seq = result[f"PRIMER_LEFT_{i}_SEQUENCE"]
+        rev_seq = result[f"PRIMER_RIGHT_{i}_SEQUENCE"]
+        pairs.append({
+            "rank": i,
+            "forward": {
+                "binding_region": fwd_seq,
+                "full_sequence": overhang_fwd + fwd_seq,
+                "tm_celsius": round(result[f"PRIMER_LEFT_{i}_TM"], 1),
+                "gc_percent": round(result[f"PRIMER_LEFT_{i}_GC_PERCENT"], 1),
+                "length": len(overhang_fwd + fwd_seq),
+            },
+            "reverse": {
+                "binding_region": rev_seq,
+                "full_sequence": overhang_rev + rev_seq,
+                "tm_celsius": round(result[f"PRIMER_RIGHT_{i}_TM"], 1),
+                "gc_percent": round(result[f"PRIMER_RIGHT_{i}_GC_PERCENT"], 1),
+                "length": len(overhang_rev + rev_seq),
+            },
+            "product_size_bp": result[f"PRIMER_PAIR_{i}_PRODUCT_SIZE"],
+            "penalty": round(result[f"PRIMER_PAIR_{i}_PENALTY"], 3),
+        })
+
+    return {
+        "template_length": len(template),
+        "primer_pairs": pairs,
+        "overhangs_applied": {
+            "forward": overhang_fwd,
+            "reverse": overhang_rev,
+        },
+    }
+
+
+def gc_content(seq: str) -> float:
+    seq = seq.upper()
+    gc = seq.count("G") + seq.count("C")
+    return round(gc / len(seq) * 100, 1) if seq else 0.0
+
+
+def melting_temperature(seq: str) -> float:
+    """Nearest-neighbor Tm via primer3-py."""
+    return round(primer3.calc_tm(seq), 1)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Design PCR primers")
+    parser.add_argument("--template", required=True, help="Template DNA sequence")
+    parser.add_argument("--overhang-f", default="", help="5' overhang for forward primer (Gibson/GG)")
+    parser.add_argument("--overhang-r", default="", help="5' overhang for reverse primer (Gibson/GG)")
+    parser.add_argument("--opt-tm", type=float, default=60.0, help="Optimal Tm (default 60°C)")
+    parser.add_argument("--min-size", type=int, default=100, help="Min product size bp")
+    parser.add_argument("--max-size", type=int, default=None, help="Max product size bp")
+    args = parser.parse_args()
+
+    result = design_primers(
+        template=args.template,
+        overhang_fwd=args.overhang_f,
+        overhang_rev=args.overhang_r,
+        opt_tm=args.opt_tm,
+        product_min_size=args.min_size,
+        product_max_size=args.max_size,
+    )
+    print(json.dumps(result, indent=2))
+
+
+if __name__ == "__main__":
+    main()
