@@ -11,6 +11,25 @@
       "host": "e_coli"
     }
   },
+  "yeast": {
+    "CYC1tt": {
+      "description": "Cytochrome c 1 transcription terminator. Standard yeast terminator; ~250 bp.",
+      "strength": "moderate",
+      "host": "yeast",
+      "notes": "Most commonly used yeast terminator; compatible with all promoters."
+    },
+    "ADH1tt": {
+      "description": "Alcohol dehydrogenase 1 transcription terminator. Strong terminator; ~350 bp.",
+      "strength": "strong",
+      "host": "yeast",
+      "notes": "Often paired with ADH1 or GAL1 promoters."
+    },
+    "PGK1tt": {
+      "description": "Phosphoglycerate kinase 1 transcription terminator. Efficient; ~500 bp.",
+      "strength": "strong",
+      "host": "yeast"
+    }
+  },
   "plant": {
     "NOS": {
       "description": "Nopaline synthase terminator from A. tumefaciens Ti plasmid. Standard plant terminator; ~260 bp.",

@@ -32,6 +32,48 @@
       "host": "e_coli"
     }
   },
+  "yeast": {
+    "GAL1": {
+      "description": "Galactose-inducible promoter from the GAL1 gene. Very strong inducible promoter; repressed by glucose, induced by galactose.",
+      "inducible": true,
+      "inducer": "galactose",
+      "repressor": "glucose",
+      "strength": "very_high",
+      "host": "yeast",
+      "sequence_source": "SGD YBR020W promoter region",
+      "notes": "Gold standard for inducible overexpression in S. cerevisiae; used in pYES2."
+    },
+    "TEF1": {
+      "description": "Translation Elongation Factor 1-alpha promoter. Strong constitutive promoter; active in all growth conditions.",
+      "constitutive": true,
+      "strength": "high",
+      "host": "yeast",
+      "sequence_source": "SGD YPR080W promoter region",
+      "notes": "Most commonly used strong constitutive promoter; ~700 bp."
+    },
+    "TDH3": {
+      "description": "Glyceraldehyde-3-phosphate dehydrogenase promoter (also called GPD). Very strong constitutive; one of the strongest in yeast.",
+      "constitutive": true,
+      "strength": "very_high",
+      "host": "yeast",
+      "sequence_source": "SGD YGR192C promoter region",
+      "notes": "Strongest constitutive promoter in yeast; may cause metabolic burden at high copy number."
+    },
+    "ADH1": {
+      "description": "Alcohol dehydrogenase 1 promoter. Medium-strength constitutive; well-characterized.",
+      "constitutive": true,
+      "strength": "medium",
+      "host": "yeast",
+      "sequence_source": "SGD YOL086C promoter region"
+    },
+    "CYC1": {
+      "description": "Cytochrome c isoform 1 promoter. Weak constitutive; useful for low-level expression.",
+      "constitutive": true,
+      "strength": "low",
+      "host": "yeast",
+      "notes": "Weak basal expression; often used as minimal promoter in regulatory studies."
+    }
+  },
   "plant": {
     "CaMV35S": {
       "description": "Cauliflower Mosaic Virus 35S promoter. Constitutive, high expression in most dicots. Weak in monocots.",

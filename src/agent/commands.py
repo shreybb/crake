@@ -129,6 +129,19 @@ COMMANDS: dict[str, Command] = {
                 "using import_sequence. Report what was loaded (name, length, topology)."
             ),
         ),
+        Command(
+            name="introduce-gene",
+            description="End-to-end gene introduction: fetch CDS, optimise codons, suggest parts",
+            usage="/introduce-gene <gene> in <source_organism> into <target_host> [goal: <goal>]",
+            prompt_template=(
+                "The user wants to introduce a gene into a host organism. "
+                "Arguments: \"{args}\". "
+                "Parse the gene name, source organism, target host (e_coli / yeast / plant_nuclear), "
+                "and optional expression goal from the arguments. "
+                "Then call introduce_gene with those values. "
+                "Present the cassette description, recommended parts, and next steps clearly."
+            ),
+        ),
     ]
 }
 

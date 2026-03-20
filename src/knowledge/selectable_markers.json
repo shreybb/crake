@@ -21,6 +21,41 @@
       "typical_concentration_ug_ml": 100
     }
   },
+  "yeast": {
+    "URA3": {
+      "description": "Orotidine-5'-phosphate decarboxylase. Auxotrophic marker for uracil prototrophy. Counterselectable with 5-FOA.",
+      "selection_condition": "Drop-out media lacking uracil (SC-URA)",
+      "counterselection": "5-fluoroorotic acid (5-FOA) — cells retaining URA3 are killed",
+      "host": "yeast",
+      "notes": "Most widely used yeast marker; enables pop-in/pop-out strategies."
+    },
+    "LEU2": {
+      "description": "Beta-isopropylmalate dehydrogenase. Auxotrophic marker for leucine prototrophy.",
+      "selection_condition": "Drop-out media lacking leucine (SC-LEU)",
+      "host": "yeast"
+    },
+    "HIS3": {
+      "description": "Imidazoleglycerol-phosphate dehydratase. Auxotrophic marker for histidine prototrophy.",
+      "selection_condition": "Drop-out media lacking histidine (SC-HIS)",
+      "host": "yeast"
+    },
+    "TRP1": {
+      "description": "Phosphoribosylanthranilate isomerase. Auxotrophic marker for tryptophan prototrophy.",
+      "selection_condition": "Drop-out media lacking tryptophan (SC-TRP)",
+      "host": "yeast"
+    },
+    "kanMX": {
+      "description": "Kanamycin/G418 resistance cassette. Dominant selectable marker; works in any yeast background.",
+      "selection_condition": "YPD + G418 (200–400 mg/L)",
+      "host": "yeast",
+      "notes": "Preferred for wild-type or prototrophic yeast strains."
+    },
+    "hygMX": {
+      "description": "Hygromycin B resistance cassette. Dominant selectable marker.",
+      "selection_condition": "YPD + Hygromycin B (300 mg/L)",
+      "host": "yeast"
+    }
+  },
   "plant": {
     "NPTII": {
       "description": "Neomycin phosphotransferase II. Confers kanamycin/G418 resistance in plants.",

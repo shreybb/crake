@@ -29,14 +29,13 @@ def get_selectable_markers() -> dict:
 def suggest_backbone(host: str, purpose: str = "") -> list[dict]:
     """Return a list of suitable backbones for the given host."""
     data = get_backbones()
-    results = []
     if host == "e_coli":
-        for name, info in data.get("e_coli", {}).items():
-            results.append({"name": name, **info})
+        return [{"name": k, **v} for k, v in data.get("e_coli", {}).items()]
+    elif host == "yeast":
+        return [{"name": k, **v} for k, v in data.get("yeast", {}).items()]
     elif host in ("agrobacterium", "plant_nuclear"):
-        for name, info in data.get("plant_binary", {}).items():
-            results.append({"name": name, **info})
-    return results
+        return [{"name": k, **v} for k, v in data.get("plant_binary", {}).items()]
+    return []
 
 
 def suggest_promoter(host: str) -> list[dict]:
@@ -44,6 +43,8 @@ def suggest_promoter(host: str) -> list[dict]:
     data = get_promoters()
     if host == "e_coli":
         return [{"name": k, **v} for k, v in data.get("e_coli", {}).items()]
+    elif host == "yeast":
+        return [{"name": k, **v} for k, v in data.get("yeast", {}).items()]
     elif host in ("agrobacterium", "plant_nuclear"):
         return [{"name": k, **v} for k, v in data.get("plant", {}).items()]
     return []
@@ -53,6 +54,8 @@ def suggest_terminator(host: str) -> list[dict]:
     data = get_terminators()
     if host == "e_coli":
         return [{"name": k, **v} for k, v in data.get("e_coli", {}).items()]
+    elif host == "yeast":
+        return [{"name": k, **v} for k, v in data.get("yeast", {}).items()]
     elif host in ("agrobacterium", "plant_nuclear"):
         return [{"name": k, **v} for k, v in data.get("plant", {}).items()]
     return []
@@ -62,6 +65,8 @@ def suggest_selectable_marker(host: str) -> list[dict]:
     data = get_selectable_markers()
     if host == "e_coli":
         return [{"name": k, **v} for k, v in data.get("e_coli", {}).items()]
+    elif host == "yeast":
+        return [{"name": k, **v} for k, v in data.get("yeast", {}).items()]
     elif host in ("agrobacterium", "plant_nuclear"):
         return [{"name": k, **v} for k, v in data.get("plant", {}).items()]
     return []

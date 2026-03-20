@@ -52,6 +52,7 @@ def optimize_codons(sequence: str, host: str) -> dict:
     # Map host names to python_codon_tables species names
     host_map = {
         "e_coli": "Escherichia coli general",
+        "yeast": "Saccharomyces cerevisiae",
         "plant_nuclear": "Arabidopsis thaliana",
         "agrobacterium": "Arabidopsis thaliana",  # optimize for plant nuclear expression
     }
@@ -97,7 +98,7 @@ def suggest_parts_for_host(host: str) -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Sequence design and codon optimization")
     parser.add_argument("--host", default="e_coli",
-                        choices=["e_coli", "plant_nuclear", "agrobacterium"],
+                        choices=["e_coli", "yeast", "plant_nuclear", "agrobacterium"],
                         help="Target host organism")
     parser.add_argument("--suggest-parts", action="store_true",
                         help="Suggest backbones, promoters, terminators for the host")

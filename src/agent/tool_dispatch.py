@@ -36,6 +36,7 @@ from src.tools.target_site import (
 from src.tools.primer_design import design_primers as _design_primers
 from src.tools.assembly import simulate_gibson, simulate_restriction_ligation
 from src.tools.validation import validate_plasmid as _validate_plasmid
+from src.tools.gene_introduction import introduce_gene as _introduce_gene
 from src.tools.export import (
     write_fasta,
     write_genbank,
@@ -68,6 +69,7 @@ def dispatch(tool_name: str, tool_input: dict, session: dict) -> dict:
         "design_primers": _handle_design_primers,
         "simulate_assembly": _handle_simulate_assembly,
         "validate_plasmid": _handle_validate_plasmid,
+        "introduce_gene": _handle_introduce_gene,
         "export_files": _handle_export_files,
     }
     handler = handlers.get(tool_name)
@@ -114,15 +116,22 @@ def _result_to_seqviz(result: dict) -> dict | None:
     name = (result.get("gene_name") or result.get("accession") or "sequence")[:30]
     annotations = []
     for f in result.get("features", []):
-        feat_name = (
-            f.get("product") or f.get("gene") or f.get("name") or f.get("type") or "feature"
-        )[:40]
+        feat_type = f.get("type", "")
+        label = (f.get("product") or f.get("gene") or f.get("name") or "")[:32]
+        # Include type prefix when label doesn't already convey it
+        if label and feat_type and feat_type.lower() not in label.lower():
+            feat_name = f"{feat_type}: {label}"
+        elif label:
+            feat_name = label
+        else:
+            feat_name = feat_type or "feature"
+        feat_name = feat_name[:48]
         annotations.append({
             "name": feat_name,
             "start": f["start"],
             "end": f["end"],
             "direction": f.get("strand", 1),
-            "color": _feat_color(f.get("type", "")),
+            "color": _feat_color(feat_type),
         })
     return {"name": name, "seq": seq, "annotations": annotations}
 
@@ -137,12 +146,15 @@ def _genbank_to_seqviz(gb_path: Path) -> dict | None:
             if feat.type == "source":
                 continue
             q = feat.qualifiers if feat.qualifiers else {}
-            # Try the most descriptive qualifiers first
+            raw_label = ""
             for key in ("product", "gene", "label", "note"):
                 if key in q:
-                    raw = q[key][0]
-                    label = raw[:40]
+                    raw_label = q[key][0][:32]
                     break
+            if raw_label and feat.type and feat.type.lower() not in raw_label.lower():
+                label = f"{feat.type}: {raw_label}"[:48]
+            elif raw_label:
+                label = raw_label
             else:
                 label = feat.type
             annotations.append({
@@ -255,6 +267,25 @@ def _handle_validate_plasmid(inp: dict, session: dict) -> dict:
         name=inp.get("name", "construct"),
     )
     session["last_validation"] = result
+    return result
+
+
+def _handle_introduce_gene(inp: dict, session: dict) -> dict:
+    result = _introduce_gene(
+        gene_name=inp["gene_name"],
+        source_organism=inp["source_organism"],
+        target_host=inp["target_host"],
+        expression_goal=inp.get("expression_goal", ""),
+    )
+    if "error" not in result:
+        session["last_gene_introduction"] = result
+        # Store optimised sequence as the active sequence for downstream tools
+        session["last_sequence"] = {
+            "gene_name": result["gene"],
+            "sequence": result["optimized_sequence"],
+            "organism": result["source_organism"],
+            "suggested_host": result["target_host"],
+        }
     return result
 
 

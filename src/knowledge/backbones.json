@@ -28,6 +28,59 @@
       "genbank": "X06403"
     }
   },
+  "yeast": {
+    "pRS316": {
+      "description": "CEN6/ARS4 centromeric low-copy episomal vector; URA3 selection; ~4.9 kb",
+      "size_bp": 4899,
+      "copy_number": "low",
+      "selection": "URA3",
+      "ori": "CEN6/ARS4",
+      "host": "yeast",
+      "notes": "Single copy per cell; stable, low expression. Part of the pRS series.",
+      "addgene": "11599"
+    },
+    "pRS315": {
+      "description": "CEN6/ARS4 centromeric low-copy episomal vector; LEU2 selection",
+      "size_bp": 4888,
+      "copy_number": "low",
+      "selection": "LEU2",
+      "ori": "CEN6/ARS4",
+      "host": "yeast",
+      "notes": "Low-copy centromeric vector; stable inheritance.",
+      "addgene": "11601"
+    },
+    "pYES2": {
+      "description": "2-micron high-copy episomal vector with GAL1 promoter; URA3 selection",
+      "size_bp": 5854,
+      "copy_number": "high",
+      "selection": "URA3",
+      "ori": "2-micron",
+      "promoter": "GAL1",
+      "host": "yeast",
+      "notes": "High-copy 20–40 copies/cell; galactose-inducible expression.",
+      "addgene": "V825-20"
+    },
+    "pESC-HIS": {
+      "description": "Dual-promoter 2-micron high-copy vector with GAL1 and GAL10 promoters; HIS3 selection",
+      "size_bp": 6700,
+      "copy_number": "high",
+      "selection": "HIS3",
+      "ori": "2-micron",
+      "promoter": "GAL1/GAL10 dual",
+      "host": "yeast",
+      "notes": "Two independent MCS driven by opposing GAL1/GAL10 promoters."
+    },
+    "pRS306": {
+      "description": "Integrating vector (URA3); integrates at ura3 locus after linearization",
+      "size_bp": 4889,
+      "copy_number": "single_copy",
+      "selection": "URA3",
+      "integration_locus": "ura3",
+      "host": "yeast",
+      "notes": "Linearize within URA3 to direct integration; stable single-copy expression.",
+      "addgene": "11607"
+    }
+  },
   "plant_binary": {
     "pCAMBIA1305.1": {
       "description": "Binary vector with GUS-PLUS reporter under CaMV35S; hygromycin plant selection, kanamycin bacterial selection",

@@ -8,7 +8,7 @@ PartType = Literal[
     "selectable_marker", "reporter", "regulatory", "other"
 ]
 
-Host = Literal["e_coli", "agrobacterium", "plant_nuclear", "plant_plastid"]
+Host = Literal["e_coli", "yeast", "agrobacterium", "plant_nuclear", "plant_plastid"]
 
 
 @dataclass(frozen=True)

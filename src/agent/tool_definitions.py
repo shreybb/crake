@@ -195,6 +195,40 @@ TOOL_DEFINITIONS: list[dict] = [
         },
     },
     {
+        "name": "introduce_gene",
+        "description": (
+            "Orchestrate end-to-end gene introduction into a target host. "
+            "Fetches the gene CDS from NCBI, codon-optimises it for the target host, "
+            "and suggests a suitable vector backbone, promoter, terminator, and "
+            "selectable marker. Returns a complete expression cassette description "
+            "and next-steps protocol."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "gene_name": {
+                    "type": "string",
+                    "description": "Gene to introduce, e.g. 'GFP' or 'URA3'",
+                },
+                "source_organism": {
+                    "type": "string",
+                    "description": "Source organism for the gene, e.g. 'Aequorea victoria'",
+                },
+                "target_host": {
+                    "type": "string",
+                    "enum": ["e_coli", "yeast", "plant_nuclear"],
+                    "description": "Destination host organism",
+                },
+                "expression_goal": {
+                    "type": "string",
+                    "description": "Optional: brief description of the expression goal, e.g. 'fluorescence reporter'",
+                    "default": "",
+                },
+            },
+            "required": ["gene_name", "source_organism", "target_host"],
+        },
+    },
+    {
         "name": "export_files",
         "description": (
             "Export the current design to lab-ready files: "
