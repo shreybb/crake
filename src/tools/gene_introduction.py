@@ -22,6 +22,38 @@ from src.tools.sequence_design import optimize_codons
 
 _VALID_HOSTS = {"e_coli", "yeast", "plant_nuclear"}
 
+# Keywords that signal a desired expression regulation type.
+_CONSTITUTIVE_KEYWORDS = {"constitutive", "constant", "stable", "gpd", "tdh3", "tef1", "adh1"}
+_INDUCIBLE_KEYWORDS = {
+    "inducible", "induction", "induced", "galactose", "gal1", "gal10",
+    "iptg", "arabinose", "copper", "cup1", "methionine", "tetracycline",
+}
+
+
+def _infer_expression_type(expression_goal: str) -> str | None:
+    """Parse expression_goal string and return 'constitutive', 'inducible', or None."""
+    lower = expression_goal.lower()
+    words = set(lower.replace("-", " ").split())
+    if words & _CONSTITUTIVE_KEYWORDS:
+        return "constitutive"
+    if words & _INDUCIBLE_KEYWORDS:
+        return "inducible"
+    return None
+
+
+def _pick_promoter(promoters: list[dict], expression_type: str | None) -> dict | None:
+    """Select the most appropriate promoter from a list.
+
+    Filters by expression_type if provided; falls back to the first item
+    when no match is found.  Returns None if the list is empty.
+    """
+    if not promoters:
+        return None
+    if expression_type is None:
+        return promoters[0]
+    matches = [p for p in promoters if p.get("expression_type") == expression_type]
+    return matches[0] if matches else promoters[0]
+
 
 def _build_cassette_description(
     gene: str,
@@ -140,14 +172,16 @@ def introduce_gene(
     if "error" not in codon_result:
         optimized_sequence = codon_result.get("optimized_sequence", original_sequence)
 
-    # Step 3 — suggest parts (take first suggestion from each list)
+    # Step 3 — suggest parts
     backbones = suggest_backbone(target_host)
     promoters = suggest_promoter(target_host)
     terminators = suggest_terminator(target_host)
     markers = suggest_selectable_marker(target_host)
 
+    expression_type = _infer_expression_type(expression_goal)
+
     vector = backbones[0] if backbones else {"name": "unknown"}
-    promoter = promoters[0] if promoters else {"name": "unknown"}
+    promoter = _pick_promoter(promoters, expression_type) or {"name": "unknown"}
     terminator = terminators[0] if terminators else {"name": "unknown"}
     marker = markers[0] if markers else {"name": "unknown"}
 

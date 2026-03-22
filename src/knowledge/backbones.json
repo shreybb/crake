@@ -36,49 +36,177 @@
       "selection": "URA3",
       "ori": "CEN6/ARS4",
       "host": "yeast",
-      "notes": "Single copy per cell; stable, low expression. Part of the pRS series.",
+      "notes": "Single copy per cell; stable, low expression. Part of the pRS CEN/ARS series.",
       "addgene": "11599"
     },
     "pRS315": {
-      "description": "CEN6/ARS4 centromeric low-copy episomal vector; LEU2 selection",
+      "description": "CEN6/ARS4 centromeric low-copy episomal vector; LEU2 selection; ~4.9 kb",
       "size_bp": 4888,
       "copy_number": "low",
       "selection": "LEU2",
       "ori": "CEN6/ARS4",
       "host": "yeast",
-      "notes": "Low-copy centromeric vector; stable inheritance.",
+      "notes": "Low-copy centromeric vector; stable inheritance. Use in leu2Δ strains.",
       "addgene": "11601"
     },
+    "pRS314": {
+      "description": "CEN6/ARS4 centromeric low-copy episomal vector; TRP1 selection; ~4.9 kb",
+      "size_bp": 4825,
+      "copy_number": "low",
+      "selection": "TRP1",
+      "ori": "CEN6/ARS4",
+      "host": "yeast",
+      "notes": "Low-copy centromeric vector. Use in trp1Δ strains.",
+      "addgene": "11596"
+    },
+    "pRS313": {
+      "description": "CEN6/ARS4 centromeric low-copy episomal vector; HIS3 selection; ~4.8 kb",
+      "size_bp": 4824,
+      "copy_number": "low",
+      "selection": "HIS3",
+      "ori": "CEN6/ARS4",
+      "host": "yeast",
+      "notes": "Low-copy centromeric vector. Use in his3Δ strains.",
+      "addgene": "11590"
+    },
+    "pRS416": {
+      "description": "2-micron high-copy episomal vector; URA3 selection; ~4.9 kb",
+      "size_bp": 4893,
+      "copy_number": "high",
+      "selection": "URA3",
+      "ori": "2-micron",
+      "host": "yeast",
+      "notes": "High-copy (~15–20 copies/cell). Promoter-less backbone; insert your own promoter-GOI cassette. Part of pRS 2-micron series.",
+      "addgene": "11624"
+    },
+    "pRS415": {
+      "description": "2-micron high-copy episomal vector; LEU2 selection; ~4.9 kb",
+      "size_bp": 4881,
+      "copy_number": "high",
+      "selection": "LEU2",
+      "ori": "2-micron",
+      "host": "yeast",
+      "notes": "High-copy 2-micron backbone; promoter-less MCS. Use in leu2Δ strains.",
+      "addgene": "11621"
+    },
+    "pRS414": {
+      "description": "2-micron high-copy episomal vector; TRP1 selection; ~4.8 kb",
+      "size_bp": 4818,
+      "copy_number": "high",
+      "selection": "TRP1",
+      "ori": "2-micron",
+      "host": "yeast",
+      "notes": "High-copy 2-micron backbone; promoter-less MCS. Use in trp1Δ strains.",
+      "addgene": "11618"
+    },
+    "pRS413": {
+      "description": "2-micron high-copy episomal vector; HIS3 selection; ~4.8 kb",
+      "size_bp": 4816,
+      "copy_number": "high",
+      "selection": "HIS3",
+      "ori": "2-micron",
+      "host": "yeast",
+      "notes": "High-copy 2-micron backbone; promoter-less MCS. Use in his3Δ strains.",
+      "addgene": "11612"
+    },
     "pYES2": {
-      "description": "2-micron high-copy episomal vector with GAL1 promoter; URA3 selection",
+      "description": "2-micron high-copy episomal vector with GAL1 promoter; URA3 selection; ~5.9 kb",
       "size_bp": 5854,
       "copy_number": "high",
       "selection": "URA3",
       "ori": "2-micron",
       "promoter": "GAL1",
       "host": "yeast",
-      "notes": "High-copy 20–40 copies/cell; galactose-inducible expression.",
+      "notes": "High-copy 20–40 copies/cell; galactose-inducible expression. Pre-loaded with GAL1 promoter.",
       "vendor": "Thermo Fisher (Invitrogen) cat. V825-20"
     },
     "pESC-HIS": {
-      "description": "Dual-promoter 2-micron high-copy vector with GAL1 and GAL10 promoters; HIS3 selection",
+      "description": "Dual-promoter 2-micron high-copy vector; GAL1 and GAL10 opposing promoters; HIS3 selection; ~6.7 kb",
       "size_bp": 6700,
       "copy_number": "high",
       "selection": "HIS3",
       "ori": "2-micron",
       "promoter": "GAL1/GAL10 dual",
       "host": "yeast",
-      "notes": "Two independent MCS driven by opposing GAL1/GAL10 promoters."
+      "notes": "Two independent MCS driven by opposing GAL1/GAL10 promoters. Useful for two-gene co-expression under galactose induction.",
+      "addgene": "26686"
+    },
+    "pESC-URA": {
+      "description": "Dual-promoter 2-micron high-copy vector; GAL1 and GAL10 opposing promoters; URA3 selection; ~6.7 kb",
+      "size_bp": 6699,
+      "copy_number": "high",
+      "selection": "URA3",
+      "ori": "2-micron",
+      "promoter": "GAL1/GAL10 dual",
+      "host": "yeast",
+      "notes": "Identical architecture to pESC-HIS but URA3 marker; 5-FOA counterselectable.",
+      "addgene": "26688"
+    },
+    "pESC-LEU": {
+      "description": "Dual-promoter 2-micron high-copy vector; GAL1 and GAL10 opposing promoters; LEU2 selection; ~6.7 kb",
+      "size_bp": 6706,
+      "copy_number": "high",
+      "selection": "LEU2",
+      "ori": "2-micron",
+      "promoter": "GAL1/GAL10 dual",
+      "host": "yeast",
+      "notes": "Identical architecture to pESC-HIS but LEU2 marker. Use in leu2Δ strains.",
+      "addgene": "26687"
+    },
+    "pESC-TRP": {
+      "description": "Dual-promoter 2-micron high-copy vector; GAL1 and GAL10 opposing promoters; TRP1 selection; ~6.7 kb",
+      "size_bp": 6659,
+      "copy_number": "high",
+      "selection": "TRP1",
+      "ori": "2-micron",
+      "promoter": "GAL1/GAL10 dual",
+      "host": "yeast",
+      "notes": "Identical architecture to pESC-HIS but TRP1 marker. Use in trp1Δ strains.",
+      "addgene": "26685"
     },
     "pRS306": {
-      "description": "Integrating vector (URA3); integrates at ura3 locus after linearization",
+      "description": "Integrating vector (URA3); integrates at ura3 locus after linearization; ~4.9 kb",
       "size_bp": 4889,
       "copy_number": "single_copy",
       "selection": "URA3",
+      "ori": "none (integrating)",
       "integration_locus": "ura3",
       "host": "yeast",
-      "notes": "Linearize within URA3 to direct integration; stable single-copy expression.",
+      "notes": "Linearize within URA3 to direct integration at the ura3 chromosomal locus; stable single-copy expression. URA3 marker is split by insert so integrants can be counterselected with 5-FOA for loop-out (pop-out).",
       "addgene": "11607"
+    },
+    "pRS305": {
+      "description": "Integrating vector (LEU2); integrates at leu2 locus after linearization; ~4.9 kb",
+      "size_bp": 4885,
+      "copy_number": "single_copy",
+      "selection": "LEU2",
+      "ori": "none (integrating)",
+      "integration_locus": "leu2",
+      "host": "yeast",
+      "notes": "Linearize within LEU2 to direct integration at leu2 locus. Stable single-copy expression in leu2Δ strains.",
+      "addgene": "11600"
+    },
+    "pRS304": {
+      "description": "Integrating vector (TRP1); integrates at trp1 locus after linearization; ~4.9 kb",
+      "size_bp": 4852,
+      "copy_number": "single_copy",
+      "selection": "TRP1",
+      "ori": "none (integrating)",
+      "integration_locus": "trp1",
+      "host": "yeast",
+      "notes": "Linearize within TRP1 to direct integration. Stable single-copy in trp1Δ strains.",
+      "addgene": "11597"
+    },
+    "pRS303": {
+      "description": "Integrating vector (HIS3); integrates at his3 locus after linearization; ~4.8 kb",
+      "size_bp": 4821,
+      "copy_number": "single_copy",
+      "selection": "HIS3",
+      "ori": "none (integrating)",
+      "integration_locus": "his3",
+      "host": "yeast",
+      "notes": "Linearize within HIS3 to direct integration. Stable single-copy in his3Δ strains.",
+      "addgene": "11591"
     }
   },
   "plant_binary": {

@@ -8,7 +8,13 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from src.tools.gene_introduction import introduce_gene, _build_cassette_description, _build_next_steps
+from src.tools.gene_introduction import (
+    introduce_gene,
+    _build_cassette_description,
+    _build_next_steps,
+    _infer_expression_type,
+    _pick_promoter,
+)
 from src.tools.knowledge import (
     suggest_backbone,
     suggest_promoter,
@@ -303,3 +309,111 @@ class TestIntroduceGeneDispatch:
         )
         assert "last_gene_introduction" in session
         assert session["last_sequence"]["sequence"] == _GFP_CDS
+
+
+# ---------------------------------------------------------------------------
+# Promoter expression type inference
+# ---------------------------------------------------------------------------
+
+class TestInferExpressionType:
+    def test_constitutive_keyword(self):
+        assert _infer_expression_type("constitutive expression") == "constitutive"
+
+    def test_inducible_keyword(self):
+        assert _infer_expression_type("inducible overexpression") == "inducible"
+
+    def test_galactose_implies_inducible(self):
+        assert _infer_expression_type("galactose-induced") == "inducible"
+
+    def test_iptg_implies_inducible(self):
+        assert _infer_expression_type("IPTG induction") == "inducible"
+
+    def test_strong_constitutive(self):
+        assert _infer_expression_type("strong constitutive") == "constitutive"
+
+    def test_empty_goal_returns_none(self):
+        assert _infer_expression_type("") is None
+
+    def test_unrelated_goal_returns_none(self):
+        assert _infer_expression_type("bioluminescence") is None
+
+
+# ---------------------------------------------------------------------------
+# Promoter picking by expression type
+# ---------------------------------------------------------------------------
+
+_YEAST_PROMOTERS = [
+    {"name": "GAL1", "expression_type": "inducible", "strength": "very_high"},
+    {"name": "TEF1", "expression_type": "constitutive", "strength": "high"},
+    {"name": "TDH3", "expression_type": "constitutive", "strength": "very_high"},
+    {"name": "ADH1", "expression_type": "constitutive", "strength": "medium"},
+]
+
+
+class TestPickPromoter:
+    def test_constitutive_excludes_gal1(self):
+        result = _pick_promoter(_YEAST_PROMOTERS, "constitutive")
+        assert result["name"] != "GAL1"
+
+    def test_constitutive_returns_constitutive_type(self):
+        result = _pick_promoter(_YEAST_PROMOTERS, "constitutive")
+        assert result["expression_type"] == "constitutive"
+
+    def test_inducible_returns_gal1(self):
+        result = _pick_promoter(_YEAST_PROMOTERS, "inducible")
+        assert result["name"] == "GAL1"
+
+    def test_fallback_when_no_match(self):
+        result = _pick_promoter(_YEAST_PROMOTERS, "repressible")
+        assert result["name"] == "GAL1"  # falls back to first
+
+    def test_none_type_returns_first(self):
+        result = _pick_promoter(_YEAST_PROMOTERS, None)
+        assert result["name"] == "GAL1"  # first item
+
+    def test_empty_list_returns_none(self):
+        result = _pick_promoter([], "constitutive")
+        assert result is None
+
+
+# ---------------------------------------------------------------------------
+# introduce_gene — expression goal drives promoter selection
+# ---------------------------------------------------------------------------
+
+class TestIntroduceGenePromoterSelection:
+    @patch("src.tools.gene_introduction.optimize_codons", side_effect=_fake_optimize_codons_ok)
+    @patch("src.tools.gene_introduction.search_gene", side_effect=_fake_search_gene_ok)
+    def test_constitutive_goal_avoids_gal1(self, mock_search, mock_opt):
+        result = introduce_gene(
+            "GFP", "Aequorea victoria", "yeast",
+            expression_goal="constitutive expression"
+        )
+        assert result["promoter"]["name"] != "GAL1", (
+            "constitutive expression_goal must not select inducible GAL1"
+        )
+
+    @patch("src.tools.gene_introduction.optimize_codons", side_effect=_fake_optimize_codons_ok)
+    @patch("src.tools.gene_introduction.search_gene", side_effect=_fake_search_gene_ok)
+    def test_constitutive_goal_selects_constitutive_promoter(self, mock_search, mock_opt):
+        result = introduce_gene(
+            "GFP", "Aequorea victoria", "yeast",
+            expression_goal="strong constitutive"
+        )
+        assert result["promoter"].get("expression_type") == "constitutive" or \
+               result["promoter"].get("constitutive") is True
+
+    @patch("src.tools.gene_introduction.optimize_codons", side_effect=_fake_optimize_codons_ok)
+    @patch("src.tools.gene_introduction.search_gene", side_effect=_fake_search_gene_ok)
+    def test_inducible_goal_selects_inducible_promoter(self, mock_search, mock_opt):
+        result = introduce_gene(
+            "GFP", "Aequorea victoria", "yeast",
+            expression_goal="galactose inducible"
+        )
+        assert result["promoter"].get("expression_type") == "inducible" or \
+               result["promoter"].get("inducible") is True
+
+    @patch("src.tools.gene_introduction.optimize_codons", side_effect=_fake_optimize_codons_ok)
+    @patch("src.tools.gene_introduction.search_gene", side_effect=_fake_search_gene_ok)
+    def test_no_expression_goal_still_returns_a_promoter(self, mock_search, mock_opt):
+        result = introduce_gene("GFP", "Aequorea victoria", "yeast")
+        assert "name" in result["promoter"]
