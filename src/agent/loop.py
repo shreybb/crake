@@ -10,6 +10,7 @@ The loop uses ReAct-style tool calling:
 from __future__ import annotations
 
 import json
+import pathlib
 import re
 import subprocess
 from typing import Any
@@ -18,7 +19,66 @@ from src.agent.tool_definitions import TOOL_DEFINITIONS
 from src.agent.tool_dispatch import dispatch
 
 MAX_ITERATIONS = 10   # safety cap on tool-call rounds per turn
-SUBPROCESS_TIMEOUT = 120  # seconds
+SUBPROCESS_TIMEOUT = 300  # seconds — codon optimisation alone can take 30–60s; full pipeline easily exceeds 120s
+
+_KNOWLEDGE_DIR = pathlib.Path(__file__).parent.parent / "knowledge"
+
+# ---------------------------------------------------------------------------
+# Knowledge-base part enumeration
+# ---------------------------------------------------------------------------
+
+def _load_available_parts() -> dict[str, list[str]]:
+    """Return all part names from the knowledge base JSON files.
+
+    Iterates over every host section in each file and collects top-level keys
+    (the part names).  Returns a new dict on every call so callers can safely
+    modify the result.
+    """
+    files = {
+        "backbones": _KNOWLEDGE_DIR / "backbones.json",
+        "promoters": _KNOWLEDGE_DIR / "promoters.json",
+        "terminators": _KNOWLEDGE_DIR / "terminators.json",
+        "markers": _KNOWLEDGE_DIR / "selectable_markers.json",
+    }
+    parts: dict[str, list[str]] = {key: [] for key in files}
+    for key, path in files.items():
+        try:
+            data = json.loads(path.read_text())
+            names: list[str] = []
+            for host_entries in data.values():
+                if isinstance(host_entries, dict):
+                    names.extend(host_entries.keys())
+            parts[key] = sorted(names)
+        except (FileNotFoundError, json.JSONDecodeError):
+            pass  # best-effort; missing files leave an empty list
+    return parts
+
+
+def _available_parts_section(parts: dict[str, list[str]]) -> str:
+    """Render the knowledge-base part lists as a system-prompt section."""
+    lines: list[str] = [
+        "## Available Parts (use only these)",
+        "",
+    ]
+    labels = [
+        ("backbones", "Vectors/Backbones"),
+        ("promoters", "Promoters"),
+        ("terminators", "Terminators"),
+        ("markers", "Selectable Markers"),
+    ]
+    for key, label in labels:
+        names = parts.get(key, [])
+        if names:
+            lines.append(f"**{label}:** {', '.join(names)}")
+    lines.extend([
+        "",
+        "**IMPORTANT:** Never reference a vector, promoter, terminator, or selectable marker "
+        "not in the lists above. If a user requests an unlisted part, acknowledge that it is "
+        "not in the knowledge base and recommend the closest available alternative from the "
+        "lists above.",
+    ])
+    return "\n".join(lines)
+
 
 # ---------------------------------------------------------------------------
 # Prompt construction
@@ -56,6 +116,8 @@ Guidelines:
 - If a tool returns an error, explain it and suggest an alternative.
 - After any search_gene, fetch_by_accession, or import_sequence call, always state:
   the sequence name, organism, length in bp, and what is now shown in the sequence preview panel.
+
+{_available_parts_section(_load_available_parts())}
 
 AVAILABLE TOOLS
 {_tool_docs()}

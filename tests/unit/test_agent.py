@@ -12,7 +12,15 @@ from unittest.mock import MagicMock
 import pytest
 
 from src.agent.tool_dispatch import dispatch
-from src.agent.loop import run_agent_turn, extract_text_response
+from src.agent.loop import (
+    run_agent_turn,
+    extract_text_response,
+    _load_available_parts,
+    _available_parts_section,
+    _SYSTEM,
+    SUBPROCESS_TIMEOUT,
+    MAX_ITERATIONS,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -302,3 +310,156 @@ class TestExtractTextResponse:
 
     def test_empty_history_returns_empty_string(self):
         assert extract_text_response([]) == ""
+
+
+# ---------------------------------------------------------------------------
+# TestAvailableParts
+# ---------------------------------------------------------------------------
+
+class TestLoadAvailableParts:
+    def test_returns_all_four_keys(self):
+        parts = _load_available_parts()
+        assert set(parts.keys()) == {"backbones", "promoters", "terminators", "markers"}
+
+    def test_backbones_contains_known_ecoli_vectors(self):
+        parts = _load_available_parts()
+        assert "pET-28a" in parts["backbones"]
+        assert "pUC19" in parts["backbones"]
+        assert "pACYC184" in parts["backbones"]
+
+    def test_backbones_contains_known_yeast_vectors(self):
+        parts = _load_available_parts()
+        assert "pRS316" in parts["backbones"]
+        assert "pYES2" in parts["backbones"]
+
+    def test_promoters_contains_known_ecoli_promoters(self):
+        parts = _load_available_parts()
+        assert "T7" in parts["promoters"]
+        assert "trc" in parts["promoters"]
+        assert "lac" in parts["promoters"]
+        assert "araBAD" in parts["promoters"]
+
+    def test_promoters_contains_known_yeast_promoters(self):
+        parts = _load_available_parts()
+        assert "GAL1" in parts["promoters"]
+        assert "TEF1" in parts["promoters"]
+        assert "TDH3" in parts["promoters"]
+
+    def test_terminators_contains_known_entries(self):
+        parts = _load_available_parts()
+        assert "rrnB_T1T2" in parts["terminators"]
+        assert "CYC1tt" in parts["terminators"]
+        assert "ADH1tt" in parts["terminators"]
+
+    def test_markers_contains_known_ecoli_markers(self):
+        parts = _load_available_parts()
+        assert "KanR" in parts["markers"]
+        assert "AmpR" in parts["markers"]
+
+    def test_markers_contains_known_yeast_markers(self):
+        parts = _load_available_parts()
+        assert "URA3" in parts["markers"]
+        assert "LEU2" in parts["markers"]
+        assert "kanMX" in parts["markers"]
+
+    def test_all_lists_are_non_empty(self):
+        parts = _load_available_parts()
+        for key, names in parts.items():
+            assert len(names) > 0, f"Expected non-empty list for {key}"
+
+    def test_returns_new_dict_each_call(self):
+        parts1 = _load_available_parts()
+        parts2 = _load_available_parts()
+        assert parts1 is not parts2
+
+
+class TestAvailablePartsSection:
+    def _sample_parts(self):
+        return {
+            "backbones": ["pET-28a", "pUC19"],
+            "promoters": ["T7", "trc"],
+            "terminators": ["rrnB_T1T2"],
+            "markers": ["KanR", "AmpR"],
+        }
+
+    def test_contains_section_header(self):
+        section = _available_parts_section(self._sample_parts())
+        assert "Available Parts" in section
+
+    def test_lists_backbone_names(self):
+        section = _available_parts_section(self._sample_parts())
+        assert "pET-28a" in section
+        assert "pUC19" in section
+
+    def test_lists_promoter_names(self):
+        section = _available_parts_section(self._sample_parts())
+        assert "T7" in section
+        assert "trc" in section
+
+    def test_lists_terminator_names(self):
+        section = _available_parts_section(self._sample_parts())
+        assert "rrnB_T1T2" in section
+
+    def test_lists_marker_names(self):
+        section = _available_parts_section(self._sample_parts())
+        assert "KanR" in section
+        assert "AmpR" in section
+
+    def test_contains_never_reference_instruction(self):
+        section = _available_parts_section(self._sample_parts())
+        assert "Never reference" in section or "never reference" in section.lower()
+
+    def test_contains_alternative_recommendation_instruction(self):
+        section = _available_parts_section(self._sample_parts())
+        assert "available" in section.lower() and "alternative" in section.lower()
+
+    def test_empty_lists_do_not_raise(self):
+        parts = {"backbones": [], "promoters": [], "terminators": [], "markers": []}
+        section = _available_parts_section(parts)
+        assert isinstance(section, str)
+
+
+class TestSystemPromptContainsKnowledgeBase:
+    def test_system_prompt_contains_available_parts_header(self):
+        assert "Available Parts" in _SYSTEM
+
+    def test_system_prompt_contains_ecoli_backbone(self):
+        assert "pET-28a" in _SYSTEM
+
+    def test_system_prompt_contains_yeast_backbone(self):
+        assert "pRS316" in _SYSTEM
+
+    def test_system_prompt_contains_known_promoter(self):
+        assert "T7" in _SYSTEM
+
+    def test_system_prompt_contains_known_terminator(self):
+        assert "rrnB_T1T2" in _SYSTEM
+
+    def test_system_prompt_contains_known_marker(self):
+        assert "KanR" in _SYSTEM or "URA3" in _SYSTEM
+
+    def test_system_prompt_contains_hallucination_guard(self):
+        assert "Never reference" in _SYSTEM or "never reference" in _SYSTEM.lower()
+
+
+# ---------------------------------------------------------------------------
+# TestLoopConstants
+# ---------------------------------------------------------------------------
+
+class TestLoopConstants:
+    def test_subprocess_timeout_is_300(self):
+        """Codon optimisation can take 30–60s; full pipeline easily exceeds 120s."""
+        assert SUBPROCESS_TIMEOUT == 300
+
+    def test_max_iterations_is_positive(self):
+        assert MAX_ITERATIONS > 0
+
+    def test_subprocess_timeout_is_used_in_subprocess_call(self, mocker):
+        """The SUBPROCESS_TIMEOUT constant must be passed to subprocess.run."""
+        proc = mocker.MagicMock()
+        proc.returncode = 0
+        proc.stdout = '{"result": "ok"}'
+        spy = mocker.patch("src.agent.loop.subprocess.run", return_value=proc)
+        run_agent_turn("hi", [], {})
+        _, kwargs = spy.call_args
+        assert kwargs.get("timeout") == SUBPROCESS_TIMEOUT

@@ -127,7 +127,7 @@ def _tool_status_label(name: str, inp: dict) -> str:
         return f"💡 Looking up parts for host **{inp.get('host', '')}**"
     if name == "optimize_codons":
         host = inp.get("host", "").replace("_", " ")
-        return f"🔄 Codon-optimising for **{host}**"
+        return f"🔄 Codon-optimising for **{host}** — this may take up to 60 s…"
     if name == "find_target_sites":
         method = inp.get("method", "")
         return f"🎯 Scanning for **{method}** target sites"
