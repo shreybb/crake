@@ -48,8 +48,14 @@ optimise codons, design primers, simulate assembly, and validate constructs.
 Guidelines:
 - Be concise and scientific.
 - Always call validate_plasmid before export_files.
-- For plant / Agrobacterium work use host="agrobacterium".
+- Host options: e_coli, yeast (S. cerevisiae), plant_nuclear, agrobacterium.
+  - For plant / Agrobacterium transformation use host="agrobacterium".
+  - For yeast (S. cerevisiae) work use host="yeast".
+  - Yeast markers are auxotrophic (URA3, LEU2, HIS3, TRP1) or dominant (kanMX, hygMX);
+    match marker to the strain's auxotrophic background.
 - If a tool returns an error, explain it and suggest an alternative.
+- After any search_gene, fetch_by_accession, or import_sequence call, always state:
+  the sequence name, organism, length in bp, and what is now shown in the sequence preview panel.
 
 AVAILABLE TOOLS
 {_tool_docs()}
@@ -140,62 +146,87 @@ def _parse_tool_call(text: str) -> dict[str, Any] | None:
 # Public agent turn
 # ---------------------------------------------------------------------------
 
+def _append_tool_exchange(
+    history: list[dict],
+    log: list[dict],
+    name: str,
+    inp: dict,
+    result: dict,
+) -> tuple[list[dict], list[dict]]:
+    """Return new history and log with the tool call + result appended (immutable)."""
+    new_log = log + [{"tool_name": name, "result": result}]
+    call_id = f"tu_{len(new_log)}"
+    new_history = history + [
+        {
+            "role": "assistant",
+            "content": [{"type": "tool_use", "id": call_id, "name": name, "input": inp}],
+        },
+        {
+            "role": "user",
+            "content": [{"type": "tool_result", "tool_use_id": call_id, "content": json.dumps(result)}],
+        },
+    ]
+    return new_history, new_log
+
+
+def _run_iteration(
+    history: list[dict],
+    log: list[dict],
+    session: dict,
+    on_tool_start,
+) -> tuple[list[dict], list[dict], bool]:
+    """Run one ReAct iteration.  Returns (history, log, done)."""
+    response_text = _call_claude(_build_prompt(history))
+    tool_call = _parse_tool_call(response_text)
+
+    if tool_call is None:
+        return history + [{"role": "assistant", "content": response_text}], log, True
+
+    name = tool_call.get("name", "")
+    inp = tool_call.get("input", {})
+
+    if on_tool_start is not None:
+        try:
+            on_tool_start(name, inp)
+        except Exception:
+            pass
+
+    try:
+        result = dispatch(name, inp, session)
+    except Exception as exc:
+        result = {"error": str(exc)}
+
+    new_history, new_log = _append_tool_exchange(history, log, name, inp, result)
+    return new_history, new_log, False
+
+
 def run_agent_turn(
     user_message: str,
     conversation_history: list[dict],
     session: dict,
     api_key: str = "",   # unused — kept for interface compatibility
+    on_tool_start=None,  # optional callback(name: str, inp: dict) called before each tool dispatch
 ) -> tuple[list[dict], list[dict]]:
     """Run one full agentic turn via the claude CLI subprocess.
 
     Args:
         user_message: Text the user typed.
-        conversation_history: Mutable list of message dicts — updated in place.
+        conversation_history: Existing message dicts — not mutated.
         session: Mutable session dict (e.g. st.session_state) for tool side effects.
         api_key: Ignored. Kept so callers don't need to change signature.
 
     Returns:
-        (conversation_history, tool_calls_log)
+        (updated_history, tool_calls_log)
     """
-    history = list(conversation_history)
-    history.append({"role": "user", "content": user_message})
-    tool_calls_log: list[dict] = []
+    history: list[dict] = list(conversation_history) + [{"role": "user", "content": user_message}]
+    log: list[dict] = []
 
     for _ in range(MAX_ITERATIONS):
-        prompt = _build_prompt(history)
-        response_text = _call_claude(prompt)
-
-        tool_call = _parse_tool_call(response_text)
-
-        if tool_call is None:
-            # Final plain-text answer
-            history.append({"role": "assistant", "content": response_text})
+        history, log, done = _run_iteration(history, log, session, on_tool_start)
+        if done:
             break
 
-        name = tool_call.get("name", "")
-        inp = tool_call.get("input", {})
-
-        try:
-            result = dispatch(name, inp, session)
-        except Exception as exc:
-            result = {"error": str(exc)}
-
-        tool_calls_log.append({"tool_name": name, "result": result})
-
-        # Record the tool call and result in history for next iteration
-        call_id = f"tu_{len(tool_calls_log)}"
-        history.append({
-            "role": "assistant",
-            "content": [{"type": "tool_use", "id": call_id, "name": name, "input": inp}],
-        })
-        history.append({
-            "role": "user",
-            "content": [{"type": "tool_result", "tool_use_id": call_id, "content": json.dumps(result)}],
-        })
-
-    conversation_history.clear()
-    conversation_history.extend(history)
-    return conversation_history, tool_calls_log
+    return history, log
 
 
 def extract_text_response(conversation_history: list[dict]) -> str:

@@ -264,13 +264,14 @@ class TestAgentLoop:
         _, log = run_agent_turn("Do bad thing", [], {})
         assert "error" in log[0]["result"]
 
-    def test_conversation_history_updated_in_place(self, mocker):
+    def test_conversation_history_not_mutated(self, mocker):
         self._mock_subprocess(mocker, ["Hi!"])
 
         history = []
-        run_agent_turn("Hello", history, {})
-        # History is mutated in place AND returned
-        assert len(history) == 2
+        updated, _ = run_agent_turn("Hello", history, {})
+        # Original list must not be mutated; updated history is returned
+        assert len(history) == 0
+        assert len(updated) == 2
 
     def test_subprocess_error_raises_runtime_error(self, mocker):
         proc = MagicMock()

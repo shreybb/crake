@@ -265,6 +265,7 @@ def _handle_validate_plasmid(inp: dict, session: dict) -> dict:
     result = _validate_plasmid(
         sequence=inp["sequence"],
         name=inp.get("name", "construct"),
+        topology=inp.get("topology", "circular"),
     )
     session["last_validation"] = result
     return result

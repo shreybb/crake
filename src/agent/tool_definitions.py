@@ -72,7 +72,7 @@ TOOL_DEFINITIONS: list[dict] = [
             "properties": {
                 "host": {
                     "type": "string",
-                    "enum": ["e_coli", "plant_nuclear", "agrobacterium"],
+                    "enum": ["e_coli", "yeast", "plant_nuclear", "agrobacterium"],
                 },
             },
             "required": ["host"],
@@ -90,7 +90,7 @@ TOOL_DEFINITIONS: list[dict] = [
                 "sequence": {"type": "string", "description": "DNA sequence to optimize"},
                 "host": {
                     "type": "string",
-                    "enum": ["e_coli", "plant_nuclear", "agrobacterium"],
+                    "enum": ["e_coli", "yeast", "plant_nuclear", "agrobacterium"],
                 },
             },
             "required": ["sequence", "host"],
@@ -190,6 +190,12 @@ TOOL_DEFINITIONS: list[dict] = [
             "properties": {
                 "sequence": {"type": "string"},
                 "name": {"type": "string", "default": "construct"},
+                "topology": {
+                    "type": "string",
+                    "enum": ["circular", "linear"],
+                    "default": "circular",
+                    "description": "Topology of the construct (default circular)",
+                },
             },
             "required": ["sequence"],
         },

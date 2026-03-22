@@ -1,7 +1,7 @@
 {
   "e_coli": {
     "KanR": {
-      "description": "Kanamycin resistance (aminoglycoside phosphotransferase, APT)",
+      "description": "Kanamycin resistance (aminoglycoside 3'-phosphotransferase, APH(3')-Ia)",
       "selection_agent": "kanamycin",
       "typical_concentration_ug_ml": 50
     },

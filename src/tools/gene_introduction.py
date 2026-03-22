@@ -40,14 +40,40 @@ def _build_cassette_description(
     )
 
 
+_YEAST_MARKER_STRAIN = {
+    "URA3": "ura3Δ (e.g. BY4741, W303-1A, CEN.PK2-1C)",
+    "LEU2": "leu2Δ (e.g. BY4741, W303-1A)",
+    "HIS3": "his3Δ (e.g. BY4741, W303-1A)",
+    "TRP1": "trp1Δ (e.g. BY4741)",
+    "kanMX": "any strain (dominant marker; select on YPD + G418 200–400 mg/L)",
+    "hygMX": "any strain (dominant marker; select on YPD + Hygromycin B 300 mg/L)",
+}
+
+
 def _build_next_steps(host: str, vector_name: str, marker_name: str) -> list[str]:
+    if host == "yeast":
+        strain_note = _YEAST_MARKER_STRAIN.get(
+            marker_name,
+            f"strain auxotrophic for {marker_name} (or use a dominant marker strain)"
+        )
+        return [
+            "1. Synthesise or amplify the codon-optimised CDS.",
+            f"2. Clone into {vector_name} upstream of the selected promoter "
+            "   (Gibson Assembly or restriction-ligation into MCS).",
+            f"3. Transform using the lithium acetate / PEG / ssDNA method into {strain_note}.",
+            f"4. Select transformants on appropriate drop-out (SC - {marker_name}) or antibiotic plates.",
+            "5. Verify plasmid presence by colony PCR and Sanger sequencing.",
+            "6. If using GAL1/GAL10 promoter: grow in SC-glucose first, then induce by "
+            "   shifting to SC-galactose (2%) for 4–6 h before assaying expression.",
+        ]
+
     steps = [
-        f"1. Synthesise or amplify the codon-optimised CDS.",
+        "1. Synthesise or amplify the codon-optimised CDS.",
         f"2. Clone into {vector_name} (e.g. Gibson Assembly or restriction-ligation).",
         f"3. Transform into appropriate {host} strain.",
         f"4. Select transformants on media with {marker_name} selection.",
-        f"5. Verify insertion by colony PCR and Sanger sequencing.",
-        f"6. Induce/confirm expression by western blot or assay.",
+        "5. Verify insertion by colony PCR and Sanger sequencing.",
+        "6. Induce/confirm expression by western blot or assay.",
     ]
     return steps
 

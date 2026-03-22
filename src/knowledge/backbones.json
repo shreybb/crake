@@ -5,7 +5,7 @@
       "size_bp": 5369,
       "selection": "kanamycin",
       "promoter": "T7",
-      "ori": "pBR322",
+      "ori": "ColE1/pMB1",
       "host": "e_coli",
       "addgene": null,
       "genbank": "EF442785"
@@ -58,7 +58,7 @@
       "promoter": "GAL1",
       "host": "yeast",
       "notes": "High-copy 20–40 copies/cell; galactose-inducible expression.",
-      "addgene": "V825-20"
+      "vendor": "Thermo Fisher (Invitrogen) cat. V825-20"
     },
     "pESC-HIS": {
       "description": "Dual-promoter 2-micron high-copy vector with GAL1 and GAL10 promoters; HIS3 selection",

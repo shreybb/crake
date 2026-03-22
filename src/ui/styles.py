@@ -36,35 +36,114 @@ html, body, [class*="css"], .stApp {
 }
 
 /* ── Kill Streamlit chrome ── */
-[data-testid="stToolbar"],
 [data-testid="stDecoration"],
-[data-testid="stHeader"],
 #MainMenu, footer { display: none !important; }
+/* Hide toolbar actions (Deploy, menu) but NOT the toolbar itself — expand button lives there */
+[data-testid="stToolbarActions"],
+[data-testid="stAppDeployButton"],
+[data-testid="stMainMenuButton"] { display: none !important; }
+/* Keep toolbar invisible but rendered so the fixed expand button can escape */
+[data-testid="stToolbar"] {
+    background: transparent !important;
+    pointer-events: none !important;
+}
+[data-testid="stExpandSidebarButton"] {
+    pointer-events: auto !important;
+}
 
-/* ── Sidebar — dark themed ── */
+/* stHeader: invisible but keep it in flow so expand button can be rescued */
+[data-testid="stHeader"] {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    height: 0px !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+}
+/* "Expand sidebar" button — lives in stHeader (0-height), rescue with fixed positioning */
+[data-testid="stExpandSidebarButton"] {
+    position: fixed !important;
+    top: 14px !important;
+    left: 12px !important;
+    z-index: 10000 !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+    width: 32px !important;
+    height: 32px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 6px !important;
+    border-radius: 6px !important;
+    color: #00E5A0 !important;
+    background: rgba(0,229,160,0.06) !important;
+    border: 1px solid rgba(0,229,160,0.15) !important;
+    cursor: pointer !important;
+    transition: color 0.15s, background 0.15s, border-color 0.15s !important;
+    overflow: visible !important;
+}
+[data-testid="stExpandSidebarButton"]:hover {
+    color: #C8E8F0 !important;
+    background: rgba(0,229,160,0.14) !important;
+    border-color: rgba(0,229,160,0.3) !important;
+}
+[data-testid="stExpandSidebarButton"] span,
+[data-testid="stExpandSidebarButton"] [data-testid="stIconMaterial"] {
+    color: #00E5A0 !important;
+    font-size: 18px !important;
+    line-height: 1 !important;
+}
+/* Collapse button inside the sidebar */
+[data-testid="stSidebarCollapseButton"] button {
+    color: #00E5A0 !important;
+    background: rgba(0,229,160,0.06) !important;
+    border: 1px solid rgba(0,229,160,0.15) !important;
+    border-radius: 6px !important;
+    transition: color 0.15s, background 0.15s, border-color 0.15s !important;
+}
+[data-testid="stSidebarCollapseButton"] button:hover {
+    color: #C8E8F0 !important;
+    background: rgba(0,229,160,0.14) !important;
+    border-color: rgba(0,229,160,0.3) !important;
+}
+
+/* ── Sidebar ── */
 [data-testid="stSidebar"] {
-    background: #03050A !important;
-    border-right: 1px solid #112030 !important;
-    min-width: 260px !important;
-    max-width: 300px !important;
+    background: #070D15 !important;
+    border-right: 1px solid #1E3A50 !important;
 }
 [data-testid="stSidebar"] > div:first-child {
-    padding: 16px 0 !important;
+    padding: 16px 8px !important;
 }
-[data-testid="stSidebarContent"] {
-    background: #03050A !important;
+
+/* ── Main columns layout: fill viewport height ── */
+/* Force the top-level two-column block to fill the remaining viewport */
+[data-testid="stMainBlockContainer"] > [data-testid="stVerticalBlock"] > [data-testid="stHorizontalBlock"] {
+    min-height: calc(100vh - 66px) !important;
 }
-[data-testid="collapsedControl"] {
-    color: #3A7080 !important;
-    background: #070D15 !important;
+/* Chat column inner block: flex column so messages can grow */
+[data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child > [data-testid="stVerticalBlock"],
+[data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:first-child > [data-testid="stVerticalBlock"] {
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+/* Messages box: grow to fill remaining space in the column */
+[data-testid="stHorizontalBlock"] > [data-testid="column"]:first-child [data-testid="stVerticalBlockBorderWrapper"],
+[data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:first-child [data-testid="stVerticalBlockBorderWrapper"] {
+    flex: 1 1 0 !important;
+    height: auto !important;
+    min-height: 200px !important;
 }
 
 /* ── Right column: sticky ── */
-[data-testid="stHorizontalBlock"] > [data-testid="column"]:nth-child(2) {
+[data-testid="stHorizontalBlock"] > [data-testid="column"]:nth-child(2),
+[data-testid="stHorizontalBlock"] > [data-testid="stColumn"]:nth-child(2) {
     position: sticky;
-    top: 66px;
+    top: 58px;
     align-self: flex-start;
-    max-height: calc(100vh - 80px);
+    max-height: calc(100vh - 66px);
     overflow-y: auto;
 }
 
@@ -74,11 +153,17 @@ html, body, [class*="css"], .stApp {
     background-image: radial-gradient(rgba(0,229,160,0.045) 1px, transparent 1px) !important;
     background-size: 28px 28px !important;
 }
-.main .block-container {
+.main .block-container,
+[data-testid="stMainBlockContainer"] {
     background: transparent !important;
     padding: 0 !important;
-    padding-bottom: 100px !important;
+    padding-bottom: 8px !important;
     max-width: 100% !important;
+}
+/* Kill any residual Streamlit top gap */
+[data-testid="stAppViewContainer"] > .main > .block-container > div:first-child {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
 }
 
 /* ── Keyframe animations ── */
@@ -103,7 +188,7 @@ html, body, [class*="css"], .stApp {
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     border-bottom: 1px solid rgba(0,229,160,0.08);
-    padding: 0 28px;
+    padding: 0 24px 0 48px;
     height: 58px;
     display: flex;
     align-items: center;
@@ -115,7 +200,7 @@ html, body, [class*="css"], .stApp {
 .crake-logo-wrap {
     display: flex;
     align-items: center;
-    gap: 11px;
+    gap: 8px;
 }
 .crake-logo-mark {
     width: 32px;
@@ -174,7 +259,7 @@ html, body, [class*="css"], .stApp {
 .crake-intro-wrap {
     position: relative;
     overflow: hidden;
-    padding: 60px 48px 40px;
+    padding: 48px 40px 32px;
 }
 .crake-intro-glow {
     pointer-events: none;
@@ -195,7 +280,7 @@ html, body, [class*="css"], .stApp {
     text-align: center;
     position: relative;
     z-index: 1;
-    margin-bottom: 52px;
+    margin-bottom: 40px;
 }
 .crake-intro-eyebrow {
     display: inline-flex;
@@ -232,12 +317,14 @@ html, body, [class*="css"], .stApp {
     background-clip: text;
 }
 .crake-intro-sub {
+    display: block;
+    width: 100%;
     font-size: 16px;
     color: #3A7080;
     line-height: 1.68;
     max-width: 560px;
-    margin: 0 auto;
-    text-align: center;
+    margin: 8px auto 0;
+    text-align: center !important;
     font-family: 'Outfit', sans-serif;
 }
 
@@ -249,29 +336,31 @@ html, body, [class*="css"], .stApp {
     border-collapse: collapse;
 }
 .crake-cmd-table td {
-    padding: 7px 0;
+    padding: 9px 0;
     vertical-align: middle;
     border-bottom: 1px solid #112030;
 }
 .crake-cmd-table tr:last-child td { border-bottom: none; }
 .crake-cmd-table .cmd-key {
     font-family: 'Fira Code', monospace;
-    font-size: 12.5px;
+    font-size: 14px;
     color: #00E5A0;
     white-space: nowrap;
-    padding-right: 24px;
+    padding-right: 32px;
     width: 1%;
 }
 .crake-cmd-table .cmd-desc {
     font-family: 'Outfit', sans-serif;
-    font-size: 13.5px;
+    font-size: 15px;
     color: #3A7080;
+    padding-left: 28px;
+    border-left: 1px solid #112030;
 }
 .crake-step-card {
     background: #070D15;
     border: 1px solid #112030;
-    border-radius: 16px;
-    padding: 24px 20px;
+    border-radius: 14px;
+    padding: 20px 16px;
     height: 100%;
     transition: border-color 0.25s, box-shadow 0.25s, transform 0.2s;
     position: relative;
@@ -334,7 +423,7 @@ html, body, [class*="css"], .stApp {
 .crake-section-label {
     font-size: 10px;
     font-weight: 700;
-    color: #1A3040;
+    color: #3A7080;
     text-transform: uppercase;
     letter-spacing: 0.12em;
     margin-bottom: 14px;
@@ -371,7 +460,7 @@ html, body, [class*="css"], .stApp {
 .crake-intro-footer {
     text-align: center;
     font-size: 12.5px;
-    color: #1A3040;
+    color: #3A7080;
     margin-top: 36px;
     padding-bottom: 8px;
     font-family: 'Outfit', sans-serif;
@@ -385,23 +474,23 @@ html, body, [class*="css"], .stApp {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    margin: 14px 0;
+    margin: 10px 0;
     animation: msgIn 0.2s ease-out;
 }
 .crake-msg-ai-row {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    margin: 14px 0;
+    margin: 10px 0;
     animation: msgIn 0.2s ease-out;
 }
 .crake-role-user {
     font-size: 9px;
     font-weight: 700;
-    color: #1A3040;
+    color: #3A7080;
     text-transform: uppercase;
     letter-spacing: 0.12em;
-    margin-bottom: 5px;
+    margin-bottom: 4px;
     padding-right: 4px;
     font-family: 'Fira Code', monospace;
 }
@@ -411,7 +500,7 @@ html, body, [class*="css"], .stApp {
     color: rgba(0,229,160,0.6);
     text-transform: uppercase;
     letter-spacing: 0.12em;
-    margin-bottom: 5px;
+    margin-bottom: 4px;
     padding-left: 4px;
     font-family: 'Fira Code', monospace;
 }
@@ -420,7 +509,7 @@ html, body, [class*="css"], .stApp {
     border: 1px solid rgba(0,152,255,0.16);
     color: #C8E8F0;
     border-radius: 18px 18px 4px 18px;
-    padding: 11px 16px;
+    padding: 10px 16px;
     max-width: 86%;
     font-size: 14.5px;
     line-height: 1.65;
@@ -432,7 +521,7 @@ html, body, [class*="css"], .stApp {
     border: 1px solid #112030;
     border-left: none;
     border-radius: 4px 18px 18px 18px;
-    padding: 12px 16px 12px 20px;
+    padding: 12px 16px 12px 16px;
     max-width: 92%;
     font-size: 14.5px;
     line-height: 1.68;
@@ -467,11 +556,11 @@ html, body, [class*="css"], .stApp {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 56px 24px 32px;
+    padding: 48px 24px 32px;
     text-align: center;
 }
 .crake-chat-empty-icon { font-size: 40px; margin-bottom: 14px; opacity: 0.25; }
-.crake-chat-empty-text { font-size: 14px; color: #1A3040; font-family: 'Outfit', sans-serif; }
+.crake-chat-empty-text { font-size: 14px; color: #3A7080; font-family: 'Outfit', sans-serif; }
 
 /* ── Command hints ── */
 .crake-cmd-wrap {
@@ -484,40 +573,68 @@ html, body, [class*="css"], .stApp {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.12em;
-    color: #1A3040;
+    color: #3A7080;
     margin-bottom: 8px;
     padding: 8px 0 4px;
     font-family: 'Fira Code', monospace;
 }
 
-/* ── Chat input ── */
-[data-testid="stChatInput"] {
+/* ── Hide old sticky chat input (replaced by embedded form) ── */
+[data-testid="stBottom"] { display: none !important; }
+
+/* ── Chat window card ── */
+.crake-chat-win-header {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #3A7080;
+    padding: 8px 4px 10px;
+    font-family: 'Fira Code', monospace;
+}
+
+/* ── Embedded text input (chat form) ── */
+[data-testid="stForm"] [data-testid="stTextInput"] input {
     background: #070D15 !important;
     border: 1px solid #1A3040 !important;
-    border-radius: 14px !important;
-    transition: border-color 0.15s, box-shadow 0.15s !important;
-}
-[data-testid="stChatInput"]:focus-within {
-    border-color: rgba(0,229,160,0.3) !important;
-    box-shadow: 0 0 0 3px rgba(0,229,160,0.06), 0 0 24px rgba(0,229,160,0.05) !important;
-}
-[data-testid="stChatInput"] textarea {
-    background: transparent !important;
+    border-radius: 12px !important;
     color: #C8E8F0 !important;
     font-size: 14px !important;
     caret-color: #00E5A0 !important;
     font-family: 'Outfit', sans-serif !important;
+    padding: 10px 16px !important;
+    transition: border-color 0.15s, box-shadow 0.15s !important;
 }
-[data-testid="stChatInput"] textarea::placeholder { color: #1A3040 !important; }
-[data-testid="stChatInput"] button {
+[data-testid="stForm"] [data-testid="stTextInput"] input:focus {
+    border-color: rgba(0,229,160,0.35) !important;
+    box-shadow: 0 0 0 3px rgba(0,229,160,0.06) !important;
+    outline: none !important;
+}
+[data-testid="stForm"] [data-testid="stTextInput"] input::placeholder {
+    color: #3A7080 !important;
+}
+
+/* ── Send button (the ↑ submit) ── */
+[data-testid="stForm"] [data-testid="stFormSubmitButton"] button {
     background: #00E5A0 !important;
-    border-radius: 9px !important;
     color: #03050A !important;
+    border: none !important;
+    border-radius: 10px !important;
     font-weight: 700 !important;
+    font-size: 16px !important;
+    height: 42px !important;
+    transition: background 0.15s, box-shadow 0.15s !important;
 }
-[data-testid="stChatInput"] button:hover {
+[data-testid="stForm"] [data-testid="stFormSubmitButton"] button:hover {
     background: #00CFAA !important;
     box-shadow: 0 0 16px rgba(0,229,160,0.4) !important;
+}
+
+/* ── Remove form border/padding ── */
+[data-testid="stForm"] {
+    border: none !important;
+    padding: 0 !important;
+    background: transparent !important;
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -540,7 +657,7 @@ html, body, [class*="css"], .stApp {
     color: #3A7080;
     font-size: 12.5px;
     font-weight: 500;
-    padding: 10px 16px;
+    padding: 8px 14px;
     border-radius: 0;
     border-bottom: 2px solid transparent;
     margin-bottom: -1px;
@@ -558,15 +675,15 @@ html, body, [class*="css"], .stApp {
 }
 .stTabs [data-baseweb="tab-panel"] {
     background: transparent;
-    padding: 14px 6px 8px;
+    padding: 16px 8px;
 }
 
 /* ── Metric cards ── */
 [data-testid="stMetric"] {
     background: #070D15;
     border: 1px solid #112030;
-    border-radius: 12px;
-    padding: 14px 18px;
+    border-radius: 10px;
+    padding: 12px 16px;
     transition: border-color 0.2s, box-shadow 0.2s;
 }
 [data-testid="stMetric"]:hover {
@@ -680,16 +797,16 @@ a[href*="ncbi.nlm.nih.gov"]:hover {
 .crake-header-stats {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     min-width: 180px;
     justify-content: flex-end;
 }
 .crake-stat {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 4px;
     font-size: 12px;
-    color: #1A3040;
+    color: #3A7080;
     font-variant-numeric: tabular-nums;
     transition: color .15s;
     font-family: 'Fira Code', monospace;
@@ -718,7 +835,7 @@ a[href*="ncbi.nlm.nih.gov"]:hover {
 }
 .crake-kbd-label {
     font-size: 11.5px;
-    color: #1A3040;
+    color: #3A7080;
     white-space: nowrap;
     font-family: 'Outfit', sans-serif;
 }
@@ -731,22 +848,22 @@ a[href*="ncbi.nlm.nih.gov"]:hover {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: .12em;
-    color: #1A3040;
-    padding: 0 16px 10px;
+    color: #3A7080;
+    padding: 0 0 10px;
     border-bottom: 1px solid #112030;
     margin-bottom: 12px;
     font-family: 'Fira Code', monospace;
 }
 .crake-sb-empty {
     font-size: 13px;
-    color: #1A3040;
-    padding: 12px 16px;
+    color: #3A7080;
+    padding: 4px;
     line-height: 1.6;
     font-family: 'Outfit', sans-serif;
 }
 .crake-sb-item {
-    padding: 10px 16px;
-    border-bottom: 1px solid #070D15;
+    padding: 8px 0;
+    border-bottom: 1px solid #112030;
     cursor: pointer;
     transition: background .15s;
 }
@@ -762,7 +879,7 @@ a[href*="ncbi.nlm.nih.gov"]:hover {
 }
 .crake-sb-item-meta {
     font-size: 11px;
-    color: #1A3040;
+    color: #3A7080;
     font-family: 'Fira Code', monospace;
 }
 </style>
@@ -849,9 +966,9 @@ _PALETTE_SCRIPT = """
 
     var html =
       '<div style="padding:8px 16px 7px;font-size:10px;font-weight:700;' +
-      'color:#1A3040;text-transform:uppercase;letter-spacing:.12em;' +
+      'color:#3A7080;text-transform:uppercase;letter-spacing:.12em;' +
       'border-bottom:1px solid #112030;position:sticky;top:0;background:#070D15;z-index:1;">' +
-      'Commands — <span style="color:#1A3040;font-weight:400;text-transform:none;letter-spacing:0;">' +
+      'Commands — <span style="color:#3A7080;font-weight:400;text-transform:none;letter-spacing:0;">' +
       '↑↓ navigate · Tab confirm · Esc close</span></div>';
 
     m.forEach(function(c, i){
@@ -1014,19 +1131,70 @@ _PALETTE_SCRIPT = """
   });
   obs.observe(doc.body, {childList:true, subtree:true});
 
-  /* ── dynamically fit scrollable containers to viewport ── */
+  /* ── fit the chat messages container to fill available column height ── */
   function fitContainers(){
-    var h = Math.floor(window.parent.innerHeight - 190);
-    if(h < 300) return;
-    doc.querySelectorAll('[data-testid="stVerticalBlockBorderWrapper"]').forEach(function(c){
-      c.style.height = h + 'px';
-    });
+    try {
+      var hBlocks = doc.querySelectorAll('[data-testid="stHorizontalBlock"]');
+      var chatCol = null;
+      for (var i = 0; i < hBlocks.length; i++) {
+        /* handle both "column" (older Streamlit) and "stColumn" (newer) */
+        var cols = hBlocks[i].querySelectorAll(
+          ':scope > [data-testid="column"], :scope > [data-testid="stColumn"]'
+        );
+        if (cols.length === 2) { chatCol = cols[0]; break; }
+      }
+      if (!chatCol) return;
+
+      var msgBox = chatCol.querySelector('[data-testid="stVerticalBlockBorderWrapper"]');
+      var formEl = chatCol.querySelector('[data-testid="stForm"]');
+      if (!msgBox || !formEl) return;
+
+      var msgTop = msgBox.getBoundingClientRect().top;
+      /* use the form element's own height — no wrapper traversal that can return null */
+      var formH  = formEl.getBoundingClientRect().height;
+      var viewH  = window.parent.innerHeight;
+      var newH   = Math.floor(viewH - msgTop - formH - 16);
+
+      if (newH > 200) {
+        msgBox.style.height    = newH + 'px';
+        msgBox.style.maxHeight = 'none';
+      }
+    } catch(e) { /* layout not ready — next timeout will retry */ }
   }
   fitContainers();
   window.parent.addEventListener('resize', fitContainers);
-  /* re-run after Streamlit finishes rendering */
-  setTimeout(fitContainers, 800);
-  setTimeout(fitContainers, 2000);
+  setTimeout(fitContainers, 400);
+  setTimeout(fitContainers, 1200);
+  setTimeout(fitContainers, 3000);
+
+  /* inject dark background into seqviz iframes — keep hover/tooltip styles untouched */
+  var SEQVIZ_CSS =
+    'body, #root { background: #070D15 !important; }' +
+    /* tooltip popup — make it readable on dark */
+    '[class*="tooltip"], [class*="Tooltip"], [class*="popup"], [class*="Popup"] {' +
+    '  background: #0D1825 !important; color: #C8E8F0 !important;' +
+    '  border: 1px solid rgba(0,229,160,0.25) !important;' +
+    '  border-radius: 6px !important; padding: 6px 10px !important;' +
+    '  font-size: 12px !important; z-index: 9999 !important; }';
+
+  function injectSeqvizDark(){
+    doc.querySelectorAll('iframe').forEach(function(frame){
+      try {
+        var fdoc = frame.contentDocument || frame.contentWindow.document;
+        if(!fdoc || fdoc.querySelector('#crake-seqviz-dark')) return;
+        var style = fdoc.createElement('style');
+        style.id = 'crake-seqviz-dark';
+        style.textContent = SEQVIZ_CSS;
+        (fdoc.head || fdoc.documentElement).appendChild(style);
+      } catch(e) {}
+    });
+  }
+
+  /* run after initial render and watch for new iframes */
+  setTimeout(injectSeqvizDark, 1200);
+  setTimeout(injectSeqvizDark, 3000);
+  var seqvizObs = new MutationObserver(function(){ injectSeqvizDark(); });
+  seqvizObs.observe(doc.body, {childList:true, subtree:true});
 })();
 </script>
 </body></html>

@@ -21,6 +21,57 @@ except ImportError:
 # Header
 # ---------------------------------------------------------------------------
 
+def _build_gene_pill_html(gene_name: str, gene_organism: str | None) -> str:
+    if _ACCESSION_RE.match(gene_name):
+        display = f"Accession {gene_name}"
+    else:
+        display = gene_name[:24] + ("…" if len(gene_name) > 24 else "")
+    org_label = f" — {gene_organism}" if gene_organism else ""
+    tip = f' title="{display}{org_label}"'
+    return (
+        f'<span class="crake-pill"{tip}>'
+        f'<span class="crake-pip pip-blue"></span>{display}</span>'
+    )
+
+
+def _build_validation_pill_html(validation_valid: bool) -> str:
+    if validation_valid:
+        return (
+            '<span class="crake-pill" title="All validation checks passed">'
+            '<span class="crake-pip pip-green"></span>Validated</span>'
+        )
+    return (
+        '<span class="crake-pill" title="Construct has validation warnings">'
+        '<span class="crake-pip pip-amber"></span>Has warnings</span>'
+    )
+
+
+def _build_activity_html(message_count: int, tool_call_count: int) -> str:
+    kbd_hint = (
+        '<span class="crake-kbd-hint" title="Type / to see all commands">'
+        '<kbd class="crake-kbd">/</kbd>'
+        '<span class="crake-kbd-label">commands</span>'
+        '</span>'
+    )
+    msgs = (
+        f'<span class="crake-stat" title="{message_count} conversation turns">'
+        f'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" '
+        f'stroke="currentColor" stroke-width="2" style="opacity:.45">'
+        f'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'
+        f'<span style="color:#3A7080;">{message_count}</span></span>'
+    ) if message_count > 0 else ""
+    tools = (
+        f'<span class="crake-stat" title="{tool_call_count} tool calls made this session">'
+        f'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" '
+        f'stroke="currentColor" stroke-width="2" style="opacity:.45">'
+        f'<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77'
+        f'a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91'
+        f'a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>'
+        f'<span style="color:#3A7080;">{tool_call_count}</span></span>'
+    ) if tool_call_count > 0 else ""
+    return kbd_hint + msgs + tools
+
+
 def render_header(
     gene_name: str | None = None,
     gene_organism: str | None = None,
@@ -31,58 +82,11 @@ def render_header(
     """Sticky top bar: wordmark + live status pills + session stats."""
     pills_html = ""
     if gene_name:
-        if _ACCESSION_RE.match(gene_name):
-            label = gene_name          # keep accession as-is, it IS the identifier
-            prefix = "Accession "
-            display = f"{prefix}{label}"
-        else:
-            display = gene_name[:24] + ("…" if len(gene_name) > 24 else "")
-        org_label = f" — {gene_organism}" if gene_organism else ""
-        tip = f' title="{display}{org_label}"'
-        pills_html += (
-            f'<span class="crake-pill"{tip}>'
-            f'<span class="crake-pip pip-blue"></span>{display}</span>'
-        )
-    if validation_valid is True:
-        pills_html += (
-            '<span class="crake-pill" title="All validation checks passed">'
-            '<span class="crake-pip pip-green"></span>Validated</span>'
-        )
-    elif validation_valid is False:
-        pills_html += (
-            '<span class="crake-pill" title="Construct has validation warnings">'
-            '<span class="crake-pip pip-amber"></span>Has warnings</span>'
-        )
+        pills_html += _build_gene_pill_html(gene_name, gene_organism)
+    if validation_valid is not None:
+        pills_html += _build_validation_pill_html(validation_valid)
 
-    # "/" shortcut badge — always visible
-    kbd_hint = (
-        '<span class="crake-kbd-hint" title="Type / to see all commands">'
-        '<kbd class="crake-kbd">/</kbd>'
-        '<span class="crake-kbd-label">commands</span>'
-        '</span>'
-    )
-
-    activity_html = ""
-    if message_count > 0:
-        activity_html += (
-            f'<span class="crake-stat" title="{message_count} conversation turns">'
-            f'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" '
-            f'stroke="currentColor" stroke-width="2" style="opacity:.45">'
-            f'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'
-            f'<span style="color:#3A7080;">{message_count}</span></span>'
-        )
-    if tool_call_count > 0:
-        activity_html += (
-            f'<span class="crake-stat" title="{tool_call_count} tool calls made this session">'
-            f'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" '
-            f'stroke="currentColor" stroke-width="2" style="opacity:.45">'
-            f'<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77'
-            f'a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91'
-            f'a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>'
-            f'<span style="color:#3A7080;">{tool_call_count}</span></span>'
-        )
-
-    stats_html = kbd_hint + activity_html
+    stats_html = _build_activity_html(message_count, tool_call_count)
 
     st.markdown(
         f'<div class="crake-header">'
@@ -231,18 +235,15 @@ def render_sidebar_history(conversations: list[dict]) -> str | None:
         except Exception:
             date_label = saved_at[:16]
 
-        col_name, col_btn = st.sidebar.columns([3, 1])
-        with col_name:
-            st.markdown(
-                f'<div class="crake-sb-item-name" title="{name}">{name}</div>'
-                f'<div class="crake-sb-item-meta">{date_label}</div>',
-                unsafe_allow_html=True,
-            )
-        with col_btn:
-            if st.button("Load", key=f"load_{convo['file']}", use_container_width=True):
-                to_load = str(convo["file"])
+        st.sidebar.markdown(
+            f'<div class="crake-sb-item-name" title="{name}">{name}</div>'
+            f'<div class="crake-sb-item-meta">{date_label}</div>',
+            unsafe_allow_html=True,
+        )
+        if st.sidebar.button("Load →", key=f"load_{convo['file']}", use_container_width=True):
+            to_load = str(convo["file"])
 
-        st.sidebar.markdown('<div style="height:1px;background:#112030;margin:2px 0;"></div>', unsafe_allow_html=True)
+        st.sidebar.markdown('<div style="height:1px;background:#112030;margin:8px 0;"></div>', unsafe_allow_html=True)
 
     return to_load
 
@@ -328,6 +329,39 @@ def _extract_tool_badges(content) -> list[str]:
 # Data panel (tabs wrapper)
 # ---------------------------------------------------------------------------
 
+def _render_top_viewer(seqviz_data: dict | None, export_paths: dict) -> None:
+    """Render the interactive seqviz component or SVG fallback at the top of the data panel."""
+    has_seqviz = bool(seqviz_data and seqviz_data.get("seq") and _SEQVIZ_AVAILABLE)
+    has_svg = bool(export_paths.get("map") and Path(export_paths["map"]).exists())
+
+    if has_seqviz:
+        _seqviz_component(
+            name=seqviz_data["name"],
+            seq=seqviz_data["seq"],
+            annotations=seqviz_data["annotations"],
+            style={"height": "280px", "background": "#070D15", "borderRadius": "10px", "padding": "4px"},
+            highlights=[],
+            enzymes=["EcoRI", "PstI", "BamHI", "HindIII", "NcoI", "NotI", "XhoI"],
+        )
+        st.markdown(
+            '<div style="margin-bottom:2px;font-size:11px;color:#3A7080;text-align:right;'
+            'padding-right:4px;">Hover over features · scroll to zoom · click to select</div>',
+            unsafe_allow_html=True,
+        )
+    elif has_svg:
+        svg_data = Path(export_paths["map"]).read_text()
+        b64 = base64.b64encode(svg_data.encode()).decode()
+        st.markdown(
+            f'<div style="text-align:center;padding:8px 0;">'
+            f'<img src="data:image/svg+xml;base64,{b64}" '
+            f'style="max-width:100%;border-radius:10px;background:#070D15;padding:8px;">'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+    else:
+        _empty_state("Load a sequence to see the interactive map here.", "🗺️")
+
+
 def render_data_panel(
     sequence_result: dict,
     optimization_result: dict | None,
@@ -337,43 +371,9 @@ def render_data_panel(
     export_paths: dict,
 ) -> None:
     """Render the right-hand data panel: seqviz viewer at top, then tabs."""
-    # ── Top: interactive seqviz viewer (always visible when data available) ──
-    has_seqviz = bool(seqviz_data and seqviz_data.get("seq") and _SEQVIZ_AVAILABLE)
-    has_svg = bool(export_paths.get("map") and Path(export_paths["map"]).exists())
+    _render_top_viewer(seqviz_data, export_paths)
+    st.markdown('<div style="margin-top:4px"></div>', unsafe_allow_html=True)
 
-    if has_seqviz:
-        _seqviz_component(
-            name=seqviz_data["name"],
-            seq=seqviz_data["seq"],
-            annotations=seqviz_data["annotations"],
-            style={"height": "420px"},
-            highlights=[],
-            enzymes=["EcoRI", "PstI", "BamHI", "HindIII", "NcoI", "NotI", "XhoI"],
-        )
-        st.markdown(
-            '<div style="margin-bottom:2px;font-size:10px;color:#1A3040;text-align:right;'
-            'padding-right:4px;">Hover over features for details · scroll to zoom</div>',
-            unsafe_allow_html=True,
-        )
-    elif has_svg:
-        svg_data = Path(export_paths["map"]).read_text()
-        b64 = base64.b64encode(svg_data.encode()).decode()
-        st.markdown(
-            f'<div style="text-align:center;padding:8px 0;">'
-            f'<img src="data:image/svg+xml;base64,{b64}" '
-            f'style="max-width:100%;border-radius:10px;background:#070D15;padding:16px;">'
-            f'</div>',
-            unsafe_allow_html=True,
-        )
-    else:
-        _empty_state(
-            "Load a sequence to see the interactive map here.",
-            "🗺️",
-        )
-
-    st.markdown('<div style="margin-top:12px"></div>', unsafe_allow_html=True)
-
-    # ── Bottom: compact tabs for the rest of the data ──
     tab_seq, tab_primers, tab_val, tab_dl = st.tabs(
         ["Sequence", "Primers", "Validation", "Downloads"]
     )
@@ -386,6 +386,52 @@ def render_data_panel(
 # ---------------------------------------------------------------------------
 # Sequence tab
 # ---------------------------------------------------------------------------
+
+def _render_optimization_metrics(optimization_result: dict) -> None:
+    """Render the codon-optimisation before/after metrics row."""
+    gc_before = optimization_result["gc_before"]
+    gc_after = optimization_result["gc_after"]
+    delta = round(gc_after - gc_before, 1)
+    st.markdown('<div style="margin-top:12px"></div>', unsafe_allow_html=True)
+    o1, o2, o3 = st.columns(3)
+    o1.metric("GC Before Optim.", f"{gc_before:.1f}%",
+              help="GC content before codon optimisation")
+    o2.metric("GC After Optim.", f"{gc_after:.1f}%", delta=f"{delta:+.1f}%",
+              help="GC content after optimisation — closer to 50% is generally better")
+    o3.metric("Optimised Host",
+              optimization_result.get("host", "—").replace("_", " ").title(),
+              help="Host organism whose codon table was used for optimisation")
+
+
+def _render_gene_info(sequence_result: dict) -> None:
+    """Render the name + organism row."""
+    st.markdown(
+        '<div style="margin:16px 0 8px;">'
+        '<span style="font-size:11px;font-weight:700;text-transform:uppercase;'
+        'letter-spacing:0.1em;color:#3A7080;">Gene info</span>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+    organism = sequence_result.get("organism", "—")
+    organism_url = "https://www.ncbi.nlm.nih.gov/taxonomy?term=" + organism.replace(" ", "+")
+    i1, i2 = st.columns(2)
+    i1.markdown(
+        f'<span style="font-size:11.5px;color:#3A7080;text-transform:uppercase;'
+        f'letter-spacing:.06em;font-weight:600;">Name</span><br>'
+        f'<span style="font-size:15px;color:#C8E8F0;font-weight:500;">'
+        f'{sequence_result.get("gene_name", "—")}</span>',
+        unsafe_allow_html=True,
+    )
+    i2.markdown(
+        f'<span style="font-size:11.5px;color:#3A7080;text-transform:uppercase;'
+        f'letter-spacing:.06em;font-weight:600;">Organism</span><br>'
+        f'<a href="{organism_url}" target="_blank" rel="noopener" '
+        f'style="font-size:15px;color:#C8E8F0;font-style:italic;text-decoration:none;'
+        f'border-bottom:1px dashed #3A7080;transition:color .15s;" '
+        f'title="View on NCBI Taxonomy">{organism}</a>',
+        unsafe_allow_html=True,
+    )
+
 
 def render_sequence(
     sequence_result: dict,
@@ -410,55 +456,16 @@ def render_sequence(
                   help="Suggested cloning/expression host inferred from the source organism")
 
         if optimization_result and "gc_before" in optimization_result:
-            gc_before = optimization_result["gc_before"]
-            gc_after  = optimization_result["gc_after"]
-            delta = round(gc_after - gc_before, 1)
-            st.markdown('<div style="margin-top:8px"></div>', unsafe_allow_html=True)
-            o1, o2, o3 = st.columns(3)
-            o1.metric("GC Before Optim.", f"{gc_before:.1f}%",
-                      help="GC content before codon optimisation")
-            o2.metric("GC After Optim.",  f"{gc_after:.1f}%",  delta=f"{delta:+.1f}%",
-                      help="GC content after optimisation — closer to 50% is generally better")
-            o3.metric("Optimised Host",
-                      optimization_result.get("host", "—").replace("_", " ").title(),
-                      help="Host organism whose codon table was used for optimisation")
+            _render_optimization_metrics(optimization_result)
 
-        st.markdown(
-            '<div style="margin:18px 0 4px;">'
-            '<span style="font-size:11px;font-weight:700;text-transform:uppercase;'
-            'letter-spacing:0.1em;color:#3A7080;">Gene info</span>'
-            '</div>',
-            unsafe_allow_html=True,
-        )
-        organism = sequence_result.get("organism", "—")
-        organism_url = (
-            "https://www.ncbi.nlm.nih.gov/taxonomy?term="
-            + organism.replace(" ", "+")
-        )
-        i1, i2 = st.columns(2)
-        i1.markdown(
-            f'<span style="font-size:11.5px;color:#3A7080;text-transform:uppercase;'
-            f'letter-spacing:.06em;font-weight:600;">Name</span><br>'
-            f'<span style="font-size:15px;color:#C8E8F0;font-weight:500;">'
-            f'{sequence_result.get("gene_name", "—")}</span>',
-            unsafe_allow_html=True,
-        )
-        i2.markdown(
-            f'<span style="font-size:11.5px;color:#3A7080;text-transform:uppercase;'
-            f'letter-spacing:.06em;font-weight:600;">Organism</span><br>'
-            f'<a href="{organism_url}" target="_blank" rel="noopener" '
-            f'style="font-size:15px;color:#C8E8F0;font-style:italic;text-decoration:none;'
-            f'border-bottom:1px dashed #1A3040;transition:color .15s;" '
-            f'title="View on NCBI Taxonomy">{organism}</a>',
-            unsafe_allow_html=True,
-        )
+        _render_gene_info(sequence_result)
 
         if seq:
             seq_type = sequence_result.get("sequence_type", "")
             type_label = f" · {seq_type}" if seq_type else ""
             st.markdown(
-                f'<div style="margin-top:18px;font-size:11px;font-weight:700;text-transform:uppercase;'
-                f'letter-spacing:0.1em;color:#3A7080;margin-bottom:6px;">Sequence preview '
+                f'<div style="margin-top:16px;font-size:11px;font-weight:700;text-transform:uppercase;'
+                f'letter-spacing:0.1em;color:#3A7080;margin-bottom:8px;">Sequence preview '
                 f'<span style="font-weight:400;text-transform:none;letter-spacing:0;">'
                 f'(first 600 bp{type_label})</span></div>',
                 unsafe_allow_html=True,
@@ -494,7 +501,12 @@ def render_plasmid_map(
                 name=seqviz_data["name"],
                 seq=seqviz_data["seq"],
                 annotations=seqviz_data["annotations"],
-                style={"height": "480px"},
+                style={
+                    "height": "500px",
+                    "background": "#ffffff",
+                    "borderRadius": "10px",
+                    "padding": "8px",
+                },
                 highlights=[],
                 enzymes=["EcoRI", "PstI", "BamHI", "HindIII", "NcoI", "NotI", "XhoI"],
             )
@@ -502,7 +514,7 @@ def render_plasmid_map(
         if has_svg:
             if has_seqviz:
                 st.markdown(
-                    '<div style="margin-top:20px;font-size:11px;font-weight:700;'
+                    '<div style="margin-top:16px;font-size:11px;font-weight:700;'
                     'text-transform:uppercase;letter-spacing:.1em;color:#3A7080;">'
                     'Annotated map (static)</div>',
                     unsafe_allow_html=True,
@@ -513,7 +525,7 @@ def render_plasmid_map(
                 f'<div style="text-align:center;padding:12px 0;">'
                 f'<img src="data:image/svg+xml;base64,{b64}" '
                 f'style="max-width:660px;width:100%;border-radius:10px;'
-                f'background:#070D15;padding:16px;">'
+                f'background:#070D15;padding:8px;">'
                 f'</div>',
                 unsafe_allow_html=True,
             )
@@ -584,7 +596,7 @@ def render_validation(validation_result: dict, tab) -> None:
         if flagged:
             st.markdown(
                 '<div style="margin-top:16px;font-size:11px;font-weight:700;text-transform:uppercase;'
-                'letter-spacing:.1em;color:#3A7080;margin-bottom:6px;">GC by Window</div>',
+                'letter-spacing:.1em;color:#3A7080;margin-bottom:8px;">GC by Window</div>',
                 unsafe_allow_html=True,
             )
             df_gc = pd.DataFrame(flagged)[["start", "gc_percent"]].rename(
@@ -596,7 +608,7 @@ def render_validation(validation_result: dict, tab) -> None:
         if sites:
             st.markdown(
                 '<div style="margin-top:16px;font-size:11px;font-weight:700;text-transform:uppercase;'
-                'letter-spacing:.1em;color:#3A7080;margin-bottom:6px;">Restriction Sites</div>',
+                'letter-spacing:.1em;color:#3A7080;margin-bottom:8px;">Restriction Sites</div>',
                 unsafe_allow_html=True,
             )
             st.dataframe(
@@ -642,9 +654,9 @@ def render_downloads(export_paths: dict, tab) -> None:
 
 def _empty_state(message: str, icon: str = "·") -> None:
     st.markdown(
-        f'<div style="padding:40px 16px;text-align:center;">'
+        f'<div style="padding:40px 24px;text-align:center;">'
         f'<div style="font-size:32px;margin-bottom:10px;opacity:.3;">{icon}</div>'
-        f'<p style="color:#1A3040;font-size:13.5px;margin:0;">{message}</p>'
+        f'<p style="color:#3A7080;font-size:13.5px;margin:0;">{message}</p>'
         f'</div>',
         unsafe_allow_html=True,
     )

@@ -88,7 +88,11 @@ def restriction_map(sequence: str) -> list[dict]:
     return sorted(sites, key=lambda x: x["enzyme"])
 
 
-def validate_plasmid(sequence: str, name: str = "construct") -> dict:
+def validate_plasmid(
+    sequence: str,
+    name: str = "construct",
+    topology: str = "circular",
+) -> dict:
     """Run all validation checks on a plasmid sequence."""
     orfs = find_orfs(sequence)
     gc = gc_windows(sequence)
@@ -107,7 +111,7 @@ def validate_plasmid(sequence: str, name: str = "construct") -> dict:
     return {
         "name": name,
         "length_bp": len(sequence),
-        "topology": "circular",
+        "topology": topology,
         "gc_analysis": gc,
         "orfs": orfs[:10],  # top 10 by length
         "restriction_sites": rsites,

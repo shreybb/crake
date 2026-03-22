@@ -54,6 +54,70 @@ class TestKnowledge:
         assert "NPTII" in names
         assert "BAR" in names
 
+    # --- Yeast knowledge base ---
+
+    def test_suggest_backbone_yeast_returns_results(self):
+        results = suggest_backbone("yeast")
+        assert len(results) >= 1
+
+    def test_suggest_backbone_yeast_includes_prs316(self):
+        results = suggest_backbone("yeast")
+        names = [r["name"] for r in results]
+        assert "pRS316" in names
+
+    def test_suggest_backbone_yeast_includes_integrating_vector(self):
+        results = suggest_backbone("yeast")
+        names = [r["name"] for r in results]
+        assert "pRS306" in names, "pRS306 integrating vector must be present"
+
+    def test_suggest_promoter_yeast_includes_gal1(self):
+        results = suggest_promoter("yeast")
+        names = [r["name"] for r in results]
+        assert "GAL1" in names
+
+    def test_suggest_promoter_yeast_includes_constitutive(self):
+        results = suggest_promoter("yeast")
+        names = [r["name"] for r in results]
+        # Must have at least one strong constitutive promoter
+        assert "TEF1" in names or "TDH3" in names
+
+    def test_suggest_terminator_yeast_includes_cyc1tt(self):
+        results = suggest_terminator("yeast")
+        names = [r["name"] for r in results]
+        assert "CYC1tt" in names
+
+    def test_suggest_selectable_marker_yeast_includes_auxotrophic(self):
+        results = suggest_selectable_marker("yeast")
+        names = [r["name"] for r in results]
+        assert "URA3" in names
+
+    def test_suggest_selectable_marker_yeast_includes_dominant(self):
+        results = suggest_selectable_marker("yeast")
+        names = [r["name"] for r in results]
+        assert "kanMX" in names, "Dominant marker kanMX required for prototrophic strains"
+
+    def test_yeast_ura3_has_counterselection_info(self):
+        results = suggest_selectable_marker("yeast")
+        ura3 = next(r for r in results if r["name"] == "URA3")
+        assert "5-FOA" in ura3.get("counterselection", "") or "5-FOA" in ura3.get("notes", "")
+
+    # --- plant_plastid stub ---
+
+    def test_plant_plastid_backbone_returns_unsupported_note(self):
+        results = suggest_backbone("plant_plastid")
+        assert len(results) == 1
+        assert results[0].get("supported") is False
+
+    def test_plant_plastid_marker_returns_unsupported_note(self):
+        results = suggest_selectable_marker("plant_plastid")
+        assert len(results) == 1
+        assert results[0].get("supported") is False
+
+    def test_plant_plastid_note_mentions_aada(self):
+        results = suggest_backbone("plant_plastid")
+        note = results[0].get("note", "")
+        assert "aadA" in note, "aadA is the canonical plastid marker and must be mentioned"
+
 
 class TestAnnotation:
     def test_restriction_sites_returns_list(self):

@@ -117,21 +117,24 @@ class TestFindCrisprPamSites:
     def test_finds_known_ngg_site(self):
         sites = find_crispr_pam_sites(self.CRISPR_SEQ + "N" * 10)
         assert len(sites) >= 1
-        guides = [s["guide_rna"] for s in sites]
-        assert "GCGCATCGATCGGCATCGAT" in guides
+        # protospacer is DNA; guide_rna is the RNA equivalent (T→U)
+        protospacers = [s["protospacer"] for s in sites]
+        assert "GCGCATCGATCGGCATCGAT" in protospacers
+        rnas = [s["guide_rna"] for s in sites]
+        assert "GCGCAUCGAUCGGCAUCGAU" in rnas
 
     def test_filters_low_gc_guide(self):
         # All AT guide — 0% GC, should be filtered
         low_gc = "ATATATATATATATATATAT" + "AGG"
         sites = find_crispr_pam_sites(low_gc)
-        bad = [s for s in sites if s["guide_rna"] == "ATATATATATATATATATAT"]
+        bad = [s for s in sites if s["protospacer"] == "ATATATATATATATATATAT"]
         assert bad == []
 
     def test_filters_homopolymer_guide(self):
         # Guide with AAAAA run
         poly = "GCGCAAAAAGCGCATCGATCGAGG"
         sites = find_crispr_pam_sites(poly)
-        bad = [s for s in sites if "AAAAA" in s["guide_rna"]]
+        bad = [s for s in sites if "AAAAA" in s["protospacer"]]
         assert bad == []
 
     def test_pam_field_present(self):

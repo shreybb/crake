@@ -159,10 +159,12 @@ def find_crispr_pam_sites(
                 # Map reverse-complement position back to forward strand
                 pos = len(seq_upper) - pos - len(full_site)
 
+            guide_rna = guide.replace("T", "U")
             sites.append({
                 "strand": strand,
                 "position": pos,
-                "guide_rna": guide,
+                "protospacer": guide,        # DNA sequence (order as oligo)
+                "guide_rna": guide_rna,      # RNA sequence (T→U; for sgRNA synthesis)
                 "pam": full_site[20:],
                 "gc_percent": gc,
                 "left_arm": seq_upper[max(0, pos - arm_length): pos],
