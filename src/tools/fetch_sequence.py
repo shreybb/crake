@@ -25,7 +25,7 @@ import urllib.request
 from Bio import Entrez, SeqIO
 from Bio.SeqRecord import SeqRecord
 
-Entrez.email = os.environ.get("NCBI_EMAIL", "crake@localhost")
+_INVALID_NCBI_EMAILS = frozenset({"", "crake@localhost", "you@example.com"})
 
 _NCBI_API_KEY = os.environ.get("NCBI_API_KEY")
 if _NCBI_API_KEY:
@@ -33,6 +33,26 @@ if _NCBI_API_KEY:
 
 # 3 req/s without API key; 10 req/s with one
 _NCBI_DELAY = 0.1 if _NCBI_API_KEY else 0.34
+
+_NCBI_EMAIL_HELP = (
+    "NCBI_EMAIL is required for NCBI gene search and accession fetch. "
+    "Copy .env.example to .env and set NCBI_EMAIL to a valid contact address "
+    "(see https://www.ncbi.nlm.nih.gov/home/about/policies/)."
+)
+
+
+def ncbi_email_error() -> str | None:
+    """Return an error message if NCBI_EMAIL is missing or a placeholder."""
+    email = os.environ.get("NCBI_EMAIL", "").strip()
+    if email.lower() in _INVALID_NCBI_EMAILS or "@" not in email:
+        return _NCBI_EMAIL_HELP
+    return None
+
+
+def _apply_ncbi_email() -> None:
+    """Configure Entrez.email from NCBI_EMAIL (call after :func:`ncbi_email_error` is clear)."""
+    Entrez.email = os.environ.get("NCBI_EMAIL", "").strip()
+
 
 _PLANT_KEYWORDS = {
     "arabidopsis", "thaliana", "tobacco", "nicotiana", "rice", "oryza",
@@ -90,6 +110,9 @@ def fetch_by_accession(
     Returns:
         JSON-serialisable dict with ``sequence``, ``suggested_host`` and metadata.
     """
+    if err := ncbi_email_error():
+        return {"error": err, "accession": accession}
+    _apply_ncbi_email()
     try:
         fmt = "gb" if db == "nucleotide" else "fasta"
         handle = Entrez.efetch(db=db, id=accession, rettype=fmt, retmode="text")
@@ -130,6 +153,9 @@ def search_gene(gene_name: str, organism: str, full_sequence: bool = False) -> d
 
     Returns the top hit fetched via :func:`fetch_by_accession`.
     """
+    if err := ncbi_email_error():
+        return {"error": err, "gene": gene_name, "organism": organism}
+    _apply_ncbi_email()
     precise = (
         f'"{gene_name}"[Gene Name] AND "{organism}"[Organism] AND CDS[Feature Key]'
     )
@@ -229,6 +255,12 @@ def main() -> None:
         ),
     )
     args = parser.parse_args()
+
+    if args.gene or (args.accession and args.db != "uniprot"):
+        if err := ncbi_email_error():
+            print(json.dumps({"error": err}))
+            sys.exit(1)
+        _apply_ncbi_email()
 
     if args.gene:
         if not args.organism:

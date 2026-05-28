@@ -8,9 +8,16 @@ from src.tools.fetch_sequence import (
     fetch_by_accession,
     fetch_from_uniprot,
     infer_host,
+    ncbi_email_error,
     search_gene,
     _extract_cds,
 )
+
+
+@pytest.fixture(autouse=True)
+def _valid_ncbi_email(monkeypatch):
+    """Most fetch tests mock Entrez but still pass the email gate."""
+    monkeypatch.setenv("NCBI_EMAIL", "crake-test@example.com")
 
 
 # ---------------------------------------------------------------------------
@@ -232,6 +239,34 @@ UNIPROT_FASTA = (
     "MVSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEGDATYGKLTLKFICTTGKLPVPWPT\n"
     "LVTTLTYGVQCFSRYPDHMKQHDFFKSAMPEGYVQERTIFFKDDGNYKTRAEVKFEGDTLV\n"
 )
+
+
+# ---------------------------------------------------------------------------
+# NCBI email validation
+# ---------------------------------------------------------------------------
+
+class TestNcbiEmail:
+    def test_missing_email_returns_error(self, monkeypatch):
+        monkeypatch.delenv("NCBI_EMAIL", raising=False)
+        assert ncbi_email_error() is not None
+        result = fetch_by_accession("U55762")
+        assert "NCBI_EMAIL" in result["error"]
+        assert result["accession"] == "U55762"
+
+    def test_placeholder_email_rejected(self, monkeypatch):
+        monkeypatch.setenv("NCBI_EMAIL", "you@example.com")
+        result = search_gene("GFP", "Aequorea victoria")
+        assert "NCBI_EMAIL" in result["error"]
+
+    def test_uniprot_does_not_require_ncbi_email(self, monkeypatch):
+        monkeypatch.delenv("NCBI_EMAIL", raising=False)
+        mock_resp = MagicMock()
+        mock_resp.__enter__ = lambda self: self
+        mock_resp.__exit__ = MagicMock(return_value=False)
+        mock_resp.read.return_value = UNIPROT_FASTA.encode("utf-8")
+        with patch("src.tools.fetch_sequence.urllib.request.urlopen", return_value=mock_resp):
+            result = fetch_from_uniprot("P42212")
+        assert "error" not in result
 
 
 class TestFetchFromUniprot:
