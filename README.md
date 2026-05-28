@@ -1,5 +1,6 @@
 # Crake
 
+[![Tests](https://github.com/shreybb/crake/actions/workflows/test.yml/badge.svg)](https://github.com/shreybb/crake/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 **Deterministic plasmid design workbench** — fetch genes, codon-optimise for a host, suggest curated vector parts, validate constructs, and export lab-ready files (GenBank, FASTA, primer CSV, SVG map, protocol).
