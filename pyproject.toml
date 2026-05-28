@@ -1,9 +1,23 @@
 [project]
 name = "crake"
 version = "0.1.0"
-description = "Plasmid design workbench with curated parts and lab-ready export"
+description = "Deterministic plasmid design workbench with curated parts and lab-ready export"
 readme = "README.md"
+license = "MIT"
 requires-python = ">=3.11"
+authors = [
+    { name = "Shrey Bhandare", email = "103163688+shreybb@users.noreply.github.com" },
+]
+keywords = ["bioinformatics", "plasmid", "synthetic-biology", "streamlit", "cloning"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
 dependencies = [
     "biopython>=1.86",
     "dna-features-viewer>=3.1.2",
@@ -15,6 +29,11 @@ dependencies = [
     "streamlit>=1.55.0",
     "streamlit-seqviz>=0.0.5",
 ]
+
+[project.urls]
+Homepage = "https://github.com/shreybb/crake"
+Repository = "https://github.com/shreybb/crake"
+Issues = "https://github.com/shreybb/crake/issues"
 
 [project.optional-dependencies]
 dev = ["pytest>=9.0.2"]

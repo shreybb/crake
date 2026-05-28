@@ -1,5 +1,7 @@
 # Crake
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 **Deterministic plasmid design workbench** — fetch genes, codon-optimise for a host, suggest curated vector parts, validate constructs, and export lab-ready files (GenBank, FASTA, primer CSV, SVG map, protocol).
 
 Runs as a **Streamlit app with slash commands** (e.g. `/genesearch`, `/optimize`, `/export`). There is no in-app chat model and **no API keys** are required for core workflows. NCBI gene fetch needs a contact email (see [Configuration](#configuration)).
