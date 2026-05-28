@@ -1,4 +1,4 @@
-"""Tool dispatch: maps Claude tool names to Python function calls.
+"""Tool dispatch: routes tool names to Python implementations.
 
 The `dispatch` function is the single entry point.  It:
 1. Calls the appropriate tool function with validated arguments.
@@ -52,7 +52,7 @@ def dispatch(tool_name: str, tool_input: dict, session: dict) -> dict:
 
     Args:
         tool_name: One of the names defined in tool_definitions.TOOL_DEFINITIONS.
-        tool_input: The ``input`` field from the Claude tool_use block.
+        tool_input: Parameter dict for the tool (from slash commands or direct calls).
         session: Mutable session dict (e.g. st.session_state).  Side effects:
             ``last_sequence``, ``last_assembly``, ``last_validation``,
             ``last_primers``, and ``export_paths`` are written here.

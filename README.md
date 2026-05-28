@@ -1,6 +1,8 @@
 # Crake
 
-**Plasmid design workbench** — fetch genes, codon-optimise for a host, suggest curated vector parts, validate constructs, and export lab-ready files (GenBank, FASTA, primer CSV, SVG map, protocol). **No LLM or API keys required.**
+**Deterministic plasmid design workbench** — fetch genes, codon-optimise for a host, suggest curated vector parts, validate constructs, and export lab-ready files (GenBank, FASTA, primer CSV, SVG map, protocol).
+
+Runs as a **Streamlit app with slash commands** (e.g. `/genesearch`, `/optimize`, `/export`). There is no in-app chat model and **no API keys** are required for core workflows. NCBI gene fetch needs a contact email (see [Configuration](#configuration)).
 
 ---
 
@@ -14,10 +16,17 @@
 ## Installation
 
 ```bash
-git clone https://github.com/your-org/crake.git
+git clone https://github.com/shreybb/crake.git
 cd crake
 uv sync
+cp .env.example .env   # set NCBI_EMAIL for gene search / fetch
 ```
+
+---
+
+## Configuration
+
+Copy `.env.example` to `.env` and set `NCBI_EMAIL` to a valid address. NCBI [requires](https://www.ncbi.nlm.nih.gov/home/about/policies/) this for Entrez access. Optionally set `NCBI_API_KEY` for higher rate limits.
 
 ---
 
@@ -69,15 +78,13 @@ All commands run **deterministic Python tools** (NCBI, DnaChisel, Primer3, etc.)
 ```
 crake/
 ├── app.py                      # Streamlit UI
+├── main.py                     # CLI usage examples for tools
 ├── src/
-│   ├── agent/
-│   │   ├── command_runner.py   # Slash command → tool dispatch
-│   │   ├── commands.py         # Command definitions
-│   │   ├── tool_dispatch.py    # Tool router + session state
-│   │   └── tool_definitions.py # Input schemas (tests/docs)
+│   ├── agent/                  # Slash commands → tool dispatch
 │   ├── tools/                  # Bioinformatics implementations
 │   ├── knowledge/              # Curated parts JSON
 │   └── ui/
+├── docs/audits/                # Historical review notes (optional reading)
 └── tests/
 ```
 

@@ -1,7 +1,8 @@
 """
-Crake — AI-assisted plasmid design.
+Crake — deterministic plasmid design workbench.
 
-Tool scripts Claude invokes via Bash:
+Standalone CLI entrypoints for each bioinformatics tool (also invoked by the
+Streamlit app via slash commands):
 
     # Fetch starting sequence
     python src/tools/fetch_sequence.py --gene GFP --organism "Aequorea victoria"

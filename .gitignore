@@ -17,3 +17,9 @@ screenshot-*.png
 firebase-debug.log
 crake_output/
 exports/
+
+# Secrets and machine-local config
+.env
+.env.local
+.env.*.local
+.mcp.json

@@ -309,8 +309,7 @@ class TestIntroduceGeneYeastNextSteps:
 # ---------------------------------------------------------------------------
 
 class TestToolDefinitionsEnums:
-    """The tool schemas are the contract between Claude and Python — they must
-    stay in sync with what the Python functions actually accept."""
+    """Tool schemas must stay in sync with what the Python handlers accept."""
 
     def _get_tool(self, name: str) -> dict:
         from src.agent.tool_definitions import TOOL_DEFINITIONS
