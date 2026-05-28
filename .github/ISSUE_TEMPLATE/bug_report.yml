@@ -1,0 +1,45 @@
+name: Bug report
+description: Report incorrect behavior or a crash
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Include the slash command or workflow you used, if applicable.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. uv run streamlit run app.py
+        2. /genesearch GFP in Aequorea victoria
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Crake version or commit
+      placeholder: e.g. 0.1.0 or git sha
+  - type: dropdown
+    id: python
+    attributes:
+      label: Python version
+      options:
+        - "3.11"
+        - "3.12"
+        - other
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error output or logs
+      render: shell

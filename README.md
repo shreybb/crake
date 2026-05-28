@@ -99,6 +99,7 @@ crake/
 - [CLI tools](docs/cli.md)
 - [Roadmap](docs/roadmap.md)
 - [Contributing](CONTRIBUTING.md)
+- [Security](SECURITY.md)
 - [Audits](docs/audits/) — historical biology review notes
 
 ---
