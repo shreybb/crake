@@ -86,9 +86,19 @@ crake/
 │   ├── tools/                  # Bioinformatics implementations
 │   ├── knowledge/              # Curated parts JSON
 │   └── ui/
-├── docs/audits/                # Historical review notes (optional reading)
+├── docs/                       # Architecture, CLI, roadmap
 └── tests/
 ```
+
+---
+
+## Documentation
+
+- [Architecture](docs/architecture.md)
+- [CLI tools](docs/cli.md)
+- [Roadmap](docs/roadmap.md)
+- [Contributing](CONTRIBUTING.md)
+- [Audits](docs/audits/) — historical biology review notes
 
 ---
 
