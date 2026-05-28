@@ -23,7 +23,10 @@ def find_orfs(sequence: str, min_length: int = 100) -> list[dict]:
     orfs = []
     for strand, nuc in [(1, seq), (-1, seq.reverse_complement())]:
         for frame in range(3):
-            trans = str(nuc[frame:].translate())
+            subseq = nuc[frame:]
+            remainder = len(subseq) % 3
+            subseq = subseq[:-remainder] if remainder else subseq
+            trans = str(subseq.translate())
             aa_start = 0
             while True:
                 m_pos = trans.find("M", aa_start)
@@ -72,10 +75,17 @@ def gc_windows(sequence: str, window: int = 100) -> dict:
     }
 
 
-def restriction_map(sequence: str) -> list[dict]:
-    """Common restriction enzyme sites."""
+def restriction_map(sequence: str, linear: bool = False) -> list[dict]:
+    """Common restriction enzyme sites.
+
+    Args:
+        sequence: DNA sequence to analyse.
+        linear: When True, treat the sequence as linear (e.g. a PCR product or
+            restriction-digested backbone).  When False (default), treat as
+            circular (standard plasmid).
+    """
     seq = Seq(sequence.upper())
-    analysis = Analysis(CommOnly, seq, linear=False)
+    analysis = Analysis(CommOnly, seq, linear=linear)
     results = analysis.full()
     sites = []
     for enzyme, positions in results.items():
@@ -96,7 +106,7 @@ def validate_plasmid(
     """Run all validation checks on a plasmid sequence."""
     orfs = find_orfs(sequence)
     gc = gc_windows(sequence)
-    rsites = restriction_map(sequence)
+    rsites = restriction_map(sequence, linear=(topology == "linear"))
 
     warnings = []
     if not orfs:
@@ -116,7 +126,7 @@ def validate_plasmid(
         "orfs": orfs[:10],  # top 10 by length
         "restriction_sites": rsites,
         "warnings": warnings,
-        "valid": len(warnings) == 0,
+        "passed_checks": len(warnings) == 0,
     }
 
 

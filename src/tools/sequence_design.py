@@ -49,6 +49,10 @@ def optimize_codons(sequence: str, host: str) -> dict:
     if len(sequence) % 3 != 0:
         return {"error": "Sequence length must be divisible by 3 (in-frame CDS required)"}
 
+    seq_upper = sequence.upper()
+    if not seq_upper.startswith("ATG"):
+        return {"error": "Sequence must start with ATG (Met start codon). Provide a complete CDS."}
+
     # Map host names to python_codon_tables species names
     host_map = {
         "e_coli": "Escherichia coli general",

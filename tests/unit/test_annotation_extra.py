@@ -9,7 +9,7 @@ from src.tools.annotation import annotate_from_genbank, find_restriction_sites
 
 
 GENBANK_CONTENT = """\
-LOCUS       pTest                     34 bp    DNA     circular SYN 01-JAN-2025
+LOCUS       pTest                     33 bp    DNA     circular SYN 01-JAN-2025
 DEFINITION  Test circular plasmid.
 ACCESSION   pTest
 VERSION     pTest.1
@@ -96,3 +96,39 @@ class TestFindRestrictionSitesExtra:
         # All returned sites must have at least one position
         for site in sites:
             assert len(site["positions"]) > 0
+
+
+class TestFindRestrictionSitesTopology:
+    """Verify the linear parameter is forwarded correctly to BioPython Analysis."""
+
+    def test_default_is_circular(self):
+        """linear=False (circular) should be the default."""
+        from unittest.mock import patch, MagicMock
+        mock_instance = MagicMock()
+        mock_instance.full.return_value = {}
+        with patch("src.tools.annotation.Analysis") as mock_cls:
+            mock_cls.return_value = mock_instance
+            find_restriction_sites("ATCGATCG")
+            _, kwargs = mock_cls.call_args
+            assert kwargs.get("linear") is False
+
+    def test_linear_true_forwarded(self):
+        """Explicit linear=True must reach BioPython Analysis."""
+        from unittest.mock import patch, MagicMock
+        mock_instance = MagicMock()
+        mock_instance.full.return_value = {}
+        with patch("src.tools.annotation.Analysis") as mock_cls:
+            mock_cls.return_value = mock_instance
+            find_restriction_sites("ATCGATCG", linear=True)
+            _, kwargs = mock_cls.call_args
+            assert kwargs.get("linear") is True
+
+    def test_circular_returns_list(self):
+        """linear=False should not raise and should return a list."""
+        sites = find_restriction_sites("ATCGATCGATCGATCG", linear=False)
+        assert isinstance(sites, list)
+
+    def test_linear_returns_list(self):
+        """linear=True should not raise and should return a list."""
+        sites = find_restriction_sites("ATCGATCGATCGATCG", linear=True)
+        assert isinstance(sites, list)

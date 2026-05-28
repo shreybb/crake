@@ -1,4 +1,4 @@
-"""Crake — AI-assisted plasmid design.
+"""Crake — plasmid design workbench (deterministic tools, no LLM required).
 
 Run with:
     uv run streamlit run app.py
@@ -8,18 +8,24 @@ from __future__ import annotations
 import datetime
 import json
 import os
+import re
 from pathlib import Path
 
 import streamlit as st
 
-from src.agent.commands import expand, help_markdown, parse_input
-from src.agent.loop import run_agent_turn
-from src.agent.tool_dispatch import _result_to_seqviz
+from src.agent.command_runner import (
+    execute_command,
+    format_result_message,
+    introduce_gene_input,
+)
+from src.agent.commands import help_markdown, parse_input, validate_command
+from src.agent.tool_dispatch import _result_to_seqviz, dispatch
 from src.ui.components import (
     render_chat_history,
     render_data_panel,
     render_header,
     render_intro,
+    render_sidebar_gene_launcher,
     render_sidebar_history,
 )
 from src.ui.styles import inject_css, inject_command_palette
@@ -110,39 +116,28 @@ def _restore_conversation(filepath: str) -> None:
         st.session_state.last_optimization = data["last_optimization"]
 
 
-# ── Tool status labels ───────────────────────────────────────────────────────
+# ── Supported hosts for pre-flight validation ──────────────────────────────
+_UNSUPPORTED_HOST_RE = re.compile(
+    r'\b(hansenula|aspergillus|trichoderma|bacillus\s+subtilis'
+    r'|lactobacillus|streptomyces|neurospora|candida\s+albicans|fusarium)\b',
+    re.IGNORECASE,
+)
 
-def _tool_status_label(name: str, inp: dict) -> str:
-    """Return a human-readable description of a tool call for the status widget."""
-    if name == "search_gene":
-        gene = inp.get("gene_name", "")
-        org = inp.get("organism", "")
-        return f"🔍 Searching NCBI for **{gene}**" + (f" in *{org}*" if org else "")
-    if name == "fetch_by_accession":
-        return f"📥 Fetching accession **{inp.get('accession', '')}** from {inp.get('db', 'nucleotide')}"
-    if name == "import_sequence":
-        p = inp.get("path", "")
-        return f"📂 Loading file **{Path(p).name if p else p}**"
-    if name == "suggest_parts":
-        return f"💡 Looking up parts for host **{inp.get('host', '')}**"
-    if name == "optimize_codons":
-        host = inp.get("host", "").replace("_", " ")
-        return f"🔄 Codon-optimising for **{host}** — this may take up to 60 s…"
-    if name == "find_target_sites":
-        method = inp.get("method", "")
-        return f"🎯 Scanning for **{method}** target sites"
-    if name == "design_primers":
-        return f"🧪 Designing PCR primers (Tm {inp.get('opt_tm', 60):.0f} °C)"
-    if name == "simulate_assembly":
-        method = inp.get("method", "")
-        frags = len(inp.get("fragments", []))
-        return f"⚙️ Simulating **{method}** assembly with {frags} fragment(s)"
-    if name == "validate_plasmid":
-        return f"✅ Validating construct **{inp.get('name', 'construct')}**"
-    if name == "export_files":
-        return f"📦 Exporting files for **{inp.get('name', 'construct')}**"
-    return f"🔧 Running **{name}**"
+_HOST_SUPPORT_MSG = (
+    "⚠️ **Unsupported host detected.** Crake currently supports:\n\n"
+    "- **E. coli** — bacterial expression\n"
+    "- **Yeast / S. cerevisiae** — fungal expression "
+    "(Pichia, Kluyveromyces, and other non-cerevisiae yeasts are treated using "
+    "S. cerevisiae protocols as a starting point)\n"
+    "- **Plant nuclear** — Agrobacterium-mediated T-DNA delivery\n\n"
+    "The pipeline will fall back to the closest supported host. "
+    "For best results, use one of the supported hosts above."
+)
 
+_NO_LLM_HINT = (
+    "Crake runs **slash commands** and the sidebar **Introduce a Gene** form — "
+    "there is no free-text chat model. Type `/help` for commands."
+)
 
 # ── Page config ────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -171,6 +166,11 @@ for _k, _v in _DEFAULTS.items():
         st.session_state[_k] = _v
 
 # ── Sidebar — always render so the collapse toggle is always visible ──────────
+intro_req = render_sidebar_gene_launcher()
+if intro_req:
+    st.session_state.pending_introduce_gene = intro_req
+    st.rerun()
+
 conversations = _load_saved_conversations()
 to_load = render_sidebar_history(conversations)
 if to_load:
@@ -183,7 +183,7 @@ val = st.session_state.last_validation
 render_header(
     gene_name=seq.get("gene_name"),
     gene_organism=seq.get("organism"),
-    validation_valid=val.get("valid") if val else None,
+    validation_valid=val.get("passed_checks") if val else None,
     message_count=len([m for m in st.session_state.messages if m.get("role") == "user"]),
     tool_call_count=len(st.session_state.tool_calls_log),
 )
@@ -201,7 +201,7 @@ if not messages:
         with _ic1:
             _typed_input = st.text_input(
                 "intro_msg",
-                placeholder="Ask Crake anything, or type /genesearch, /fetch, /load…",
+                placeholder="Type a slash command (/help, /genesearch, /fetch, /load…)",
                 label_visibility="collapsed",
             )
         with _ic2:
@@ -240,7 +240,7 @@ else:
         # Scrollable messages area
         chat_box = st.container(height=580, border=False)
         with chat_box:
-            render_chat_history(messages)
+            render_chat_history(messages, validation_result=st.session_state.last_validation)
 
         # Input form — contained inside the chat window
         with st.form("chat_input_form", clear_on_submit=True):
@@ -248,7 +248,7 @@ else:
             with _ic1:
                 _typed_input = st.text_input(
                     "chat_msg",
-                    placeholder="Ask Crake anything, or type /genesearch, /fetch, /load…",
+                    placeholder="Type a slash command (/help, /genesearch, /fetch, /load…)",
                     label_visibility="collapsed",
                 )
             with _ic2:
@@ -264,51 +264,63 @@ else:
             export_paths=st.session_state.export_paths,
         )
 
-user_input = _typed_input.strip() if (_submitted and _typed_input) else None
+_pending_intro = st.session_state.pop("pending_introduce_gene", None)
+user_input = _pending_intro or (_typed_input.strip() if (_submitted and _typed_input) else None)
 
-# ── Agent turn ───────────────────────────────────────────────────────────────
+# ── Command execution (no LLM) ───────────────────────────────────────────────
 if user_input:
-    cmd_name, args = parse_input(user_input)
+    if _UNSUPPORTED_HOST_RE.search(user_input):
+        st.session_state.messages.append({"role": "user", "content": user_input})
+        st.session_state.messages.append({"role": "assistant", "content": _HOST_SUPPORT_MSG})
+        st.rerun()
+
+    if isinstance(_pending_intro, dict):
+        display_input = (
+            f"/introduce-gene {_pending_intro['gene_name']} in "
+            f"{_pending_intro['source_organism']} into {_pending_intro['target_host']}"
+        )
+        cmd_name, args = "introduce-gene", ""
+        tool_input = introduce_gene_input(
+            _pending_intro["gene_name"],
+            _pending_intro["source_organism"],
+            _pending_intro["target_host"],
+            _pending_intro.get("expression_goal", ""),
+        )
+    else:
+        display_input = user_input
+        cmd_name, args = parse_input(user_input)
+
+    if cmd_name is None:
+        st.session_state.messages.append({"role": "user", "content": user_input})
+        st.session_state.messages.append({"role": "assistant", "content": _NO_LLM_HINT})
+        st.rerun()
 
     if cmd_name == "help":
         st.session_state.messages.append({"role": "user", "content": "/help"})
         st.session_state.messages.append({"role": "assistant", "content": help_markdown()})
         st.rerun()
 
-    else:
-        try:
-            agent_message = expand(cmd_name, args) if cmd_name else user_input
-        except ValueError as exc:
-            st.session_state.messages.append({"role": "user", "content": user_input})
-            st.session_state.messages.append({"role": "assistant", "content": str(exc)})
-            st.rerun()
-            agent_message = None
-
-        if agent_message:
-            try:
-                with st.status("Crake is thinking…", expanded=True) as _agent_status:
-                    def _on_tool(name: str, inp: dict) -> None:
-                        _agent_status.write(_tool_status_label(name, inp))
-
-                    updated_history, tool_log = run_agent_turn(
-                        user_message=agent_message,
-                        conversation_history=st.session_state.messages,
-                        session=st.session_state,
-                        on_tool_start=_on_tool,
-                    )
-                    _agent_status.update(label="Done", state="complete", expanded=False)
-
-                for msg in updated_history:
-                    if msg.get("role") == "user" and msg.get("content") == agent_message:
-                        msg["content"] = user_input
-                        break
-
-                st.session_state.messages = updated_history
-                st.session_state.tool_calls_log.extend(tool_log)
-            except Exception as exc:
-                st.session_state.messages.append({"role": "user", "content": user_input})
-                st.session_state.messages.append({
-                    "role": "assistant",
-                    "content": f"Something went wrong: {exc}",
-                })
-            st.rerun()
+    try:
+        validate_command(cmd_name)
+        with st.spinner("Running…"):
+            if isinstance(_pending_intro, dict):
+                tool_name = "introduce_gene"
+                result = dispatch(tool_name, tool_input, st.session_state)
+                message = format_result_message(tool_name, result)
+            else:
+                tool_name, message, result = execute_command(
+                    cmd_name, args, st.session_state
+                )
+        st.session_state.messages.append({"role": "user", "content": display_input})
+        st.session_state.messages.append({"role": "assistant", "content": message})
+        st.session_state.tool_calls_log.append({"tool_name": tool_name, "result": result})
+    except ValueError as exc:
+        st.session_state.messages.append({"role": "user", "content": display_input})
+        st.session_state.messages.append({"role": "assistant", "content": str(exc)})
+    except Exception as exc:
+        st.session_state.messages.append({"role": "user", "content": display_input})
+        st.session_state.messages.append({
+            "role": "assistant",
+            "content": f"Something went wrong: {exc}",
+        })
+    st.rerun()

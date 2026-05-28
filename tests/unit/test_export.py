@@ -47,7 +47,7 @@ VALIDATION_JSON = {
         {"enzyme": "EcoRI", "positions": [10], "count": 1},
     ],
     "warnings": [],
-    "valid": True,
+    "passed_checks": True,
 }
 
 PRIMERS_JSON = {
@@ -142,6 +142,74 @@ class TestWriteGenbank:
         out = tmp / "out.gb"
         write_genbank(ASSEMBLY_JSON, {}, "pTest", out)
         assert out.exists()
+
+    def test_restriction_site_feature_length_not_always_6(self, tmp):
+        """NotI recognition site is 8 bp — feature end must be pos + 8, not pos + 6."""
+        out = tmp / "out.gb"
+        validation_with_not1 = {
+            **VALIDATION_JSON,
+            "restriction_sites": [
+                {"enzyme": "NotI", "positions": [5], "count": 1},
+            ],
+        }
+        write_genbank(ASSEMBLY_JSON, validation_with_not1, "pTest", out)
+        record = SeqIO.read(str(out), "genbank")
+        not1_features = [
+            f for f in record.features
+            if f.type == "misc_binding" and "NotI" in str(f.qualifiers.get("note", ""))
+        ]
+        assert len(not1_features) == 1
+        feat = not1_features[0]
+        # NotI recognition site (GCGGCCGC) = 8 bp → end should be start + 8
+        assert int(feat.location.end) - int(feat.location.start) == 8
+
+    def test_ecori_site_feature_length_is_6(self, tmp):
+        """EcoRI recognition site is 6 bp — standard case must still work."""
+        out = tmp / "out.gb"
+        write_genbank(ASSEMBLY_JSON, VALIDATION_JSON, "pTest", out)
+        record = SeqIO.read(str(out), "genbank")
+        ecori_features = [
+            f for f in record.features
+            if f.type == "misc_binding" and "EcoRI" in str(f.qualifiers.get("note", ""))
+        ]
+        assert len(ecori_features) == 1
+        feat = ecori_features[0]
+        assert int(feat.location.end) - int(feat.location.start) == 6
+
+    def test_restriction_site_annotated_at_recognition_sequence_not_cut_site(self, tmp):
+        """GenBank feature must start at the recognition sequence, not the cut site.
+
+        BioPython Analysis.full() returns 1-based CUT positions; export.py must
+        convert to 0-based recognition-sequence start coordinates.
+
+        EcoRI (G^AATTC) has fst5cut=1 (cuts after the G).
+        For a recognition site starting at 0-based position 5:
+          BioPython returns cut_pos = 5 + 1 + 1 = 7
+          Correct recog_start = 7 - 1 - 1 = 5
+          Wrong (old bug): SimpleLocation(7, 13) → seq[7:13] ≠ GAATTC
+          Correct:         SimpleLocation(5, 11) → seq[5:11] == GAATTC
+        """
+        # Build a sequence with EcoRI (GAATTC) at 0-based position 5
+        sequence = "AAAAAGAATTCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        from Bio.Restriction import EcoRI, Analysis
+        from Bio.Seq import Seq as BioSeq
+        cut_pos = Analysis([EcoRI], BioSeq(sequence), linear=True).full()[EcoRI][0]
+        assembly = {**ASSEMBLY_JSON, "product_sequence": sequence, "product_length_bp": len(sequence)}
+        validation = {
+            **VALIDATION_JSON,
+            "restriction_sites": [{"enzyme": "EcoRI", "positions": [cut_pos], "count": 1}],
+        }
+        out = tmp / "out.gb"
+        write_genbank(assembly, validation, "pTest", out)
+        record = SeqIO.read(str(out), "genbank")
+        ecori_feats = [f for f in record.features if "EcoRI" in str(f.qualifiers.get("note", ""))]
+        assert len(ecori_feats) == 1
+        feat = ecori_feats[0]
+        # Feature must be positioned over the actual GAATTC recognition sequence
+        start = int(feat.location.start)
+        assert sequence[start:start + 6] == "GAATTC", (
+            f"Feature at {start} spans '{sequence[start:start+6]}', expected 'GAATTC'"
+        )
 
 
 # ---------------------------------------------------------------------------

@@ -21,6 +21,7 @@ from Bio.SeqRecord import SeqRecord
 # Tool imports — direct Python calls, no subprocess
 from src.tools.fetch_sequence import (
     fetch_by_accession as _fetch_by_accession,
+    fetch_from_uniprot as _fetch_from_uniprot,
     search_gene as _search_gene,
 )
 from src.tools.import_file import import_sequence as _import_sequence
@@ -185,13 +186,18 @@ def _handle_search_gene(inp: dict, session: dict) -> dict:
 
 
 def _handle_fetch_by_accession(inp: dict, session: dict) -> dict:
-    result = _fetch_by_accession(
-        inp["accession"],
-        db=inp.get("db", "nucleotide"),
-        full_sequence=inp.get("full_sequence", False),
-    )
-    session["last_sequence"] = result
-    session["last_seqviz"] = _result_to_seqviz(result)
+    db = inp.get("db", "nucleotide")
+    if db == "uniprot":
+        result = _fetch_from_uniprot(inp["accession"])
+    else:
+        result = _fetch_by_accession(
+            inp["accession"],
+            db=db,
+            full_sequence=inp.get("full_sequence", False),
+        )
+    if "error" not in result:
+        session["last_sequence"] = result
+        session["last_seqviz"] = _result_to_seqviz(result)
     return result
 
 
@@ -217,14 +223,16 @@ def _handle_find_target_sites(inp: dict, session: dict) -> dict:
     seq = inp["sequence"]
     method = inp["method"]
     arm_length = inp.get("arm_length", 500)
+    topology = inp.get("topology", "linear")
 
     if method == "restriction":
-        sites = find_restriction_edit_sites(seq, arm_length=arm_length)
+        sites = find_restriction_edit_sites(seq, arm_length=arm_length, topology=topology)
         return {"method": method, "target_sites": sites, "site_count": len(sites)}
 
     if method == "crispr":
-        sites = find_crispr_pam_sites(seq, arm_length=arm_length)
-        return {"method": method, "target_sites": sites, "site_count": len(sites)}
+        pam = inp.get("pam", "NGG")
+        sites = find_crispr_pam_sites(seq, pam=pam, arm_length=arm_length)
+        return {"method": method, "target_sites": sites, "site_count": len(sites), "pam": pam}
 
     if method == "homologous":
         position = inp.get("position")

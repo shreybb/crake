@@ -40,7 +40,7 @@ def design_primers(
             "PRIMER_MIN_TM": opt_tm - 5,
             "PRIMER_MAX_TM": opt_tm + 5,
             "PRIMER_MIN_GC": 40.0,
-            "PRIMER_MAX_GC": 65.0,
+            "PRIMER_MAX_GC": 70.0,
             "PRIMER_PRODUCT_SIZE_RANGE": [[product_min_size, product_max_size]],
             "PRIMER_NUM_RETURN": 3,
         },
@@ -71,9 +71,18 @@ def design_primers(
             "penalty": round(result[f"PRIMER_PAIR_{i}_PENALTY"], 3),
         })
 
+    warning = None
+    if not pairs:
+        template_gc = round(gc_content(template), 1)
+        warning = (
+            f"No primer pairs found (template GC {template_gc}%). "
+            "Try widening the product size range or adjusting the Tm window."
+        )
+
     return {
         "template_length": len(template),
         "primer_pairs": pairs,
+        "warning": warning,
         "overhangs_applied": {
             "forward": overhang_fwd,
             "reverse": overhang_rev,

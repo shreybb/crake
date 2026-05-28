@@ -76,7 +76,7 @@
       "selection": "URA3",
       "ori": "2-micron",
       "host": "yeast",
-      "notes": "High-copy (~15–20 copies/cell). Promoter-less backbone; insert your own promoter-GOI cassette. Part of pRS 2-micron series.",
+      "notes": "High-copy (~20–40 copies/cell). Promoter-less backbone; insert your own promoter-GOI cassette. Part of pRS 2-micron series.",
       "addgene": "11624"
     },
     "pRS415": {
@@ -86,7 +86,7 @@
       "selection": "LEU2",
       "ori": "2-micron",
       "host": "yeast",
-      "notes": "High-copy 2-micron backbone; promoter-less MCS. Use in leu2Δ strains.",
+      "notes": "High-copy (~20–40 copies/cell); promoter-less MCS. Use in leu2Δ strains.",
       "addgene": "11621"
     },
     "pRS414": {
@@ -96,7 +96,7 @@
       "selection": "TRP1",
       "ori": "2-micron",
       "host": "yeast",
-      "notes": "High-copy 2-micron backbone; promoter-less MCS. Use in trp1Δ strains.",
+      "notes": "High-copy (~20–40 copies/cell); promoter-less MCS. Use in trp1Δ strains.",
       "addgene": "11618"
     },
     "pRS413": {
@@ -106,7 +106,7 @@
       "selection": "HIS3",
       "ori": "2-micron",
       "host": "yeast",
-      "notes": "High-copy 2-micron backbone; promoter-less MCS. Use in his3Δ strains.",
+      "notes": "High-copy (~20–40 copies/cell); promoter-less MCS. Use in his3Δ strains.",
       "addgene": "11612"
     },
     "pYES2": {

@@ -1,11 +1,10 @@
 [project]
 name = "crake"
 version = "0.1.0"
-description = "AI-assisted plasmid design with Benchling integration"
+description = "Plasmid design workbench with curated parts and lab-ready export"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "anthropic>=0.84.0",
     "biopython>=1.86",
     "dna-features-viewer>=3.1.2",
     "dnachisel>=3.2.16",

@@ -882,6 +882,152 @@ a[href*="ncbi.nlm.nih.gov"]:hover {
     color: #3A7080;
     font-family: 'Fira Code', monospace;
 }
+
+/* ══════════════════════════════════════════════════════════════
+   FEATURED PIPELINE CARD (intro page)
+══════════════════════════════════════════════════════════════ */
+.crake-pipeline-card {
+    background: linear-gradient(135deg, rgba(0,229,160,0.05) 0%, rgba(0,152,255,0.04) 100%);
+    border: 1px solid rgba(0,229,160,0.2);
+    border-radius: 14px;
+    padding: 20px 24px;
+    max-width: 560px;
+    margin: 0 auto 32px;
+    position: relative;
+    z-index: 1;
+}
+.crake-pipeline-badge {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: #00E5A0;
+    background: rgba(0,229,160,0.08);
+    border: 1px solid rgba(0,229,160,0.2);
+    border-radius: 100px;
+    padding: 2px 10px;
+    margin-bottom: 10px;
+    font-family: 'Fira Code', monospace;
+}
+.crake-pipeline-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #C8E8F0;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+    font-family: 'Outfit', sans-serif;
+}
+.crake-pipeline-steps {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+.crake-pipeline-step {
+    background: rgba(0,229,160,0.06);
+    border: 1px solid rgba(0,229,160,0.15);
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-size: 12px;
+    color: #6AADC0;
+    font-family: 'Outfit', sans-serif;
+    white-space: nowrap;
+}
+.crake-pipeline-arrow {
+    color: rgba(0,229,160,0.4);
+    font-size: 14px;
+    font-weight: 300;
+}
+.crake-pipeline-desc {
+    font-size: 13px;
+    color: #3A7080;
+    line-height: 1.6;
+    margin-bottom: 12px;
+    font-family: 'Outfit', sans-serif;
+}
+.crake-pipeline-desc b { color: #6AADC0; }
+.crake-pipeline-desc code {
+    font-family: 'Fira Code', monospace;
+    font-size: 12px;
+    color: #00E5A0;
+    background: rgba(0,229,160,0.06);
+    border: 1px solid rgba(0,229,160,0.12);
+    border-radius: 4px;
+    padding: 1px 6px;
+}
+.crake-pipeline-example {
+    display: block;
+    font-family: 'Fira Code', monospace;
+    font-size: 12px;
+    color: rgba(0,229,160,0.7);
+    background: rgba(0,229,160,0.04);
+    border: 1px solid rgba(0,229,160,0.1);
+    border-radius: 8px;
+    padding: 8px 12px;
+    word-break: break-all;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   INDUCIBLE PROMOTER CALLOUT (inline in chat)
+══════════════════════════════════════════════════════════════ */
+.crake-inducible-callout {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    background: rgba(255,164,60,0.06);
+    border: 1px solid rgba(255,164,60,0.2);
+    border-left: 3px solid #FFA43C;
+    border-radius: 0 8px 8px 0;
+    padding: 8px 12px;
+    margin-top: 10px;
+    font-size: 12.5px;
+    line-height: 1.55;
+}
+.crake-inducible-icon {
+    color: #FFA43C;
+    font-size: 13px;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+.crake-inducible-text {
+    color: #7AAAB8;
+    font-family: 'Outfit', sans-serif;
+}
+.crake-inducible-text b { color: #FFA43C; }
+
+/* ══════════════════════════════════════════════════════════════
+   INLINE VALIDATION WARNINGS (in chat)
+══════════════════════════════════════════════════════════════ */
+.crake-val-warning-block {
+    background: rgba(255,164,60,0.05);
+    border: 1px solid rgba(255,164,60,0.18);
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin: 6px 0 4px;
+    max-width: 92%;
+}
+.crake-val-warning-title {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #FFA43C;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+    font-family: 'Fira Code', monospace;
+}
+.crake-val-warning-list {
+    margin: 0;
+    padding-left: 18px;
+}
+.crake-val-warning-item {
+    font-size: 13px;
+    color: #7AAAB8;
+    line-height: 1.6;
+    margin-bottom: 4px;
+    font-family: 'Outfit', sans-serif;
+}
 </style>
 """
 
@@ -899,6 +1045,7 @@ _PALETTE_SCRIPT = """
   var doc = window.parent.document;
 
   var CMDS = [
+    {cmd:'/introduce-gene', usage:'/introduce-gene <gene> in <org> into <host>', desc:'End-to-end gene introduction pipeline'},
     {cmd:'/genesearch', usage:'/genesearch <query>',      desc:'Search for a gene by natural language'},
     {cmd:'/fetch',      usage:'/fetch <accession>',       desc:'Retrieve a sequence by NCBI accession'},
     {cmd:'/load',       usage:'/load <path>',             desc:'Import a local .dna / .gb / .fasta file'},

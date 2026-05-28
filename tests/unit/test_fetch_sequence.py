@@ -69,6 +69,27 @@ class TestInferHost:
     def test_case_insensitive(self):
         assert infer_host("ARABIDOPSIS THALIANA") == "agrobacterium"
 
+    # Yeast host inference (Issue G fix)
+    def test_saccharomyces_cerevisiae(self):
+        """S. cerevisiae genes should suggest yeast host, not e_coli."""
+        assert infer_host("Saccharomyces cerevisiae") == "yeast"
+
+    def test_schizosaccharomyces_pombe(self):
+        assert infer_host("Schizosaccharomyces pombe") == "yeast"
+
+    def test_pichia_pastoris(self):
+        assert infer_host("Pichia pastoris") == "yeast"
+
+    def test_kluyveromyces(self):
+        assert infer_host("Kluyveromyces lactis") == "yeast"
+
+    def test_yeast_keyword_case_insensitive(self):
+        assert infer_host("SACCHAROMYCES CEREVISIAE") == "yeast"
+
+    def test_plant_takes_priority_over_yeast_keyword(self):
+        """Plant keywords should still map to agrobacterium."""
+        assert infer_host("Arabidopsis thaliana") == "agrobacterium"
+
 
 # ---------------------------------------------------------------------------
 # _extract_cds

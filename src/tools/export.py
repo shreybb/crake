@@ -30,6 +30,16 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, SimpleLocation
 from Bio.SeqRecord import SeqRecord
+from Bio.Restriction import CommOnly as _CommOnly
+
+# Per-enzyme site length and 5′ cut offset.
+# BioPython Analysis.full() returns the cut position (1-based), not the start of
+# the recognition sequence.  The 0-based recognition site start is:
+#   recog_start = cut_pos - fst5cut - 1
+# where fst5cut = enzyme.charac[0] (bases between recognition start and cut site,
+# positive = cut inside recognition sequence, negative = cut upstream).
+_ENZYME_SITE_LENGTH: dict[str, int] = {str(e): len(e.site) for e in _CommOnly}
+_ENZYME_CUT_OFFSET: dict[str, int] = {str(e): e.charac[0] for e in _CommOnly}
 
 
 # ---------------------------------------------------------------------------
@@ -73,11 +83,19 @@ def write_genbank(
         record.features.append(feat)
 
     for site in validation_json.get("restriction_sites", []):
+        enzyme_name = site["enzyme"]
+        site_len = _ENZYME_SITE_LENGTH.get(enzyme_name, 6)
+        fst5cut = _ENZYME_CUT_OFFSET.get(enzyme_name, 1)
         for pos in site.get("positions", []):
+            # BioPython returns 1-based cut positions; convert to 0-based
+            # recognition sequence start: recog_start = pos - fst5cut - 1
+            recog_start = pos - fst5cut - 1
+            if recog_start < 0 or recog_start + site_len > len(sequence):
+                continue  # skip sites at wrap-around boundaries
             feat = SeqFeature(
-                SimpleLocation(pos, pos + 6, strand=0),
+                SimpleLocation(recog_start, recog_start + site_len, strand=0),
                 type="misc_binding",
-                qualifiers={"note": [site["enzyme"]]},
+                qualifiers={"note": [enzyme_name]},
             )
             record.features.append(feat)
 

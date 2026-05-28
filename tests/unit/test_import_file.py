@@ -20,7 +20,7 @@ from src.tools.import_file import import_sequence, _seqrecord_to_result
 FASTA_CONTENT = ">pTest\nATGGAGCTGAACGATCGATCGATCGATCGATCG\n"
 
 GENBANK_CONTENT = """\
-LOCUS       pTest                     34 bp    DNA     linear   SYN 01-JAN-2025
+LOCUS       pTest                     33 bp    DNA     linear   SYN 01-JAN-2025
 DEFINITION  Test plasmid.
 ACCESSION   pTest
 VERSION     pTest.1

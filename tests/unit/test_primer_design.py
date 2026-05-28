@@ -134,3 +134,48 @@ class TestDesignPrimers:
         with patch("src.tools.primer_design.primer3.design_primers", return_value=mock_result):
             result = design_primers("ATCG" * 50)
         assert result["primer_pairs"] == []
+
+    def test_warning_is_none_when_pairs_found(self):
+        mock_result = {
+            "PRIMER_PAIR_NUM_RETURNED": 1,
+            "PRIMER_LEFT_0_SEQUENCE": "ATGGTGAGCAAGGGCGAGG",
+            "PRIMER_RIGHT_0_SEQUENCE": "CTTATGGTCGGGTAGCGGC",
+            "PRIMER_LEFT_0_TM": 61.3,
+            "PRIMER_RIGHT_0_TM": 60.8,
+            "PRIMER_LEFT_0_GC_PERCENT": 57.9,
+            "PRIMER_RIGHT_0_GC_PERCENT": 57.9,
+            "PRIMER_PAIR_0_PRODUCT_SIZE": 200,
+            "PRIMER_PAIR_0_PENALTY": 0.124,
+        }
+        with patch("src.tools.primer_design.primer3.design_primers", return_value=mock_result):
+            result = design_primers("ATCG" * 50)
+        assert result["warning"] is None
+
+    def test_warning_present_when_no_pairs(self):
+        mock_result = {"PRIMER_PAIR_NUM_RETURNED": 0}
+        with patch("src.tools.primer_design.primer3.design_primers", return_value=mock_result):
+            result = design_primers("ATCG" * 50)
+        assert result["warning"] is not None
+        assert isinstance(result["warning"], str)
+        assert len(result["warning"]) > 0
+
+    def test_warning_includes_gc_percent(self):
+        """Warning message should include the template GC% to aid diagnosis."""
+        mock_result = {"PRIMER_PAIR_NUM_RETURNED": 0}
+        with patch("src.tools.primer_design.primer3.design_primers", return_value=mock_result):
+            result = design_primers("GCGCGCGC" * 10)  # 100% GC template
+        assert "GC" in result["warning"] or "gc" in result["warning"].lower()
+
+    def test_max_gc_is_70(self):
+        """Confirm that primer3 is invoked with PRIMER_MAX_GC=70 (not 65)."""
+        captured = {}
+        original = __import__("primer3")
+
+        def capture_call(seq_args, global_args):
+            captured["global_args"] = global_args
+            return {"PRIMER_PAIR_NUM_RETURNED": 0}
+
+        with patch("src.tools.primer_design.primer3.design_primers", side_effect=capture_call):
+            design_primers("ATCG" * 50)
+
+        assert captured["global_args"]["PRIMER_MAX_GC"] == 70.0

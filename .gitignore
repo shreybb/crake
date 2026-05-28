@@ -8,3 +8,12 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Local / tooling artifacts
+.coverage
+.DS_Store
+.playwright-mcp/
+screenshot-*.png
+firebase-debug.log
+crake_output/
+exports/

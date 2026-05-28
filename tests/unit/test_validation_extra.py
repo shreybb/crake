@@ -59,7 +59,7 @@ class TestValidatePlasmidWarnings:
     def test_valid_false_when_warnings_present(self):
         result = validate_plasmid(HIGH_GC_SEQ, "test")
         if result["warnings"]:
-            assert result["valid"] is False
+            assert result["passed_checks"] is False
 
     def test_many_flagged_windows_triggers_warning(self):
         # Alternate high-GC and low-GC blocks to generate many flagged windows
@@ -112,3 +112,49 @@ class TestFindOrfsNegativeStrand:
         orfs = find_orfs(seq, min_length=10)
         # We just confirm it runs without error and returns a list
         assert isinstance(orfs, list)
+
+
+class TestRestrictionMapTopology:
+    def test_restriction_map_linear_flag_forwarded(self):
+        """restriction_map must pass linear=True when topology='linear'."""
+        from unittest.mock import patch, MagicMock
+        mock_instance = MagicMock()
+        mock_instance.full.return_value = {}
+        with patch("src.tools.validation.Analysis") as mock_analysis_cls:
+            mock_analysis_cls.return_value = mock_instance
+            restriction_map("ATCGATCG" * 50, linear=True)
+            _, kwargs = mock_analysis_cls.call_args
+            assert kwargs.get("linear") is True
+
+    def test_restriction_map_circular_flag_forwarded(self):
+        """restriction_map must pass linear=False when topology='circular'."""
+        from unittest.mock import patch, MagicMock
+        mock_instance = MagicMock()
+        mock_instance.full.return_value = {}
+        with patch("src.tools.validation.Analysis") as mock_analysis_cls:
+            mock_analysis_cls.return_value = mock_instance
+            restriction_map("ATCGATCG" * 50, linear=False)
+            _, kwargs = mock_analysis_cls.call_args
+            assert kwargs.get("linear") is False
+
+    def test_validate_plasmid_circular_topology_uses_circular_map(self):
+        """validate_plasmid(topology='circular') must call restriction_map with linear=False."""
+        from unittest.mock import patch, MagicMock
+        mock_instance = MagicMock()
+        mock_instance.full.return_value = {}
+        with patch("src.tools.validation.Analysis") as mock_analysis_cls:
+            mock_analysis_cls.return_value = mock_instance
+            validate_plasmid("ATCG" * 100, topology="circular")
+            _, kwargs = mock_analysis_cls.call_args
+            assert kwargs.get("linear") is False
+
+    def test_validate_plasmid_linear_topology_uses_linear_map(self):
+        """validate_plasmid(topology='linear') must call restriction_map with linear=True."""
+        from unittest.mock import patch, MagicMock
+        mock_instance = MagicMock()
+        mock_instance.full.return_value = {}
+        with patch("src.tools.validation.Analysis") as mock_analysis_cls:
+            mock_analysis_cls.return_value = mock_instance
+            validate_plasmid("ATCG" * 100, topology="linear")
+            _, kwargs = mock_analysis_cls.call_args
+            assert kwargs.get("linear") is True

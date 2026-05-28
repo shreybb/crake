@@ -1,7 +1,6 @@
-"""Claude tool schemas for the Crake agent.
+"""Tool input schemas for Crake (documentation and schema-consistency tests).
 
-Each entry is a dict matching the Anthropic tool format.
-Import TOOL_DEFINITIONS and pass directly to client.messages.create(tools=...).
+Each entry describes parameters accepted by :func:`src.agent.tool_dispatch.dispatch`.
 """
 from __future__ import annotations
 
@@ -101,7 +100,8 @@ TOOL_DEFINITIONS: list[dict] = [
         "description": (
             "Find edit sites in a genomic sequence. "
             "restriction: single-cut enzyme sites. "
-            "crispr: SpCas9 NGG PAM sites ranked by GC content. "
+            "crispr: CRISPR PAM sites ranked by GC content (default SpCas9 NGG; "
+            "set pam='TTTV' for Cas12a, 'NNGRRT' for SaCas9). "
             "homologous: extract left/right homology arms around a position."
         ),
         "input_schema": {
@@ -120,6 +120,26 @@ TOOL_DEFINITIONS: list[dict] = [
                     "type": "integer",
                     "default": 500,
                     "description": "Homology arm length in bp",
+                },
+                "topology": {
+                    "type": "string",
+                    "enum": ["linear", "circular"],
+                    "default": "linear",
+                    "description": (
+                        "Topology of the target sequence. Use 'circular' for plasmid "
+                        "maps; 'linear' (default) for genomic loci or PCR products."
+                    ),
+                },
+                "pam": {
+                    "type": "string",
+                    "default": "NGG",
+                    "description": (
+                        "PAM sequence for CRISPR scanning (method=crispr only). "
+                        "Default 'NGG' = SpCas9. Common alternatives: "
+                        "'TTTV' = Cas12a/Cpf1 (better for AT-rich plant genomes, 5' PAM); "
+                        "'NNGRRT' = SaCas9 (smaller, used with AAV delivery); "
+                        "'NG' = SpCas9-NG (relaxed PAM for dense targeting)."
+                    ),
                 },
             },
             "required": ["sequence", "method"],
@@ -222,7 +242,7 @@ TOOL_DEFINITIONS: list[dict] = [
                 },
                 "target_host": {
                     "type": "string",
-                    "enum": ["e_coli", "yeast", "plant_nuclear"],
+                    "enum": ["e_coli", "yeast", "plant_nuclear", "agrobacterium"],
                     "description": "Destination host organism",
                 },
                 "expression_goal": {

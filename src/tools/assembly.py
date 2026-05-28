@@ -45,7 +45,7 @@ def simulate_gibson(fragments: list[str], overlap_min: int = 20) -> dict:
         if not assembled:
             return {
                 "success": False,
-                "error": "No assembly products found. Check overlaps (min overlap: {overlap_min} bp).",
+                "error": f"No assembly products found. Check overlaps (min overlap: {overlap_min} bp).",
                 "parts": [{"name": p.name, "length": len(p)} for p in parts],
             }
         topology = "linear"

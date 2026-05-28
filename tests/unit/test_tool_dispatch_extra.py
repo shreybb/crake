@@ -137,7 +137,7 @@ class TestResultToSeqviz:
 # ---------------------------------------------------------------------------
 
 GENBANK_CONTENT = """\
-LOCUS       pTest                     34 bp    DNA     circular SYN 01-JAN-2025
+LOCUS       pTest                     33 bp    DNA     circular SYN 01-JAN-2025
 DEFINITION  Test plasmid.
 ACCESSION   pTest
 VERSION     pTest.1
@@ -148,7 +148,7 @@ SOURCE      synthetic construct
 FEATURES             Location/Qualifiers
      CDS             1..33
                      /gene="gfp"
-     source          1..34
+     source          1..33
                      /organism="synthetic construct"
 ORIGIN
         1 atggagctga acgatcgatc gatcgatcga tcg
@@ -302,3 +302,161 @@ class TestIntroduceGeneYeastNextSteps:
         steps = _build_next_steps("e_coli", "pET-28a", "KanR")
         assert len(steps) == 6
         assert "lithium" not in " ".join(steps).lower()
+
+
+# ---------------------------------------------------------------------------
+# Tool definition schema — enum consistency (Issues K and L)
+# ---------------------------------------------------------------------------
+
+class TestToolDefinitionsEnums:
+    """The tool schemas are the contract between Claude and Python — they must
+    stay in sync with what the Python functions actually accept."""
+
+    def _get_tool(self, name: str) -> dict:
+        from src.agent.tool_definitions import TOOL_DEFINITIONS
+        for t in TOOL_DEFINITIONS:
+            if t["name"] == name:
+                return t
+        raise KeyError(f"Tool '{name}' not found in TOOL_DEFINITIONS")
+
+    def test_introduce_gene_target_host_includes_agrobacterium(self):
+        """Issue K fix: agrobacterium must be in introduce_gene.target_host enum."""
+        tool = self._get_tool("introduce_gene")
+        enum = tool["input_schema"]["properties"]["target_host"]["enum"]
+        assert "agrobacterium" in enum, (
+            f"agrobacterium missing from introduce_gene.target_host enum: {enum}"
+        )
+
+    def test_introduce_gene_target_host_enum_matches_valid_hosts(self):
+        """introduce_gene schema enum must match _VALID_HOSTS in the Python function."""
+        from src.tools.gene_introduction import _VALID_HOSTS
+        tool = self._get_tool("introduce_gene")
+        enum_set = set(tool["input_schema"]["properties"]["target_host"]["enum"])
+        assert enum_set == _VALID_HOSTS, (
+            f"Schema enum {enum_set} does not match _VALID_HOSTS {_VALID_HOSTS}"
+        )
+
+    def test_find_target_sites_has_topology_parameter(self):
+        """Issue L fix: topology must be exposed in find_target_sites tool schema."""
+        tool = self._get_tool("find_target_sites")
+        assert "topology" in tool["input_schema"]["properties"], (
+            "topology parameter missing from find_target_sites tool definition"
+        )
+
+    def test_find_target_sites_topology_enum(self):
+        """topology must accept 'linear' and 'circular'."""
+        tool = self._get_tool("find_target_sites")
+        enum = tool["input_schema"]["properties"]["topology"]["enum"]
+        assert "linear" in enum
+        assert "circular" in enum
+
+    def test_suggest_parts_host_includes_agrobacterium(self):
+        """suggest_parts already had agrobacterium — verify it hasn't regressed."""
+        tool = self._get_tool("suggest_parts")
+        enum = tool["input_schema"]["properties"]["host"]["enum"]
+        assert "agrobacterium" in enum
+
+
+class TestDispatchFindTargetSitesTopology:
+    """Verify topology is forwarded to find_restriction_edit_sites (Issue L fix)."""
+
+    def test_circular_topology_forwarded_to_restriction_method(self):
+        from unittest.mock import patch, MagicMock
+        with patch("src.agent.tool_dispatch.find_restriction_edit_sites") as mock_fn:
+            mock_fn.return_value = []
+            dispatch("find_target_sites", {
+                "sequence": "ATCGATCGATCGATCGATCG",
+                "method": "restriction",
+                "topology": "circular",
+            }, {})
+            _, kwargs = mock_fn.call_args
+            assert kwargs.get("topology") == "circular"
+
+    def test_linear_topology_forwarded_to_restriction_method(self):
+        from unittest.mock import patch
+        with patch("src.agent.tool_dispatch.find_restriction_edit_sites") as mock_fn:
+            mock_fn.return_value = []
+            dispatch("find_target_sites", {
+                "sequence": "ATCGATCGATCGATCGATCG",
+                "method": "restriction",
+                "topology": "linear",
+            }, {})
+            _, kwargs = mock_fn.call_args
+            assert kwargs.get("topology") == "linear"
+
+    def test_topology_defaults_to_linear_when_not_provided(self):
+        from unittest.mock import patch
+        with patch("src.agent.tool_dispatch.find_restriction_edit_sites") as mock_fn:
+            mock_fn.return_value = []
+            dispatch("find_target_sites", {
+                "sequence": "ATCGATCGATCGATCGATCG",
+                "method": "restriction",
+            }, {})
+            _, kwargs = mock_fn.call_args
+            assert kwargs.get("topology") == "linear"
+
+
+class TestDispatchCrisprPamForwarding:
+    """Issue V fix: pam parameter must be forwarded to find_crispr_pam_sites.
+
+    SpCas9 (NGG) is the default, but researchers targeting AT-rich plant genomes
+    may need Cas12a (TTTV) or SaCas9 (NNGRRT) — both already supported by
+    find_crispr_pam_sites() but previously unreachable through the agent tool.
+    """
+
+    def test_default_pam_is_ngg(self):
+        from unittest.mock import patch
+        with patch("src.agent.tool_dispatch.find_crispr_pam_sites") as mock_fn:
+            mock_fn.return_value = []
+            result = dispatch("find_target_sites", {
+                "sequence": "ATCGATCGATCGATCGATCG",
+                "method": "crispr",
+            }, {})
+            _, kwargs = mock_fn.call_args
+            assert kwargs.get("pam") == "NGG", "Default PAM must be NGG (SpCas9)"
+
+    def test_custom_pam_forwarded(self):
+        """Cas12a TTTV PAM must reach find_crispr_pam_sites."""
+        from unittest.mock import patch
+        with patch("src.agent.tool_dispatch.find_crispr_pam_sites") as mock_fn:
+            mock_fn.return_value = []
+            dispatch("find_target_sites", {
+                "sequence": "ATCGATCGATCGATCGATCG",
+                "method": "crispr",
+                "pam": "TTTV",
+            }, {})
+            _, kwargs = mock_fn.call_args
+            assert kwargs.get("pam") == "TTTV", (
+                "Cas12a PAM 'TTTV' was not forwarded to find_crispr_pam_sites"
+            )
+
+    def test_pam_returned_in_result(self):
+        """Result dict must include the pam that was used."""
+        from unittest.mock import patch
+        with patch("src.agent.tool_dispatch.find_crispr_pam_sites") as mock_fn:
+            mock_fn.return_value = []
+            result = dispatch("find_target_sites", {
+                "sequence": "ATCGATCGATCGATCGATCG",
+                "method": "crispr",
+                "pam": "NNGRRT",
+            }, {})
+            assert result.get("pam") == "NNGRRT", (
+                "Result should echo back the pam used so the caller knows which nuclease was scanned"
+            )
+
+    def test_pam_schema_has_ngg_default(self):
+        """Tool schema must have pam property with NGG as default."""
+        from src.agent.tool_definitions import TOOL_DEFINITIONS
+        tool = next(t for t in TOOL_DEFINITIONS if t["name"] == "find_target_sites")
+        pam_schema = tool["input_schema"]["properties"].get("pam")
+        assert pam_schema is not None, "pam property missing from find_target_sites schema"
+        assert pam_schema.get("default") == "NGG"
+
+    def test_pam_schema_description_mentions_cas12a(self):
+        """Description must mention Cas12a so researchers know they can use it."""
+        from src.agent.tool_definitions import TOOL_DEFINITIONS
+        tool = next(t for t in TOOL_DEFINITIONS if t["name"] == "find_target_sites")
+        desc = tool["input_schema"]["properties"]["pam"]["description"]
+        assert "Cas12a" in desc or "TTTV" in desc, (
+            "pam description should mention Cas12a/TTTV for AT-rich genome users"
+        )

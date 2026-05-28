@@ -41,6 +41,7 @@ def find_restriction_edit_sites(
     sequence: str,
     require_unique: bool = True,
     arm_length: int = DEFAULT_ARM_LENGTH,
+    topology: str = "linear",
 ) -> list[dict]:
     """Find restriction sites suitable as edit entry points.
 
@@ -50,13 +51,16 @@ def find_restriction_edit_sites(
             exactly once — guaranteeing a defined insertion point.
         arm_length: Length of flanking sequence to include as ``left_arm``
             / ``right_arm`` for downstream assembly.
+        topology: ``"circular"`` or ``"linear"`` (default).  Use ``"circular"``
+            when scanning a plasmid map to detect sites that span the sequence
+            origin; use ``"linear"`` for genomic loci or PCR products.
 
     Returns:
         List of site dicts sorted by position, each containing the enzyme
         name, cut position, overhang size, and flanking arms.
     """
     seq = Seq(sequence.upper())
-    analysis = Analysis(CommOnly, seq, linear=True)
+    analysis = Analysis(CommOnly, seq, linear=(topology != "circular"))
     results = analysis.full()
 
     sites = []
@@ -156,15 +160,27 @@ def find_crispr_pam_sites(
 
             pos = match.start()
             if strand == -1:
-                # Map reverse-complement position back to forward strand
+                # Map reverse-complement position back to forward strand.
+                # pos_fwd is the 5' end of the full 23-nt site (NCC + protospacer
+                # complement) on the forward strand.
                 pos = len(seq_upper) - pos - len(full_site)
+                # SpCas9 blunt cut: 3 nt upstream of PAM in the protospacer.
+                # For a reverse-strand guide the PAM complement (NCC) is at the
+                # 5' end of the mapped site, so the cut falls at pos+5/pos+6
+                # on the forward strand.
+                cut_position = pos + 6
+            else:
+                # Forward strand: protospacer at pos..pos+20, PAM at pos+20..pos+23.
+                # Cas9 cuts between guide positions 17 and 18 (3 nt from PAM).
+                cut_position = pos + 17
 
             guide_rna = guide.replace("T", "U")
             sites.append({
                 "strand": strand,
                 "position": pos,
-                "protospacer": guide,        # DNA sequence (order as oligo)
-                "guide_rna": guide_rna,      # RNA sequence (T→U; for sgRNA synthesis)
+                "cut_position": cut_position,   # actual SpCas9 blunt-cut locus (forward-strand coord)
+                "protospacer": guide,            # DNA sequence (order as oligo)
+                "guide_rna": guide_rna,          # RNA sequence (T→U; for sgRNA synthesis)
                 "pam": full_site[20:],
                 "gc_percent": gc,
                 "left_arm": seq_upper[max(0, pos - arm_length): pos],
@@ -214,6 +230,12 @@ def main() -> None:
         help="PAM sequence for CRISPR scanning (default NGG for SpCas9)",
     )
     parser.add_argument(
+        "--topology",
+        default="linear",
+        choices=["linear", "circular"],
+        help="Sequence topology for restriction scanning (default linear; use circular for plasmids)",
+    )
+    parser.add_argument(
         "--allow-multi-cut",
         action="store_true",
         help="Include restriction enzymes that cut more than once (restriction method only)",
@@ -241,6 +263,7 @@ def main() -> None:
             sequence,
             require_unique=not args.allow_multi_cut,
             arm_length=args.arm_length,
+            topology=args.topology,
         )
         result["target_sites"] = sites
         result["recommended_site"] = recommend_edit_site(sites)

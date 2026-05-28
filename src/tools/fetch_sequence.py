@@ -41,16 +41,24 @@ _PLANT_KEYWORDS = {
     "populus", "agrobacterium", "tumefaciens", "rhizobiaceae",
 }
 
+_YEAST_KEYWORDS = {
+    "saccharomyces", "cerevisiae", "yeast", "schizosaccharomyces", "pombe",
+    "pichia", "pastoris", "kluyveromyces", "yarrowia", "candida",
+}
+
 
 def infer_host(organism: str) -> str:
     """Map source organism to the recommended cloning host.
 
     Plant-derived or Agrobacterium genes → agrobacterium (binary vector + T-DNA).
+    Yeast-derived genes → yeast (S. cerevisiae expression system).
     Everything else defaults to e_coli.
     """
     lower = organism.lower()
     if any(kw in lower for kw in _PLANT_KEYWORDS):
         return "agrobacterium"
+    if any(kw in lower for kw in _YEAST_KEYWORDS):
+        return "yeast"
     return "e_coli"
 
 

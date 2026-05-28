@@ -129,6 +129,8 @@ _EXAMPLES = [
 
 
 _COMMANDS_TABLE = [
+    ("/introduce-gene &lt;gene&gt; in &lt;org&gt; into &lt;host&gt;",
+     "End-to-end pipeline: fetch CDS → codon-optimise → suggest parts → validate"),
     ("/genesearch &lt;query&gt;",  "Find a gene sequence by natural language or species name"),
     ("/fetch &lt;accession&gt;",   "Retrieve a sequence directly by NCBI accession"),
     ("/load &lt;path&gt;",         "Import a local .dna, .gb, or .fasta file"),
@@ -157,12 +159,32 @@ def render_intro() -> None:
         '  <div class="crake-intro-hero">'
         '    <div class="crake-intro-title"><span>Crake</span></div>'
         '    <p class="crake-intro-sub">'
-        '      AI-assisted plasmid design. From sequence discovery to a lab-ready construct.'
+        '      Plasmid design workbench. From sequence discovery to a lab-ready construct.'
         '    </p>'
+        '  </div>'
+        '  <div class="crake-pipeline-card">'
+        '    <div class="crake-pipeline-badge">Featured pipeline</div>'
+        '    <div class="crake-pipeline-title">🧬 Introduce a Gene</div>'
+        '    <div class="crake-pipeline-steps">'
+        '      <span class="crake-pipeline-step">Fetch CDS</span>'
+        '      <span class="crake-pipeline-arrow">→</span>'
+        '      <span class="crake-pipeline-step">Codon-optimise</span>'
+        '      <span class="crake-pipeline-arrow">→</span>'
+        '      <span class="crake-pipeline-step">Suggest parts</span>'
+        '      <span class="crake-pipeline-arrow">→</span>'
+        '      <span class="crake-pipeline-step">Validate</span>'
+        '    </div>'
+        '    <div class="crake-pipeline-desc">'
+        '      Use the <b>sidebar form</b> or the slash command below. '
+        '      Supported hosts: <code>E. coli</code> · <code>Yeast</code> · <code>Plant</code>'
+        '    </div>'
+        '    <code class="crake-pipeline-example">'
+        '      /introduce-gene GFP in Aequorea victoria into yeast goal: constitutive'
+        '    </code>'
         '  </div>'
         f'  <table class="crake-cmd-table">{rows}</table>'
         '  <div class="crake-intro-footer" style="margin-top:32px;">'
-        '    <span>Type a command above, or describe what you want in plain English</span>'
+        '    <span>Type a slash command above — see the table for syntax</span>'
         '  </div>'
         '</div>',
         unsafe_allow_html=True,
@@ -174,6 +196,7 @@ def render_intro() -> None:
 # ---------------------------------------------------------------------------
 
 _HINT_COMMANDS = [
+    ("/introduce-gene", "end-to-end gene introduction workflow"),
     ("/genesearch", "find a gene by natural language"),
     ("/fetch", "retrieve by accession number"),
     ("/load", "import .dna / .gb / .fasta file"),
@@ -249,11 +272,107 @@ def render_sidebar_history(conversations: list[dict]) -> str | None:
 
 
 # ---------------------------------------------------------------------------
+# Sidebar — gene introduction launcher
+# ---------------------------------------------------------------------------
+
+_HOST_DISPLAY_TO_KEY = {
+    "E. coli": "e_coli",
+    "Yeast (S. cerevisiae)": "yeast",
+    "Plant (nuclear)": "plant_nuclear",
+    "Agrobacterium (plant T-DNA)": "agrobacterium",
+}
+
+_GOAL_DISPLAY_TO_KEY = {
+    "Constitutive": "constitutive",
+    "Inducible": "inducible",
+}
+
+
+def render_sidebar_gene_launcher() -> dict | None:
+    """Render the gene introduction launcher in the sidebar.
+
+    Returns tool input fields when the user submits, or None otherwise.
+    """
+    st.sidebar.markdown(
+        '<div class="crake-sb-title" style="margin-top:20px;">Introduce a Gene</div>',
+        unsafe_allow_html=True,
+    )
+    st.sidebar.markdown(
+        '<div style="font-size:11px;color:#3A7080;margin-bottom:8px;line-height:1.5;">'
+        'End-to-end pipeline: fetch CDS → codon-optimise → suggest parts → validate'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+    with st.sidebar.form("gene_launch_form", clear_on_submit=True):
+        gene = st.text_input("Gene name", placeholder="e.g. GFP, URA3, CRY1")
+        organism = st.text_input("Source organism", placeholder="e.g. Aequorea victoria")
+        host_display = st.selectbox(
+            "Target host",
+            list(_HOST_DISPLAY_TO_KEY.keys()),
+        )
+        goal_display = st.selectbox(
+            "Expression goal",
+            list(_GOAL_DISPLAY_TO_KEY.keys()),
+        )
+        submitted = st.form_submit_button("Introduce Gene →", use_container_width=True)
+
+    if submitted and gene.strip():
+        return {
+            "gene_name": gene.strip(),
+            "source_organism": organism.strip() or "unknown",
+            "target_host": _HOST_DISPLAY_TO_KEY[host_display],
+            "expression_goal": _GOAL_DISPLAY_TO_KEY[goal_display],
+        }
+
+    return None
+
+
+# ---------------------------------------------------------------------------
 # Chat history
 # ---------------------------------------------------------------------------
 
-def render_chat_history(messages: list[dict]) -> None:
-    """Render the conversation as styled chat bubbles."""
+# Inducible promoter keywords that warrant a callout
+_INDUCIBLE_KEYWORDS = re.compile(
+    # GAL1/GAL10/pGAL1 are galactose-inducible yeast promoters.
+    # GAL4 (transcription factor) and GAL7 (metabolic enzyme) are NOT promoters
+    # and are excluded to avoid false positives.
+    # "galactose-repressed" is biologically inverted (GAL promoters are
+    # galactose-activated / glucose-repressed) and has been removed.
+    r'\b(GAL1|GAL10|PGAL1|glucose[- ]repressed'
+    r'|inducible.*promoter|promoter.*inducible|tetO|araBAD|lac[OPI]|IPTG[- ]inducible'
+    r'|anhydrotetracycline)\b',
+    re.IGNORECASE,
+)
+
+
+def _build_inducible_callout_html() -> str:
+    return (
+        '<div class="crake-inducible-callout">'
+        '<span class="crake-inducible-icon">⚠</span>'
+        '<span class="crake-inducible-text">'
+        '<b>Inducible promoter detected</b> — requires an inducer molecule; '
+        'not active under standard growth conditions. '
+        'Use a constitutive promoter if continuous expression is needed.'
+        '</span>'
+        '</div>'
+    )
+
+
+def render_chat_history(
+    messages: list[dict],
+    validation_result: dict | None = None,
+) -> None:
+    """Render the conversation as styled chat bubbles.
+
+    Parameters
+    ----------
+    messages:
+        Full conversation history.
+    validation_result:
+        Latest validation result from session state. When present and the
+        result has warnings, they are shown inline after the validate_plasmid
+        message for quick visibility.
+    """
     if not messages:
         st.markdown(
             '<div class="crake-chat-empty">'
@@ -263,6 +382,12 @@ def render_chat_history(messages: list[dict]) -> None:
             unsafe_allow_html=True,
         )
         return
+
+    val_warnings: list[str] = (
+        validation_result.get("warnings", [])
+        if validation_result and not validation_result.get("passed_checks")
+        else []
+    )
 
     for msg in messages:
         role = msg.get("role", "")
@@ -285,6 +410,11 @@ def render_chat_history(messages: list[dict]) -> None:
             text = _extract_text(content)
             tool_badges = _extract_tool_badges(content)
             if text or tool_badges:
+                inducible_callout = (
+                    _build_inducible_callout_html()
+                    if text and _INDUCIBLE_KEYWORDS.search(text)
+                    else ""
+                )
                 badges_html = "".join(
                     f'<span class="crake-tool-badge">⚙ {b}</span>'
                     for b in tool_badges
@@ -293,10 +423,27 @@ def render_chat_history(messages: list[dict]) -> None:
                 st.markdown(
                     f'<div class="crake-msg-ai-row">'
                     f'  <div class="crake-role-ai">Crake</div>'
-                    f'  <div class="crake-msg-ai">{badges_html}{separator}{text}</div>'
+                    f'  <div class="crake-msg-ai">'
+                    f'    {badges_html}{separator}{text}'
+                    f'    {inducible_callout}'
+                    f'  </div>'
                     f'</div>',
                     unsafe_allow_html=True,
                 )
+                # Show validation warnings inline directly below the message
+                # that ran validate_plasmid
+                if "validate_plasmid" in tool_badges and val_warnings:
+                    warnings_items = "".join(
+                        f'<li class="crake-val-warning-item">{w}</li>'
+                        for w in val_warnings
+                    )
+                    st.markdown(
+                        f'<div class="crake-val-warning-block">'
+                        f'  <div class="crake-val-warning-title">⚠ Validation warnings</div>'
+                        f'  <ul class="crake-val-warning-list">{warnings_items}</ul>'
+                        f'</div>',
+                        unsafe_allow_html=True,
+                    )
 
 
 def _extract_text(content) -> str:
@@ -576,7 +723,7 @@ def render_validation(validation_result: dict, tab) -> None:
             return
 
         warnings = validation_result.get("warnings", [])
-        valid = validation_result.get("valid", False)
+        valid = validation_result.get("passed_checks", False)
 
         if valid:
             st.success("Construct passed all validation checks")

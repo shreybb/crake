@@ -13,6 +13,7 @@ from src.tools.gene_introduction import (
     _build_cassette_description,
     _build_next_steps,
     _infer_expression_type,
+    _pick_backbone,
     _pick_promoter,
 )
 from src.tools.knowledge import (
@@ -205,6 +206,11 @@ class TestIntroduceGeneErrors:
         assert "error" in result
         assert "invalid_host" in result["error"]
 
+    def test_agrobacterium_in_valid_hosts_set(self):
+        """Issue I fix: agrobacterium must be in _VALID_HOSTS so plant T-DNA workflows work."""
+        from src.tools.gene_introduction import _VALID_HOSTS
+        assert "agrobacterium" in _VALID_HOSTS
+
     @patch("src.tools.gene_introduction.search_gene", side_effect=_fake_search_gene_error)
     def test_ncbi_failure_returns_error(self, mock_search):
         result = introduce_gene("FAKEGENE", "Unknown organism", "yeast")
@@ -242,6 +248,50 @@ class TestHelpers:
         steps = _build_next_steps("yeast", "pYES2", "URA3")
         assert isinstance(steps, list)
         assert any("codon" in s.lower() or "synthesise" in s.lower() for s in steps)
+
+
+class TestYeastSelectionMedia:
+    """Verify that _build_next_steps emits correct selection media for each yeast marker.
+
+    Dropout media are named for the NUTRIENT omitted (SC-URA / SC-LEU / SC-HIS / SC-TRP),
+    not for the marker gene (URA3 / LEU2 / HIS3 / TRP1).
+    Dominant antibiotic markers (kanMX, hygMX) require YPD + antibiotic — no SC dropout.
+    """
+
+    def _steps_text(self, marker: str) -> str:
+        return " ".join(_build_next_steps("yeast", "pRS316", marker))
+
+    # --- auxotrophic markers: must use nutrient-named dropout ---
+    def test_ura3_uses_SC_URA_not_gene_name(self):
+        txt = self._steps_text("URA3")
+        assert "SC-URA" in txt, f"Expected 'SC-URA' in steps: {txt}"
+        assert "SC-URA3" not in txt, "Should not write 'SC-URA3' (wrong notation)"
+
+    def test_leu2_uses_SC_LEU_not_gene_name(self):
+        txt = self._steps_text("LEU2")
+        assert "SC-LEU" in txt
+        assert "SC-LEU2" not in txt
+
+    def test_his3_uses_SC_HIS_not_gene_name(self):
+        txt = self._steps_text("HIS3")
+        assert "SC-HIS" in txt
+        assert "SC-HIS3" not in txt
+
+    def test_trp1_uses_SC_TRP_not_gene_name(self):
+        txt = self._steps_text("TRP1")
+        assert "SC-TRP" in txt
+        assert "SC-TRP1" not in txt
+
+    # --- dominant antibiotic markers: must NOT reference SC dropout ---
+    def test_kanMX_uses_G418_not_SC_dropout(self):
+        txt = self._steps_text("kanMX")
+        assert "G418" in txt, f"Expected 'G418' in steps: {txt}"
+        assert "SC-kanMX" not in txt, "kanMX uses YPD+G418, not SC dropout"
+
+    def test_hygMX_uses_hygromycin_not_SC_dropout(self):
+        txt = self._steps_text("hygMX")
+        assert "Hygromycin" in txt or "hygromycin" in txt
+        assert "SC-hygMX" not in txt, "hygMX uses YPD+HygB, not SC dropout"
 
 
 # ---------------------------------------------------------------------------
@@ -417,3 +467,176 @@ class TestIntroduceGenePromoterSelection:
     def test_no_expression_goal_still_returns_a_promoter(self, mock_search, mock_opt):
         result = introduce_gene("GFP", "Aequorea victoria", "yeast")
         assert "name" in result["promoter"]
+
+
+# ---------------------------------------------------------------------------
+# _pick_backbone — backbone selection heuristics
+# ---------------------------------------------------------------------------
+
+_YEAST_BACKBONES = [
+    {"name": "pRS316", "copy_number": "low", "ori": "CEN6/ARS4"},
+    {"name": "pRS416", "copy_number": "high", "ori": "2-micron"},
+    {"name": "pYES2",  "copy_number": "high", "ori": "2-micron", "promoter": "GAL1"},
+    {"name": "pESC-HIS", "copy_number": "high", "ori": "2-micron", "promoter": "GAL1/GAL10 dual"},
+]
+
+
+class TestPickBackbone:
+    def test_empty_list_returns_none(self):
+        assert _pick_backbone([], "yeast", "inducible") is None
+
+    def test_non_yeast_returns_first_regardless_of_expression_type(self):
+        result = _pick_backbone(_YEAST_BACKBONES, "e_coli", "inducible")
+        assert result["name"] == "pRS316"
+
+    def test_none_expression_type_returns_first(self):
+        result = _pick_backbone(_YEAST_BACKBONES, "yeast", None)
+        assert result["name"] == "pRS316"
+
+    def test_inducible_yeast_prefers_pyes2(self):
+        result = _pick_backbone(_YEAST_BACKBONES, "yeast", "inducible")
+        assert result["name"] == "pYES2"
+
+    def test_inducible_yeast_falls_back_to_high_copy_when_no_pyes2(self):
+        backbones_no_pyes2 = [
+            {"name": "pRS316", "copy_number": "low"},
+            {"name": "pRS416", "copy_number": "high"},
+        ]
+        result = _pick_backbone(backbones_no_pyes2, "yeast", "inducible")
+        assert result["name"] == "pRS416"
+
+    def test_constitutive_yeast_avoids_gal_promoter(self):
+        result = _pick_backbone(_YEAST_BACKBONES, "yeast", "constitutive")
+        # Should pick pRS416 (high-copy, no GAL promoter) over pYES2/pESC-HIS
+        assert result["name"] == "pRS416"
+
+    def test_constitutive_yeast_selects_high_copy(self):
+        result = _pick_backbone(_YEAST_BACKBONES, "yeast", "constitutive")
+        assert result.get("copy_number") == "high"
+
+    def test_constitutive_falls_back_to_first_when_no_high_copy(self):
+        backbones_low_only = [
+            {"name": "pRS316", "copy_number": "low"},
+            {"name": "pRS315", "copy_number": "low"},
+        ]
+        result = _pick_backbone(backbones_low_only, "yeast", "constitutive")
+        assert result["name"] == "pRS316"
+
+
+# ---------------------------------------------------------------------------
+# introduce_gene — backbone selection driven by expression goal
+# ---------------------------------------------------------------------------
+
+class TestIntroduceGeneBackboneSelection:
+    @patch("src.tools.gene_introduction.optimize_codons", side_effect=_fake_optimize_codons_ok)
+    @patch("src.tools.gene_introduction.search_gene", side_effect=_fake_search_gene_ok)
+    def test_inducible_goal_selects_pyes2_for_yeast(self, mock_search, mock_opt):
+        result = introduce_gene(
+            "GFP", "Aequorea victoria", "yeast",
+            expression_goal="galactose inducible",
+        )
+        assert result["vector"]["name"] == "pYES2", (
+            f"Expected pYES2 for inducible yeast; got {result['vector']['name']}"
+        )
+
+    @patch("src.tools.gene_introduction.optimize_codons", side_effect=_fake_optimize_codons_ok)
+    @patch("src.tools.gene_introduction.search_gene", side_effect=_fake_search_gene_ok)
+    def test_constitutive_goal_avoids_pyes2_for_yeast(self, mock_search, mock_opt):
+        result = introduce_gene(
+            "GFP", "Aequorea victoria", "yeast",
+            expression_goal="constitutive expression",
+        )
+        assert result["vector"]["name"] != "pYES2", (
+            "Constitutive goal should not select pYES2 (GAL1-pre-loaded vector)"
+        )
+
+
+# ---------------------------------------------------------------------------
+# Agrobacterium host path (Issue I fix)
+# ---------------------------------------------------------------------------
+
+class TestAgrobacteriumHost:
+    """After Issue I fix, agrobacterium is a valid introduce_gene host."""
+
+    @patch("src.tools.gene_introduction.optimize_codons", side_effect=_fake_optimize_codons_ok)
+    @patch("src.tools.gene_introduction.search_gene", side_effect=_fake_search_gene_ok)
+    def test_agrobacterium_host_accepted(self, mock_search, mock_opt):
+        result = introduce_gene("nptII", "Agrobacterium tumefaciens", "agrobacterium")
+        assert "error" not in result, f"agrobacterium host rejected: {result.get('error')}"
+
+    @patch("src.tools.gene_introduction.optimize_codons", side_effect=_fake_optimize_codons_ok)
+    @patch("src.tools.gene_introduction.search_gene", side_effect=_fake_search_gene_ok)
+    def test_agrobacterium_returns_plant_binary_vector(self, mock_search, mock_opt):
+        result = introduce_gene("nptII", "Agrobacterium tumefaciens", "agrobacterium")
+        # Plant binary vectors: pCAMBIA1305.1, pCAMBIA1300, pBI121, pK2GW7
+        expected_vectors = {"pCAMBIA1305.1", "pCAMBIA1300", "pBI121", "pK2GW7"}
+        assert result["vector"]["name"] in expected_vectors, (
+            f"Expected plant binary vector, got {result['vector']['name']}"
+        )
+
+    @patch("src.tools.gene_introduction.optimize_codons", side_effect=_fake_optimize_codons_ok)
+    @patch("src.tools.gene_introduction.search_gene", side_effect=_fake_search_gene_ok)
+    def test_agrobacterium_next_steps_mention_plant_infection(self, mock_search, mock_opt):
+        result = introduce_gene("nptII", "Agrobacterium tumefaciens", "agrobacterium")
+        steps_text = " ".join(result["next_steps"])
+        # Protocol must include plant infection step
+        assert any(kw in steps_text.lower() for kw in ("infect", "leaf", "infiltration", "t-dna")), (
+            "Agrobacterium next steps must include plant infection / T-DNA step"
+        )
+
+    @patch("src.tools.gene_introduction.optimize_codons", side_effect=_fake_optimize_codons_ok)
+    @patch("src.tools.gene_introduction.search_gene", side_effect=_fake_search_gene_ok)
+    def test_agrobacterium_next_steps_mention_arabidopsis_codon_table(self, mock_search, mock_opt):
+        result = introduce_gene("nptII", "Agrobacterium tumefaciens", "agrobacterium")
+        steps_text = " ".join(result["next_steps"])
+        assert "arabidopsis" in steps_text.lower(), (
+            "Agrobacterium next steps must note Arabidopsis codon table usage"
+        )
+
+
+class TestBuildNextStepsPlant:
+    def test_plant_nuclear_protocol_includes_t_dna(self):
+        steps = _build_next_steps("plant_nuclear", "pCAMBIA1300", "HPT")
+        steps_text = " ".join(steps).lower()
+        assert "t-dna" in steps_text or "t_dna" in steps_text
+
+    def test_agrobacterium_protocol_includes_regeneration(self):
+        steps = _build_next_steps("agrobacterium", "pBI121", "NPTII")
+        steps_text = " ".join(steps).lower()
+        assert "regenerat" in steps_text  # "regenerate" or "regeneration"
+
+    def test_agrobacterium_and_plant_nuclear_use_same_protocol(self):
+        agro_steps = _build_next_steps("agrobacterium", "pBI121", "NPTII")
+        plant_steps = _build_next_steps("plant_nuclear", "pBI121", "NPTII")
+        assert agro_steps == plant_steps
+
+
+# ---------------------------------------------------------------------------
+# ATG start codon validation in optimize_codons
+# ---------------------------------------------------------------------------
+
+class TestOptimizeCodonsAtgValidation:
+    def test_sequence_not_starting_with_atg_returns_error(self):
+        from src.tools.sequence_design import optimize_codons
+        result = optimize_codons("GCGGCGGCG", "e_coli")  # in-frame but no ATG
+        assert "error" in result
+        assert "ATG" in result["error"]
+
+    def test_sequence_starting_with_atg_passes_validation(self):
+        from src.tools.sequence_design import optimize_codons
+        from unittest.mock import MagicMock, patch
+        mock_instance = MagicMock()
+        mock_instance.sequence = _GFP_CDS
+        mock_module = MagicMock()
+        mock_module.DnaOptimizationProblem.return_value = mock_instance
+        mock_module.CodonOptimize.return_value = MagicMock()
+        mock_module.EnforceTranslation.return_value = MagicMock()
+        with patch.dict("sys.modules", {"dnachisel": mock_module}):
+            result = optimize_codons(_GFP_CDS, "e_coli")
+        assert "error" not in result
+
+    def test_empty_sequence_returns_length_error(self):
+        from src.tools.sequence_design import optimize_codons
+        # Empty string: length 0, divisible by 3, but no ATG
+        result = optimize_codons("", "e_coli")
+        assert "error" in result

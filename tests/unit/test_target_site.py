@@ -81,6 +81,44 @@ class TestFindRestrictionEditSites:
         result = find_restriction_edit_sites("AAAAAAAAAAAAAAAAAAAAAA")
         assert isinstance(result, list)
 
+    def test_topology_linear_is_default(self):
+        """Default topology is 'linear'; result should be a list."""
+        sites = find_restriction_edit_sites(ECORI_SEQ)
+        assert isinstance(sites, list)
+
+    def test_topology_circular_accepted(self):
+        """circular topology should not raise and should return a list."""
+        sites = find_restriction_edit_sites(ECORI_SEQ, topology="circular")
+        assert isinstance(sites, list)
+
+    def test_topology_circular_passes_linear_false_to_analysis(self):
+        """BioPython Analysis must receive linear=False for circular sequences."""
+        from unittest.mock import patch, MagicMock
+        mock_analysis_instance = MagicMock()
+        mock_analysis_instance.full.return_value = {}
+
+        with patch("src.tools.target_site.Analysis") as mock_analysis_cls:
+            mock_analysis_cls.return_value = mock_analysis_instance
+            find_restriction_edit_sites(ECORI_SEQ, topology="circular")
+            _, kwargs = mock_analysis_cls.call_args
+            assert kwargs.get("linear") is False, (
+                "Expected Analysis(linear=False) for circular topology"
+            )
+
+    def test_topology_linear_passes_linear_true_to_analysis(self):
+        """BioPython Analysis must receive linear=True for linear sequences."""
+        from unittest.mock import patch, MagicMock
+        mock_analysis_instance = MagicMock()
+        mock_analysis_instance.full.return_value = {}
+
+        with patch("src.tools.target_site.Analysis") as mock_analysis_cls:
+            mock_analysis_cls.return_value = mock_analysis_instance
+            find_restriction_edit_sites(ECORI_SEQ, topology="linear")
+            _, kwargs = mock_analysis_cls.call_args
+            assert kwargs.get("linear") is True, (
+                "Expected Analysis(linear=True) for linear topology"
+            )
+
 
 class TestExtractHomologyArms:
     def test_arms_have_correct_length(self):
@@ -170,6 +208,55 @@ class TestFindCrisprPamSites:
         for site in sites:
             assert "left_arm" in site
             assert "right_arm" in site
+
+
+class TestCrisprCutPosition:
+    """Issue S fix: cut_position must be the actual SpCas9 blunt-cut locus,
+    not the 5' start of the protospacer+PAM window."""
+
+    # Forward strand hit: guide+PAM at position 0 in a longer sequence
+    FWD_SEQ = "GCGCATCGATCGGCATCGATAGG" + "TTTTT" * 20
+
+    def test_cut_position_present_in_all_sites(self):
+        sites = find_crispr_pam_sites(self.FWD_SEQ)
+        for site in sites:
+            assert "cut_position" in site, f"cut_position missing from {site}"
+
+    def test_forward_strand_cut_is_17nt_into_site(self):
+        """SpCas9 cuts between guide positions 17 and 18 (3 nt upstream of PAM)."""
+        sites = find_crispr_pam_sites(self.FWD_SEQ)
+        fwd_sites = [s for s in sites if s["strand"] == 1]
+        assert fwd_sites, "No forward strand sites found in test sequence"
+        for site in fwd_sites:
+            expected = site["position"] + 17
+            assert site["cut_position"] == expected, (
+                f"Forward strand cut_position {site['cut_position']} "
+                f"!= position+17 ({expected})"
+            )
+
+    def test_reverse_strand_cut_is_6nt_into_mapped_site(self):
+        """For reverse-strand guides, cut maps to forward-strand pos+6."""
+        # Build a sequence where the reverse strand has an NGG PAM site
+        # A forward strand NCC followed by protospacer complement = rev-strand hit
+        # Sequence: CCCGCGCATCGATCGGCATCGAT (NCC + 20-nt protospacer complement)
+        rev_seq = "ATCG" * 20 + "CCCGCGCATCGATCGGCATCGAT" + "ATCG" * 20
+        sites = find_crispr_pam_sites(rev_seq)
+        rev_sites = [s for s in sites if s["strand"] == -1]
+        assert rev_sites, "No reverse strand sites found in test sequence"
+        for site in rev_sites:
+            expected = site["position"] + 6
+            assert site["cut_position"] == expected, (
+                f"Reverse strand cut_position {site['cut_position']} "
+                f"!= position+6 ({expected})"
+            )
+
+    def test_cut_position_differs_from_position(self):
+        """cut_position must not equal position — they are different fields."""
+        sites = find_crispr_pam_sites(self.FWD_SEQ)
+        for site in sites:
+            assert site["cut_position"] != site["position"], (
+                "cut_position should not equal position (it is an offset into the site)"
+            )
 
 
 class TestRecommendEditSite:

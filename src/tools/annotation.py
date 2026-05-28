@@ -18,11 +18,22 @@ from Bio.SeqRecord import SeqRecord
 from Bio.Restriction import RestrictionBatch, Analysis, CommOnly
 
 
-def find_restriction_sites(sequence: str, common_only: bool = True) -> list[dict]:
-    """Return restriction sites found in the sequence."""
+def find_restriction_sites(
+    sequence: str,
+    common_only: bool = True,
+    linear: bool = False,
+) -> list[dict]:
+    """Return restriction sites found in the sequence.
+
+    Args:
+        sequence: DNA sequence to scan.
+        common_only: When True (default), only search CommOnly enzymes.
+        linear: When True, treat the sequence as linear (e.g. a PCR product).
+            When False (default), treat as circular (standard plasmid).
+    """
     seq = Seq(sequence)
     batch = CommOnly  # common restriction enzymes
-    analysis = Analysis(batch, seq, linear=False)
+    analysis = Analysis(batch, seq, linear=linear)
     results = analysis.full()
 
     sites = []
