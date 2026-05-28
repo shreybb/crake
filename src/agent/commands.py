@@ -47,7 +47,7 @@ COMMANDS: dict[str, Command] = {
         Command(
             name="targets",
             description="Find edit target sites in the loaded sequence",
-            usage="/targets <crispr|restriction|homologous> [position]",
+            usage="/targets <crispr|restriction|homologous> [pam|position]",
         ),
         Command(
             name="optimize",

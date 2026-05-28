@@ -36,3 +36,11 @@ class TestExecuteCommand:
             mock_dispatch.return_value = {"sequence_type": "protein"}
             execute_command("fetch", "P42212", {})
         assert mock_dispatch.call_args[0][1]["db"] == "uniprot"
+
+    def test_targets_crispr_forwards_pam(self):
+        session = {"last_sequence": {"sequence": "ATCG" * 50, "topology": "linear"}}
+        with patch("src.agent.command_runner.dispatch") as mock_dispatch:
+            mock_dispatch.return_value = {"method": "crispr", "site_count": 0, "target_sites": []}
+            tool, _, _ = execute_command("targets", "crispr TTTV", session)
+        assert tool == "find_target_sites"
+        assert mock_dispatch.call_args[0][1]["pam"] == "TTTV"

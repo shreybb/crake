@@ -63,7 +63,7 @@ All commands run **deterministic Python tools** (NCBI, DnaChisel, Primer3, etc.)
 | `/fetch <accession>` | NCBI or UniProt accession | `/fetch U55762` or `/fetch P42212` |
 | `/load <path>` | Import `.dna`, `.gb`, or `.fa` | `/load ./plasmid.gb` |
 | `/suggest <host>` | Parts for a host | `/suggest yeast` |
-| `/targets <method>` | CRISPR / restriction / homologous sites | `/targets crispr` |
+| `/targets <method>` | CRISPR / restriction / homologous sites | `/targets crispr TTTV` |
 | `/optimize <host>` | Codon-optimise loaded sequence | `/optimize plant_nuclear` |
 | `/primers [overhangs]` | PCR primers for loaded sequence | `/primers ATTB1 ATTB2` |
 | `/assemble gibson <file>` | Gibson assembly (2 fragments) | `/assemble gibson backbone.fa` |

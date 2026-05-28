@@ -6,7 +6,8 @@ Current scope: **deterministic** workflows for bacterial, yeast, and plant/Agrob
 
 - Slash-command Streamlit UI and Introduce a Gene pipeline
 - NCBI fetch, codon optimization, curated parts knowledge base
-- CRISPR/restriction/homology target finding (configurable PAM via dispatch)
+- CRISPR/restriction/homology target finding (configurable PAM, including `/targets crispr TTTV`)
+- NCBI email validation before Entrez requests
 - Primer design, Gibson and restriction–ligation assembly simulation
 - Validation and lab export (GenBank, FASTA, SVG, CSV, protocol)
 
@@ -16,10 +17,8 @@ Current scope: **deterministic** workflows for bacterial, yeast, and plant/Agrob
 |------|--------|
 | Golden Gate assembly | Listed in domain types; no simulator in `assembly.py` |
 | `/annotate` slash command | `annotation.py` is CLI-only today |
-| `/targets` PAM flag | Dispatch supports `pam`; slash parser does not expose it yet |
 | Domain model wiring | `src/domain/` types are tested but not used in the live pipeline |
 | Benchling integration | Optional MCP example only; no in-app sync |
-| Stricter NCBI email | Fail fast if `NCBI_EMAIL` unset instead of default placeholder |
 | Additional hosts | Many organisms are intentionally unsupported or approximated |
 
 ## Non-goals (for this repo)

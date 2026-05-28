@@ -135,7 +135,10 @@ def _build_tool_input(cmd_name: str, args: str, session: dict) -> tuple[str, dic
 
     if cmd_name == "targets":
         if not text:
-            raise ValueError("Usage: `/targets <crispr|restriction|homologous> [position]`")
+            raise ValueError(
+                "Usage: `/targets <crispr|restriction|homologous> ...` — "
+                "crispr: optional PAM (e.g. TTTV); homologous: position required"
+            )
         parts = text.split()
         method = parts[0].lower()
         seq, seq_data = _session_sequence(session)
@@ -148,6 +151,8 @@ def _build_tool_input(cmd_name: str, args: str, session: dict) -> tuple[str, dic
             if len(parts) < 2:
                 raise ValueError("Usage: `/targets homologous <position>`")
             inp["position"] = int(parts[1])
+        elif method == "crispr" and len(parts) >= 2:
+            inp["pam"] = parts[1]
         return "find_target_sites", inp
 
     if cmd_name == "primers":
