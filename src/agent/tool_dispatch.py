@@ -10,13 +10,10 @@ No Streamlit imports — fully testable without a running app.
 """
 from __future__ import annotations
 
-from io import StringIO
 from pathlib import Path
 from typing import Any
 
 from Bio import SeqIO
-from Bio.Seq import Seq
-from Bio.SeqRecord import SeqRecord
 
 # Tool imports — direct Python calls, no subprocess
 from src.tools.fetch_sequence import (

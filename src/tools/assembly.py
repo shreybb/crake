@@ -17,7 +17,6 @@ from pathlib import Path
 from Bio import SeqIO
 from pydna.dseqrecord import Dseqrecord
 from pydna.assembly import Assembly
-from pydna.readers import read as pydna_read
 
 _DNA_CHARS = frozenset("ACGTUNRYMKSWHBVD")
 _SEQUENCE_FILE_SUFFIXES = {".fa", ".fasta", ".gb", ".genbank", ".dna"}
