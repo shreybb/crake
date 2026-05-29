@@ -6,15 +6,13 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from src.tools.gene_introduction import (
-    introduce_gene,
     _build_cassette_description,
     _build_next_steps,
     _infer_expression_type,
     _pick_backbone,
     _pick_promoter,
+    introduce_gene,
 )
 from src.tools.knowledge import (
     suggest_backbone,
@@ -23,7 +21,6 @@ from src.tools.knowledge import (
     suggest_terminator,
 )
 from src.tools.sequence_design import optimize_codons
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -620,13 +617,11 @@ class TestBuildNextStepsPlant:
 
 class TestOptimizeCodonsAtgValidation:
     def test_sequence_not_starting_with_atg_returns_error(self):
-        from src.tools.sequence_design import optimize_codons
         result = optimize_codons("GCGGCGGCG", "e_coli")  # in-frame but no ATG
         assert "error" in result
         assert "ATG" in result["error"]
 
     def test_sequence_starting_with_atg_passes_validation(self):
-        from src.tools.sequence_design import optimize_codons
         from unittest.mock import MagicMock, patch
         mock_instance = MagicMock()
         mock_instance.sequence = _GFP_CDS
@@ -639,7 +634,6 @@ class TestOptimizeCodonsAtgValidation:
         assert "error" not in result
 
     def test_empty_sequence_returns_length_error(self):
-        from src.tools.sequence_design import optimize_codons
         # Empty string: length 0, divisible by 3, but no ATG
         result = optimize_codons("", "e_coli")
         assert "error" in result

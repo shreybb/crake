@@ -7,8 +7,6 @@ from __future__ import annotations
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from src.agent.tool_dispatch import dispatch
 from tests.unit.test_assembly import FRAG_A, FRAG_B
 
@@ -86,6 +84,7 @@ class TestWorkflowChain:
             )
         assert asm["success"] is True
         assert session["last_assembly"]["product_sequence"]
+        assert session["last_assembly"].get("provenance") == "simulated"
 
         out_dir = tmp_path / "export"
         paths = dispatch(
@@ -93,6 +92,7 @@ class TestWorkflowChain:
             {"name": "pChain", "output_dir": str(out_dir)},
             session,
         )
+        assert paths.get("provenance") == "simulated"
         assert Path(paths["genbank"]).is_file()
         assert Path(paths["fasta"]).is_file()
         assert Path(paths["protocol"]).is_file()

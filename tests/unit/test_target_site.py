@@ -1,12 +1,11 @@
 """Unit tests for target_site tool."""
-import pytest
 from src.tools.target_site import (
-    find_restriction_edit_sites,
-    extract_homology_arms,
-    find_crispr_pam_sites,
-    recommend_edit_site,
     _gc_percent,
     _has_homopolymer,
+    extract_homology_arms,
+    find_crispr_pam_sites,
+    find_restriction_edit_sites,
+    recommend_edit_site,
 )
 
 # Sequence with a single EcoRI site (GAATTC) in the middle
@@ -93,7 +92,7 @@ class TestFindRestrictionEditSites:
 
     def test_topology_circular_passes_linear_false_to_analysis(self):
         """BioPython Analysis must receive linear=False for circular sequences."""
-        from unittest.mock import patch, MagicMock
+        from unittest.mock import MagicMock, patch
         mock_analysis_instance = MagicMock()
         mock_analysis_instance.full.return_value = {}
 
@@ -107,7 +106,7 @@ class TestFindRestrictionEditSites:
 
     def test_topology_linear_passes_linear_true_to_analysis(self):
         """BioPython Analysis must receive linear=True for linear sequences."""
-        from unittest.mock import patch, MagicMock
+        from unittest.mock import MagicMock, patch
         mock_analysis_instance = MagicMock()
         mock_analysis_instance.full.return_value = {}
 

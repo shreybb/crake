@@ -2,53 +2,65 @@
 
 Crake is a **deterministic** plasmid design workbench: every user action runs fixed Python tools. There is no LLM in the request path.
 
+## Clients
+
+| Client | Entry | Session backing |
+|--------|-------|-----------------|
+| Streamlit | `app.py` | `st.session_state` ↔ `ConstructSession` via adapter |
+| Typer CLI | `src/cli.py` | Ephemeral dict or JSON session file |
+
+Both call `command_runner.execute_command` → `tool_dispatch.dispatch`.
+
 ## Layers
 
 ```
-Streamlit UI (app.py)
-    │
-    ├─ Sidebar: Introduce a Gene form
-    └─ Chat input: slash commands
-            │
-            ▼
-    command_runner.py  — parse args, build tool input dicts
-            │
-            ▼
-    tool_dispatch.py   — route tool name → src/tools/*, update session
-            │
-            ▼
-    src/tools/*        — BioPython, DnaChisel, Primer3, pydna, NCBI Entrez
-            │
-            ▼
-    knowledge/*.json   — curated promoters, backbones, terminators, markers
+Streamlit / crake CLI
+        │
+        ▼
+command_runner.py  — parse slash args
+        │
+        ▼
+tool_dispatch.py — route tool → src/tools/*
+        │
+        ▼
+ConstructSession   — sequence, assembly, validation, primers, export_paths
+        │
+        ▼
+src/tools/*        — BioPython, DnaChisel, Primer3, pydna, Entrez
+src/knowledge/*    — curated JSON (schema-validated)
 ```
 
-## Session state
+## ConstructSession
 
-`tool_dispatch.dispatch` writes into Streamlit `session_state`:
+Defined in `src/session/construct.py`:
 
-| Key | Set by |
-|-----|--------|
-| `last_sequence` | fetch, import, search, introduce_gene, assembly |
-| `last_optimization` | optimize_codons, introduce_gene |
-| `last_validation` | validate_plasmid |
-| `last_primers` | design_primers |
-| `last_assembly` | simulate_assembly |
-| `last_seqviz` | sequence viewer payload |
-| `export_paths` | export_files |
+| Field | Purpose |
+|-------|---------|
+| `sequence` | Active `LoadedSequence` |
+| `optimization` | Last codon optimization result |
+| `assembly` | `AssemblyRecord` with `provenance`: `simulated` or `not_run` |
+| `validation`, `primers`, `annotation` | Tool outputs |
+| `export_paths` | Last export file paths |
 
-Downstream commands (e.g. `/optimize`, `/validate`, `/export`) read `last_sequence` unless a command supplies its own sequence.
+Key methods:
+
+- `promote_optimized()` — single path after `/optimize`
+- `record_assembly()` — only on successful simulation
+- `export_readiness()` — warnings before export
+- `assembly_for_export(allow_sequence_only)` — never fabricates Gibson success
+
+## Export safety
+
+`/export` without a simulated assembly raises an error unless `--allow-sequence-only` is passed. The generated `protocol.md` includes a **Provenance** section stating whether assembly was simulated.
 
 ## Tool schemas
 
-`src/agent/tool_definitions.py` lists `TOOL_DEFINITIONS` — parameter shapes used by tests to stay aligned with `tool_dispatch` handlers. Slash commands in `commands.py` are the user-facing subset.
+`src/agent/tool_definitions.py` lists parameters for each dispatch tool. Tests keep schemas aligned with handlers.
 
 ## Tests
-
-Unit tests mock NCBI and heavy dependencies. Run with:
 
 ```bash
 uv run pytest
 ```
 
-UI code under `src/ui/` is omitted from coverage config but exercised indirectly via command/dispatch tests.
+NCBI is mocked in CI. UI code under `src/ui/` is omitted from coverage targets; session adapter is tested directly.

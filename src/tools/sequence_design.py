@@ -2,21 +2,15 @@
 """
 Design and optimize a gene expression cassette.
 
-Usage:
-    python src/tools/sequence_design.py --host e_coli [--suggest-parts]
-    python src/tools/sequence_design.py --optimize-codons --sequence ATCG... --host e_coli
-    python src/tools/sequence_design.py --gc-analysis --sequence ATCG...
-
-Outputs JSON.
+CLI: ``crake cmd "/suggest e_coli"`` or ``/optimize yeast`` (after loading a sequence).
 """
 from __future__ import annotations
-import argparse
-import json
-import sys
 
 from .knowledge import (
-    suggest_backbone, suggest_promoter,
-    suggest_terminator, suggest_selectable_marker,
+    suggest_backbone,
+    suggest_promoter,
+    suggest_selectable_marker,
+    suggest_terminator,
 )
 
 
@@ -44,7 +38,7 @@ def optimize_codons(sequence: str, host: str) -> dict:
     Codon-optimize a coding sequence for the target host using DNA Chisel.
     Input sequence must start with ATG and be in-frame (length % 3 == 0).
     """
-    from dnachisel import DnaOptimizationProblem, CodonOptimize, EnforceTranslation
+    from dnachisel import CodonOptimize, DnaOptimizationProblem, EnforceTranslation
 
     if len(sequence) % 3 != 0:
         return {"error": "Sequence length must be divisible by 3 (in-frame CDS required)"}
@@ -98,43 +92,3 @@ def suggest_parts_for_host(host: str) -> dict:
         "recommended_terminators": suggest_terminator(host),
         "recommended_selectable_markers": suggest_selectable_marker(host),
     }
-
-
-def main() -> None:
-    parser = argparse.ArgumentParser(description="Sequence design and codon optimization")
-    parser.add_argument("--host", default="e_coli",
-                        choices=["e_coli", "yeast", "plant_nuclear", "agrobacterium"],
-                        help="Target host organism")
-    parser.add_argument("--suggest-parts", action="store_true",
-                        help="Suggest backbones, promoters, terminators for the host")
-    parser.add_argument("--optimize-codons", action="store_true",
-                        help="Codon-optimize the provided sequence")
-    parser.add_argument("--gc-analysis", action="store_true",
-                        help="Run basic GC/length analysis on a sequence")
-    parser.add_argument("--sequence", default="",
-                        help="Input DNA sequence (for --optimize-codons or --gc-analysis)")
-    args = parser.parse_args()
-
-    output: dict = {}
-
-    if args.suggest_parts:
-        output = suggest_parts_for_host(args.host)
-    elif args.optimize_codons:
-        if not args.sequence:
-            print(json.dumps({"error": "--sequence required for --optimize-codons"}))
-            sys.exit(1)
-        output = optimize_codons(args.sequence, args.host)
-    elif args.gc_analysis:
-        if not args.sequence:
-            print(json.dumps({"error": "--sequence required for --gc-analysis"}))
-            sys.exit(1)
-        output = analyze_sequence(args.sequence)
-    else:
-        parser.print_help()
-        sys.exit(0)
-
-    print(json.dumps(output, indent=2))
-
-
-if __name__ == "__main__":
-    main()

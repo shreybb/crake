@@ -1,10 +1,7 @@
 """Additional unit tests for validation tool."""
 from __future__ import annotations
 
-import pytest
-
 from src.tools.validation import find_orfs, gc_windows, restriction_map, validate_plasmid
-
 
 # Sequences engineered to trigger specific branches
 HIGH_GC_SEQ = "GCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGCGC"  # >70% GC
@@ -117,7 +114,7 @@ class TestFindOrfsNegativeStrand:
 class TestRestrictionMapTopology:
     def test_restriction_map_linear_flag_forwarded(self):
         """restriction_map must pass linear=True when topology='linear'."""
-        from unittest.mock import patch, MagicMock
+        from unittest.mock import MagicMock, patch
         mock_instance = MagicMock()
         mock_instance.full.return_value = {}
         with patch("src.tools.validation.Analysis") as mock_analysis_cls:
@@ -128,7 +125,7 @@ class TestRestrictionMapTopology:
 
     def test_restriction_map_circular_flag_forwarded(self):
         """restriction_map must pass linear=False when topology='circular'."""
-        from unittest.mock import patch, MagicMock
+        from unittest.mock import MagicMock, patch
         mock_instance = MagicMock()
         mock_instance.full.return_value = {}
         with patch("src.tools.validation.Analysis") as mock_analysis_cls:
@@ -139,7 +136,7 @@ class TestRestrictionMapTopology:
 
     def test_validate_plasmid_circular_topology_uses_circular_map(self):
         """validate_plasmid(topology='circular') must call restriction_map with linear=False."""
-        from unittest.mock import patch, MagicMock
+        from unittest.mock import MagicMock, patch
         mock_instance = MagicMock()
         mock_instance.full.return_value = {}
         with patch("src.tools.validation.Analysis") as mock_analysis_cls:
@@ -150,7 +147,7 @@ class TestRestrictionMapTopology:
 
     def test_validate_plasmid_linear_topology_uses_linear_map(self):
         """validate_plasmid(topology='linear') must call restriction_map with linear=True."""
-        from unittest.mock import patch, MagicMock
+        from unittest.mock import MagicMock, patch
         mock_instance = MagicMock()
         mock_instance.full.return_value = {}
         with patch("src.tools.validation.Analysis") as mock_analysis_cls:

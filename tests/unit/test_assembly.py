@@ -1,14 +1,9 @@
 """Unit tests for assembly simulation."""
 from __future__ import annotations
 
-import tempfile
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from src.tools.assembly import _load_sequence, simulate_gibson, simulate_restriction_ligation
-
 
 # ---------------------------------------------------------------------------
 # Helpers

@@ -208,8 +208,23 @@ def _build_tool_input(cmd_name: str, args: str, session: dict) -> tuple[str, dic
             "topology": topology,
         }
 
+    if cmd_name == "annotate":
+        seq, seq_data = _session_sequence(session)
+        linear = seq_data.get("topology", "linear") != "circular"
+        return "annotate_sequence", {
+            "sequence": seq,
+            "topology": "linear" if linear else "circular",
+        }
+
     if cmd_name == "export":
-        name = text.split()[0] if text else "pConstruct"
+        parts = text.split()
+        allow_sequence_only = False
+        name = "pConstruct"
+        if parts and parts[0] == "--allow-sequence-only":
+            allow_sequence_only = True
+            parts = parts[1:]
+        if parts:
+            name = parts[0]
         seq, seq_data = _session_sequence(session)
         if not session.get("last_validation"):
             dispatch(
@@ -221,15 +236,10 @@ def _build_tool_input(cmd_name: str, args: str, session: dict) -> tuple[str, dic
                 },
                 session,
             )
-        prior_asm = session.get("last_assembly") or {}
-        if not prior_asm.get("success"):
-            session["last_assembly"] = {
-                "product_sequence": seq,
-                "topology": seq_data.get("topology", "circular"),
-                "method": "direct",
-                "success": True,
-            }
-        return "export_files", {"name": name}
+        return "export_files", {
+            "name": name,
+            "allow_sequence_only": allow_sequence_only,
+        }
 
     if cmd_name == "introduce-gene":
         return "introduce_gene", _parse_introduce_gene(text)
@@ -298,7 +308,7 @@ def format_result_message(tool_name: str, result: dict[str, Any]) -> str:
     if tool_name == "validate_plasmid":
         status = "passed" if result.get("passed_checks") else "has warnings"
         warns = result.get("warnings", [])
-        tail = f"\n\nWarnings:\n" + "\n".join(f"- {w}" for w in warns[:8]) if warns else ""
+        tail = "\n\nWarnings:\n" + "\n".join(f"- {w}" for w in warns[:8]) if warns else ""
         return f"Validation **{status}** for `{result.get('name', 'construct')}`.{tail}"
 
     if tool_name == "introduce_gene":
@@ -309,10 +319,20 @@ def format_result_message(tool_name: str, result: dict[str, Any]) -> str:
             f"Vector: **{result.get('vector', {}).get('name', '?')}**."
         )
 
+    if tool_name == "annotate_sequence":
+        n = result.get("site_count", len(result.get("restriction_sites", [])))
+        return f"Annotation complete — **{n}** restriction enzyme site(s). See the data panel."
+
     if tool_name == "export_files":
         lines = ["Exported files:"]
+        prov = result.get("provenance", "")
+        if prov == "not_run":
+            lines.append(
+                "_Sequence-only export — assembly was not simulated. "
+                "Verify construct design before ordering._"
+            )
         for key, path in result.items():
-            if not key.endswith("_error"):
+            if not key.endswith("_error") and key != "provenance":
                 lines.append(f"- `{key}`: {path}")
         return "\n".join(lines)
 

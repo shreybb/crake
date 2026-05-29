@@ -24,6 +24,8 @@ from src.agent.command_runner import (
 )
 from src.agent.commands import help_markdown, parse_input, validate_command
 from src.agent.tool_dispatch import _result_to_seqviz, dispatch
+from src.session.construct import WorkflowStage
+from src.session.streamlit_adapter import session_from_state
 from src.ui.components import (
     render_chat_history,
     render_data_panel,
@@ -73,14 +75,13 @@ def _save_conversation_to_disk(messages: list[dict], session) -> None:
     seqviz = session.get("last_seqviz")
     if seqviz is None and session.get("last_sequence"):
         seqviz = _result_to_seqviz(session["last_sequence"])
+    cs = session_from_state(session)
     data = {
         "saved_at": ts,
         "name": first_user[:80] or "Conversation",
         "messages": serialisable_msgs,
-        "last_sequence": session.get("last_sequence"),
-        "last_seqviz": seqviz,
-        "last_validation": session.get("last_validation"),
-        "last_optimization": session.get("last_optimization"),
+        **cs.to_state_dict(),
+        "last_seqviz": seqviz or cs.seqviz,
     }
     (_SAVE_DIR / filename).write_text(json.dumps(data, indent=2, default=str))
 
@@ -118,6 +119,14 @@ def _restore_conversation(filepath: str) -> None:
         st.session_state.last_validation = data["last_validation"]
     if data.get("last_optimization"):
         st.session_state.last_optimization = data["last_optimization"]
+    if data.get("last_assembly"):
+        st.session_state.last_assembly = data["last_assembly"]
+    if data.get("last_annotation"):
+        st.session_state.last_annotation = data["last_annotation"]
+    if data.get("last_primers"):
+        st.session_state.last_primers = data["last_primers"]
+    if data.get("export_paths"):
+        st.session_state.export_paths = data["export_paths"]
 
 
 # ── Supported hosts for pre-flight validation ──────────────────────────────
@@ -161,6 +170,7 @@ _DEFAULTS: dict = {
     "last_validation": None,
     "last_primers": None,
     "last_optimization": None,
+    "last_annotation": None,
     "last_seqviz": None,
     "export_paths": {},
     "tool_calls_log": [],
@@ -184,10 +194,13 @@ if to_load:
 # ── Header ──────────────────────────────────────────────────────────────────
 seq = st.session_state.last_sequence or {}
 val = st.session_state.last_validation
+_cs = session_from_state(st.session_state)
+_workflow = _cs.workflow_stage()
 render_header(
     gene_name=seq.get("gene_name"),
     gene_organism=seq.get("organism"),
     validation_valid=val.get("passed_checks") if val else None,
+    workflow_stage=_workflow.value if _workflow != WorkflowStage.EMPTY else None,
     message_count=len([m for m in st.session_state.messages if m.get("role") == "user"]),
     tool_call_count=len(st.session_state.tool_calls_log),
 )
@@ -265,6 +278,7 @@ else:
             seqviz_data=st.session_state.last_seqviz,
             primers_result=st.session_state.last_primers or {},
             validation_result=st.session_state.last_validation or {},
+            annotation_result=st.session_state.last_annotation or {},
             export_paths=st.session_state.export_paths,
         )
 

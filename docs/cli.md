@@ -1,32 +1,46 @@
-# Command-line tools
+# Command-line interface
 
-Each bioinformatics capability lives under `src/tools/` and can be run as a standalone script. Examples are in `main.py`.
+Crake exposes one scripting surface: the **`crake` Typer CLI**. It uses the same `tool_dispatch` layer as the Streamlit app (no shell-outs to tool modules).
 
-General pattern:
+## Setup
 
 ```bash
-uv run python src/tools/<module>.py --help
+uv sync
+uv run crake --help
 ```
 
-## Modules
+## Slash commands (ephemeral session)
 
-| Script | Purpose |
-|--------|---------|
-| `fetch_sequence.py` | NCBI gene search, accession fetch, UniProt protein |
-| `import_file.py` | SnapGene `.dna`, GenBank, FASTA import |
-| `sequence_design.py` | Codon optimization, part suggestions |
-| `target_site.py` | CRISPR PAM, restriction sites, homology arms |
-| `primer_design.py` | Primer3 PCR primers |
-| `assembly.py` | Gibson or restriction–ligation simulation |
-| `validation.py` | ORFs, GC, restriction map, warnings |
-| `gene_introduction.py` | End-to-end fetch → optimize → suggest parts |
-| `export.py` | GenBank, FASTA, SVG map, primer CSV, protocol |
-| `annotation.py` | Restriction sites; GenBank feature summary |
+```bash
+uv run crake cmd "/genesearch GFP in Aequorea victoria"
+uv run crake cmd "/fetch U55762"
+uv run crake cmd "/load ./plasmid.gb"
+uv run crake cmd "/optimize yeast" --session-out ./session.json
+uv run crake cmd "/validate"
+uv run crake cmd "/annotate"
+uv run crake cmd "/primers"
+uv run crake cmd "/assemble gibson backbone.fa"
+uv run crake cmd "/export pMyGFP"
+uv run crake cmd "/export pMyGFP --allow-sequence-only"
+```
+
+Persist workflow state with `--session-out` and resume with the session subcommands below.
+
+## Session file workflow
+
+```bash
+uv run crake session run ./session.json "/validate"
+uv run crake session export ./session.json --name pMyGFP --output-dir ./crake_output
+```
+
+## Streamlit
+
+```bash
+uv run streamlit run app.py
+```
+
+See [README.md](../README.md) for the full command list (`/help` in the app).
 
 ## Environment
 
-Set `NCBI_EMAIL` (and optionally `NCBI_API_KEY`) before using `fetch_sequence.py` or any command that hits Entrez. See `.env.example`.
-
-## Streamlit vs CLI
-
-The Streamlit app (`app.py`) does not shell out to these scripts; it calls the same functions through `tool_dispatch.py`. Behavior should match between UI slash commands and direct script use.
+Set `NCBI_EMAIL` (and optionally `NCBI_API_KEY`) before fetch commands. See `.env.example`.

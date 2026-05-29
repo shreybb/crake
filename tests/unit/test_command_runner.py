@@ -56,3 +56,32 @@ class TestExecuteCommand:
             tool, _, _ = execute_command("targets", "crispr TTTV", session)
         assert tool == "find_target_sites"
         assert mock_dispatch.call_args[0][1]["pam"] == "TTTV"
+
+    def test_annotate_dispatches(self):
+        session = {"last_sequence": {"sequence": "ATCG" * 20, "topology": "circular"}}
+        with patch("src.agent.command_runner.dispatch") as mock_dispatch:
+            mock_dispatch.return_value = {"restriction_sites": [], "site_count": 0}
+            tool, msg, _ = execute_command("annotate", "", session)
+        assert tool == "annotate_sequence"
+        assert "Annotation" in msg
+
+    def test_export_format_sequence_only_warning(self):
+        msg = format_result_message(
+            "export_files",
+            {"genbank": "/tmp/x.gb", "provenance": "not_run"},
+        )
+        assert "sequence-only" in msg.lower() or "not simulated" in msg.lower()
+
+    def test_validate_builds_input(self):
+        session = {
+            "last_sequence": {
+                "sequence": "ATG" * 100,
+                "gene_name": "gfp",
+                "topology": "linear",
+            },
+        }
+        with patch("src.agent.command_runner.dispatch") as mock_dispatch:
+            mock_dispatch.return_value = {"passed_checks": True, "warnings": []}
+            tool, _, _ = execute_command("validate", "", session)
+        assert tool == "validate_plasmid"
+        assert mock_dispatch.call_args[0][1]["name"] == "gfp"

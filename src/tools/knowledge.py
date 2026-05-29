@@ -1,30 +1,12 @@
 """Load and query the knowledge base JSON files."""
 from __future__ import annotations
-import json
-from pathlib import Path
 
-_KB_DIR = Path(__file__).parent.parent / "knowledge"
-
-
-def _load(filename: str) -> dict:
-    return json.loads((_KB_DIR / filename).read_text())
-
-
-def get_backbones() -> dict:
-    return _load("backbones.json")
-
-
-def get_promoters() -> dict:
-    return _load("promoters.json")
-
-
-def get_terminators() -> dict:
-    return _load("terminators.json")
-
-
-def get_selectable_markers() -> dict:
-    return _load("selectable_markers.json")
-
+from src.knowledge import (
+    get_backbones,
+    get_promoters,
+    get_selectable_markers,
+    get_terminators,
+)
 
 _PLASTID_NOTE = {
     "name": "plant_plastid",

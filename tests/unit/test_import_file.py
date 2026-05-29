@@ -1,17 +1,12 @@
 """Unit tests for import_file tool."""
 from __future__ import annotations
 
-import tempfile
-from io import StringIO
-from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
-import pytest
-from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
+from Bio.SeqRecord import SeqRecord
 
-from src.tools.import_file import import_sequence, _seqrecord_to_result
-
+from src.tools.import_file import _seqrecord_to_result, import_sequence
 
 # ---------------------------------------------------------------------------
 # Helpers

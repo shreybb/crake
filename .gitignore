@@ -18,6 +18,11 @@ firebase-debug.log
 crake_output/
 exports/
 
+# Demo screenshots (WIP — add to repo when ready)
+docs/assets/demo.gif
+docs/assets/demo-hero.png
+docs/assets/demo-workflow.png
+
 # Secrets and machine-local config
 .env
 .env.local

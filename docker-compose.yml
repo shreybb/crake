@@ -1,0 +1,9 @@
+services:
+  crake:
+    build: .
+    ports:
+      - "8501:8501"
+    env_file:
+      - .env
+    volumes:
+      - ./crake_output:/app/crake_output

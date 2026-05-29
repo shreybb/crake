@@ -202,10 +202,13 @@ class TestToolDispatch:
 
     def test_export_reads_from_session(self, mocker, tmp_path):
         session = {
+            "last_sequence": {"sequence": "ATCGATCG" * 100, "topology": "circular"},
             "last_assembly": {
                 "product_sequence": "ATCGATCG" * 100,
                 "topology": "circular",
                 "method": "gibson",
+                "success": True,
+                "provenance": "simulated",
                 "input_parts": [],
             },
             "last_validation": {

@@ -2,21 +2,15 @@
 """
 Simulate DNA assembly using pydna.
 
-Usage:
-    python src/tools/assembly.py --method gibson --parts insert.fa backbone.fa
-    python src/tools/assembly.py --method restriction --parts insert.fa backbone.fa --enzymes EcoRI HindIII
-
-Outputs JSON with simulated construct details.
+CLI: ``crake cmd "/assemble gibson backbone.fa"`` (after loading the insert sequence).
 """
 from __future__ import annotations
-import argparse
-import json
-import sys
+
 from pathlib import Path
 
 from Bio import SeqIO
-from pydna.dseqrecord import Dseqrecord
 from pydna.assembly import Assembly
+from pydna.dseqrecord import Dseqrecord
 
 _DNA_CHARS = frozenset("ACGTUNRYMKSWHBVD")
 _SEQUENCE_FILE_SUFFIXES = {".fa", ".fasta", ".gb", ".genbank", ".dna"}
@@ -102,7 +96,6 @@ def simulate_restriction_ligation(
 ) -> dict:
     """Simulate restriction enzyme digest + ligation."""
     from Bio.Restriction import RestrictionBatch
-    from pydna.dseqrecord import Dseqrecord
 
     batch = RestrictionBatch(enzymes)
     digested_parts = []
@@ -135,31 +128,3 @@ def simulate_restriction_ligation(
         "topology": "circular",
         "digested_fragment_count": len(digested_parts),
     }
-
-
-def main() -> None:
-    parser = argparse.ArgumentParser(description="Simulate DNA assembly")
-    parser.add_argument("--method", required=True,
-                        choices=["gibson", "restriction"],
-                        help="Assembly method")
-    parser.add_argument("--parts", nargs="+", required=True,
-                        help="Input parts: file paths (.fa/.gb) or raw sequences")
-    parser.add_argument("--enzymes", nargs="+", default=[],
-                        help="Restriction enzymes (for --method restriction)")
-    parser.add_argument("--overlap", type=int, default=20,
-                        help="Minimum overlap for Gibson assembly (default 20bp)")
-    args = parser.parse_args()
-
-    if args.method == "gibson":
-        result = simulate_gibson(args.parts, overlap_min=args.overlap)
-    else:
-        if not args.enzymes:
-            print(json.dumps({"error": "--enzymes required for restriction method"}))
-            sys.exit(1)
-        result = simulate_restriction_ligation(args.parts, args.enzymes)
-
-    print(json.dumps(result, indent=2))
-
-
-if __name__ == "__main__":
-    main()

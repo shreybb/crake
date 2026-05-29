@@ -7,14 +7,10 @@ Supported formats:
     .gb / .genbank  Annotated GenBank flat file (via Biopython)
     .fa / .fasta    Plain FASTA (via Biopython)
 
-Usage:
-    python src/tools/import_file.py --path /path/to/plasmid.gb
+CLI: ``crake cmd "/load /path/to/plasmid.gb"``.
 """
 from __future__ import annotations
 
-import argparse
-import json
-import sys
 from pathlib import Path
 
 from Bio import SeqIO
@@ -102,14 +98,3 @@ def _import_genbank(path: Path) -> dict:
 def _import_fasta(path: Path) -> dict:
     record = SeqIO.read(str(path), "fasta")
     return _seqrecord_to_result(record, str(path))
-
-
-def main() -> None:
-    parser = argparse.ArgumentParser(description="Import a sequence file into Crake")
-    parser.add_argument("--path", required=True, help="Path to .dna, .gb, .genbank, .fa, or .fasta file")
-    args = parser.parse_args()
-    print(json.dumps(import_sequence(args.path), indent=2))
-
-
-if __name__ == "__main__":
-    main()

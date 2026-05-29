@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": {
+    "type": "object",
+    "additionalProperties": {
+      "type": "object",
+      "required": ["description"],
+      "properties": {
+        "description": { "type": "string" },
+        "size_bp": { "type": "integer" },
+        "selection": { "type": "string" },
+        "host": { "oneOf": [{ "type": "string" }, { "type": "array", "items": { "type": "string" } }] },
+        "genbank": { "type": ["string", "null"] },
+        "addgene": { "type": ["string", "null", "integer"] }
+      },
+      "additionalProperties": true
+    }
+  }
+}

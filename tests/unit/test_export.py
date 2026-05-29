@@ -1,8 +1,5 @@
 """Unit tests for export tool."""
 import csv
-import json
-import tempfile
-from pathlib import Path
 
 import pytest
 from Bio import SeqIO
@@ -191,7 +188,7 @@ class TestWriteGenbank:
         """
         # Build a sequence with EcoRI (GAATTC) at 0-based position 5
         sequence = "AAAAAGAATTCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-        from Bio.Restriction import EcoRI, Analysis
+        from Bio.Restriction import Analysis, EcoRI
         from Bio.Seq import Seq as BioSeq
         cut_pos = Analysis([EcoRI], BioSeq(sequence), linear=True).full()[EcoRI][0]
         assembly = {**ASSEMBLY_JSON, "product_sequence": sequence, "product_length_bp": len(sequence)}

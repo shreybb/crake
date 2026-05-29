@@ -1,9 +1,12 @@
 """Unit tests for bio tool scripts."""
-import json
-import pytest
 
-from src.tools.knowledge import suggest_backbone, suggest_promoter, suggest_terminator, suggest_selectable_marker
 from src.tools.annotation import find_restriction_sites
+from src.tools.knowledge import (
+    suggest_backbone,
+    suggest_promoter,
+    suggest_selectable_marker,
+    suggest_terminator,
+)
 from src.tools.sequence_design import analyze_sequence, suggest_parts_for_host
 from src.tools.validation import find_orfs, gc_windows, validate_plasmid
 

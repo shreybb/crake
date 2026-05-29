@@ -5,13 +5,13 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from src.tools.fetch_sequence import (
+    _extract_cds,
+    _topology_from_record,
     fetch_by_accession,
     fetch_from_uniprot,
     infer_host,
     ncbi_email_error,
     search_gene,
-    _extract_cds,
-    _topology_from_record,
 )
 
 

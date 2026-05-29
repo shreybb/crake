@@ -72,15 +72,35 @@ def _build_activity_html(message_count: int, tool_call_count: int) -> str:
     return kbd_hint + msgs + tools
 
 
+_WORKFLOW_LABELS = {
+    "loaded": "Loaded",
+    "optimized": "Optimized",
+    "validated": "Validated",
+    "assembled": "Assembled",
+    "exported": "Exported",
+}
+
+
+def _build_workflow_pill_html(stage: str) -> str:
+    label = _WORKFLOW_LABELS.get(stage, stage.title())
+    return (
+        f'<span class="crake-pill" title="Workflow stage">'
+        f'<span class="crake-pip pip-blue"></span>{label}</span>'
+    )
+
+
 def render_header(
     gene_name: str | None = None,
     gene_organism: str | None = None,
     validation_valid: bool | None = None,
+    workflow_stage: str | None = None,
     message_count: int = 0,
     tool_call_count: int = 0,
 ) -> None:
     """Sticky top bar: wordmark + live status pills + session stats."""
     pills_html = ""
+    if workflow_stage:
+        pills_html += _build_workflow_pill_html(workflow_stage)
     if gene_name:
         pills_html += _build_gene_pill_html(gene_name, gene_organism)
     if validation_valid is not None:
@@ -509,6 +529,23 @@ def _render_top_viewer(seqviz_data: dict | None, export_paths: dict) -> None:
         _empty_state("Load a sequence to see the interactive map here.", "🗺️")
 
 
+def render_annotation(annotation_result: dict, tab) -> None:
+    with tab:
+        sites = annotation_result.get("restriction_sites", [])
+        if not sites:
+            _empty_state("Run `/annotate` to scan restriction sites.", "✂️")
+            return
+        rows = [
+            {
+                "Enzyme": s["enzyme"],
+                "Cuts": s["cut_count"],
+                "Positions": ", ".join(str(p) for p in s["positions"][:8]),
+            }
+            for s in sites[:40]
+        ]
+        st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+
+
 def render_data_panel(
     sequence_result: dict,
     optimization_result: dict | None,
@@ -516,15 +553,17 @@ def render_data_panel(
     primers_result: dict,
     validation_result: dict,
     export_paths: dict,
+    annotation_result: dict | None = None,
 ) -> None:
     """Render the right-hand data panel: seqviz viewer at top, then tabs."""
     _render_top_viewer(seqviz_data, export_paths)
     st.markdown('<div style="margin-top:4px"></div>', unsafe_allow_html=True)
 
-    tab_seq, tab_primers, tab_val, tab_dl = st.tabs(
-        ["Sequence", "Primers", "Validation", "Downloads"]
+    tab_seq, tab_ann, tab_primers, tab_val, tab_dl = st.tabs(
+        ["Sequence", "Annotation", "Primers", "Validation", "Downloads"]
     )
     render_sequence(sequence_result, tab_seq, optimization_result=optimization_result)
+    render_annotation(annotation_result or {}, tab_ann)
     render_primers(primers_result, tab_primers)
     render_validation(validation_result, tab_val)
     render_downloads(export_paths, tab_dl)

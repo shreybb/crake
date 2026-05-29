@@ -2,8 +2,7 @@
 
 The `dispatch` function is the single entry point.  It:
 1. Calls the appropriate tool function with validated arguments.
-2. Stores results in `session` for downstream tools (e.g. export_files
-   reads last_assembly / last_validation / last_primers automatically).
+2. Updates :class:`ConstructSession` for downstream tools.
 3. Returns the result dict (always JSON-serialisable).
 
 No Streamlit imports — fully testable without a running app.
@@ -11,30 +10,13 @@ No Streamlit imports — fully testable without a running app.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
 
 from Bio import SeqIO
 
-# Tool imports — direct Python calls, no subprocess
-from src.tools.fetch_sequence import (
-    fetch_by_accession as _fetch_by_accession,
-    fetch_from_uniprot as _fetch_from_uniprot,
-    search_gene as _search_gene,
-)
-from src.tools.import_file import import_sequence as _import_sequence
-from src.tools.sequence_design import (
-    optimize_codons as _optimize_codons,
-    suggest_parts_for_host as _suggest_parts,
-)
-from src.tools.target_site import (
-    extract_homology_arms,
-    find_crispr_pam_sites,
-    find_restriction_edit_sites,
-)
-from src.tools.primer_design import design_primers as _design_primers
+from src.session.construct import ConstructSession
+from src.session.streamlit_adapter import apply_to_state, session_from_state
+from src.tools.annotation import annotate_from_genbank, find_restriction_sites
 from src.tools.assembly import simulate_gibson, simulate_restriction_ligation
-from src.tools.validation import validate_plasmid as _validate_plasmid
-from src.tools.gene_introduction import introduce_gene as _introduce_gene
 from src.tools.export import (
     write_fasta,
     write_genbank,
@@ -42,21 +24,35 @@ from src.tools.export import (
     write_primers_csv,
     write_protocol_md,
 )
+from src.tools.fetch_sequence import (
+    fetch_by_accession as _fetch_by_accession,
+)
+from src.tools.fetch_sequence import (
+    fetch_from_uniprot as _fetch_from_uniprot,
+)
+from src.tools.fetch_sequence import (
+    search_gene as _search_gene,
+)
+from src.tools.gene_introduction import introduce_gene as _introduce_gene
+from src.tools.import_file import import_sequence as _import_sequence
+from src.tools.primer_design import design_primers as _design_primers
+from src.tools.sequence_design import (
+    optimize_codons as _optimize_codons,
+)
+from src.tools.sequence_design import (
+    suggest_parts_for_host as _suggest_parts,
+)
+from src.tools.target_site import (
+    extract_homology_arms,
+    find_crispr_pam_sites,
+    find_restriction_edit_sites,
+)
+from src.tools.validation import validate_plasmid as _validate_plasmid
 
 
-def dispatch(tool_name: str, tool_input: dict, session: dict) -> dict:
-    """Call the named tool and return its JSON-serialisable result.
-
-    Args:
-        tool_name: One of the names defined in tool_definitions.TOOL_DEFINITIONS.
-        tool_input: Parameter dict for the tool (from slash commands or direct calls).
-        session: Mutable session dict (e.g. st.session_state).  Side effects:
-            ``last_sequence``, ``last_assembly``, ``last_validation``,
-            ``last_primers``, and ``export_paths`` are written here.
-
-    Raises:
-        ValueError: If ``tool_name`` is not recognised.
-    """
+def dispatch(tool_name: str, tool_input: dict, session: dict | ConstructSession) -> dict:
+    """Call the named tool and return its JSON-serialisable result."""
+    cs = session_from_state(session)
     handlers = {
         "search_gene": _handle_search_gene,
         "fetch_by_accession": _handle_fetch_by_accession,
@@ -68,12 +64,16 @@ def dispatch(tool_name: str, tool_input: dict, session: dict) -> dict:
         "simulate_assembly": _handle_simulate_assembly,
         "validate_plasmid": _handle_validate_plasmid,
         "introduce_gene": _handle_introduce_gene,
+        "annotate_sequence": _handle_annotate_sequence,
         "export_files": _handle_export_files,
     }
     handler = handlers.get(tool_name)
     if handler is None:
         raise ValueError(f"Unknown tool: '{tool_name}'")
-    return handler(tool_input, session)
+    result = handler(tool_input, cs)
+    if not isinstance(session, ConstructSession):
+        apply_to_state(cs, session)
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -81,23 +81,23 @@ def dispatch(tool_name: str, tool_input: dict, session: dict) -> dict:
 # ---------------------------------------------------------------------------
 
 _FEAT_COLORS: dict[str, str] = {
-    "CDS":           "#4ADE80",   # vivid green
-    "gene":          "#86EFAC",   # light green
-    "promoter":      "#818CF8",   # indigo
-    "terminator":    "#F87171",   # red
-    "misc_binding":  "#FCD34D",   # amber
-    "rep_origin":    "#C084FC",   # purple
-    "regulatory":    "#FB923C",   # orange
-    "5'UTR":         "#67E8F9",   # cyan
-    "3'UTR":         "#67E8F9",   # cyan
-    "misc_feature":  "#94A3B8",   # slate
-    "primer_bind":   "#38BDF8",   # sky blue
-    "LTR":           "#A78BFA",   # violet
-    "enhancer":      "#FF6B6B",   # pink-red
-    "exon":          "#10B981",   # emerald
-    "intron":        "#6B7280",   # gray
-    "sig_peptide":   "#F472B6",   # pink
-    "mat_peptide":   "#34D399",   # teal
+    "CDS":           "#4ADE80",
+    "gene":          "#86EFAC",
+    "promoter":      "#818CF8",
+    "terminator":    "#F87171",
+    "misc_binding":  "#FCD34D",
+    "rep_origin":    "#C084FC",
+    "regulatory":    "#FB923C",
+    "5'UTR":         "#67E8F9",
+    "3'UTR":         "#67E8F9",
+    "misc_feature":  "#94A3B8",
+    "primer_bind":   "#38BDF8",
+    "LTR":           "#A78BFA",
+    "enhancer":      "#FF6B6B",
+    "exon":          "#10B981",
+    "intron":        "#6B7280",
+    "sig_peptide":   "#F472B6",
+    "mat_peptide":   "#34D399",
 }
 _DEFAULT_FEAT_COLOR = "#818CF8"
 
@@ -107,7 +107,6 @@ def _feat_color(feat_type: str) -> str:
 
 
 def _result_to_seqviz(result: dict) -> dict | None:
-    """Convert a fetch/import result dict to seqviz component data."""
     seq = result.get("sequence", "")
     if not seq or result.get("sequence_type") == "protein":
         return None
@@ -116,7 +115,6 @@ def _result_to_seqviz(result: dict) -> dict | None:
     for f in result.get("features", []):
         feat_type = f.get("type", "")
         label = (f.get("product") or f.get("gene") or f.get("name") or "")[:32]
-        # Include type prefix when label doesn't already convey it
         if label and feat_type and feat_type.lower() not in label.lower():
             feat_name = f"{feat_type}: {label}"
         elif label:
@@ -134,8 +132,11 @@ def _result_to_seqviz(result: dict) -> dict | None:
     return {"name": name, "seq": seq, "annotations": annotations}
 
 
+def _set_seqviz(cs: ConstructSession, result: dict) -> None:
+    cs.seqviz = _result_to_seqviz(result)
+
+
 def _genbank_to_seqviz(gb_path: Path) -> dict | None:
-    """Read a GenBank file and return seqviz component data with annotations."""
     try:
         record = SeqIO.read(str(gb_path), "genbank")
         name = (record.name or record.id or "construct")[:30]
@@ -168,21 +169,22 @@ def _genbank_to_seqviz(gb_path: Path) -> dict | None:
 
 
 # ---------------------------------------------------------------------------
-# Individual handlers
+# Handlers
 # ---------------------------------------------------------------------------
 
-def _handle_search_gene(inp: dict, session: dict) -> dict:
+def _handle_search_gene(inp: dict, cs: ConstructSession) -> dict:
     result = _search_gene(
         inp["gene_name"],
         inp["organism"],
         full_sequence=inp.get("full_sequence", False),
     )
-    session["last_sequence"] = result
-    session["last_seqviz"] = _result_to_seqviz(result)
+    cs.set_sequence_from_result(result, "genesearch")
+    if cs.sequence:
+        _set_seqviz(cs, cs.sequence.to_dict())
     return result
 
 
-def _handle_fetch_by_accession(inp: dict, session: dict) -> dict:
+def _handle_fetch_by_accession(inp: dict, cs: ConstructSession) -> dict:
     db = inp.get("db", "nucleotide")
     if db == "uniprot":
         result = _fetch_from_uniprot(inp["accession"])
@@ -193,41 +195,34 @@ def _handle_fetch_by_accession(inp: dict, session: dict) -> dict:
             full_sequence=inp.get("full_sequence", False),
         )
     if "error" not in result:
-        session["last_sequence"] = result
-        session["last_seqviz"] = _result_to_seqviz(result)
+        cs.set_sequence_from_result(result, "fetch")
+        if cs.sequence:
+            _set_seqviz(cs, cs.sequence.to_dict())
     return result
 
 
-def _handle_import_sequence(inp: dict, session: dict) -> dict:
+def _handle_import_sequence(inp: dict, cs: ConstructSession) -> dict:
     result = _import_sequence(inp["path"])
     if "error" not in result:
-        session["last_sequence"] = result
-        session["last_seqviz"] = _result_to_seqviz(result)
+        cs.set_sequence_from_result(result, "import")
+        if cs.sequence:
+            _set_seqviz(cs, cs.sequence.to_dict())
     return result
 
 
-def _handle_suggest_parts(inp: dict, session: dict) -> dict:
+def _handle_suggest_parts(inp: dict, cs: ConstructSession) -> dict:
     return _suggest_parts(inp["host"])
 
 
-def _handle_optimize_codons(inp: dict, session: dict) -> dict:
+def _handle_optimize_codons(inp: dict, cs: ConstructSession) -> dict:
     result = _optimize_codons(inp["sequence"], inp["host"])
-    session["last_optimization"] = result
-    if "error" not in result and result.get("optimized_sequence"):
-        prior = session.get("last_sequence") or {}
-        updated = {
-            **prior,
-            "sequence": result["optimized_sequence"],
-            "length_bp": len(result["optimized_sequence"]),
-        }
-        if not updated.get("gene_name"):
-            updated["gene_name"] = prior.get("gene_name") or "optimized"
-        session["last_sequence"] = updated
-        session["last_seqviz"] = _result_to_seqviz(updated)
+    cs.promote_optimized(result)
+    if cs.sequence:
+        _set_seqviz(cs, cs.sequence.to_dict())
     return result
 
 
-def _handle_find_target_sites(inp: dict, session: dict) -> dict:
+def _handle_find_target_sites(inp: dict, cs: ConstructSession) -> dict:
     seq = inp["sequence"]
     method = inp["method"]
     arm_length = inp.get("arm_length", 500)
@@ -252,18 +247,18 @@ def _handle_find_target_sites(inp: dict, session: dict) -> dict:
     return {"error": f"Unknown method: {method}"}
 
 
-def _handle_design_primers(inp: dict, session: dict) -> dict:
+def _handle_design_primers(inp: dict, cs: ConstructSession) -> dict:
     result = _design_primers(
         template=inp["template"],
         overhang_fwd=inp.get("overhang_fwd", ""),
         overhang_rev=inp.get("overhang_rev", ""),
         opt_tm=inp.get("opt_tm", 60.0),
     )
-    session["last_primers"] = result
+    cs.primers = result
     return result
 
 
-def _handle_simulate_assembly(inp: dict, session: dict) -> dict:
+def _handle_simulate_assembly(inp: dict, cs: ConstructSession) -> dict:
     method = inp["method"]
     fragments = inp["fragments"]
 
@@ -273,22 +268,21 @@ def _handle_simulate_assembly(inp: dict, session: dict) -> dict:
         enzymes = inp.get("enzymes", [])
         result = simulate_restriction_ligation(fragments, enzymes)
 
-    if result.get("success"):
-        session["last_assembly"] = result
+    cs.record_assembly(result)
     return result
 
 
-def _handle_validate_plasmid(inp: dict, session: dict) -> dict:
+def _handle_validate_plasmid(inp: dict, cs: ConstructSession) -> dict:
     result = _validate_plasmid(
         sequence=inp["sequence"],
         name=inp.get("name", "construct"),
         topology=inp.get("topology", "circular"),
     )
-    session["last_validation"] = result
+    cs.validation = result
     return result
 
 
-def _handle_introduce_gene(inp: dict, session: dict) -> dict:
+def _handle_introduce_gene(inp: dict, cs: ConstructSession) -> dict:
     result = _introduce_gene(
         gene_name=inp["gene_name"],
         source_organism=inp["source_organism"],
@@ -296,28 +290,49 @@ def _handle_introduce_gene(inp: dict, session: dict) -> dict:
         expression_goal=inp.get("expression_goal", ""),
     )
     if "error" not in result:
-        session["last_gene_introduction"] = result
-        # Store optimised sequence as the active sequence for downstream tools
-        session["last_sequence"] = {
-            "gene_name": result["gene"],
-            "sequence": result["optimized_sequence"],
-            "length_bp": len(result["optimized_sequence"]),
-            "organism": result["source_organism"],
-            "suggested_host": result["target_host"],
-            "topology": "linear",
-        }
-        session["last_seqviz"] = _result_to_seqviz(session["last_sequence"])
+        cs.gene_introduction = result
+        cs.set_sequence_from_result(
+            {
+                "gene_name": result["gene"],
+                "sequence": result["optimized_sequence"],
+                "length_bp": len(result["optimized_sequence"]),
+                "organism": result["source_organism"],
+                "suggested_host": result["target_host"],
+                "topology": "linear",
+            },
+            "introduce_gene",
+        )
+        if cs.sequence:
+            _set_seqviz(cs, cs.sequence.to_dict())
     return result
 
 
-def _handle_export_files(inp: dict, session: dict) -> dict:
+def _handle_annotate_sequence(inp: dict, cs: ConstructSession) -> dict:
+    if inp.get("path"):
+        result = annotate_from_genbank(inp["path"])
+    else:
+        seq = inp.get("sequence", "")
+        linear = inp.get("topology", "linear") == "linear"
+        sites = find_restriction_sites(seq, linear=linear)
+        result = {
+            "restriction_sites": sites,
+            "site_count": len(sites),
+            "topology": "linear" if linear else "circular",
+        }
+    cs.annotation = result
+    return result
+
+
+def _handle_export_files(inp: dict, cs: ConstructSession) -> dict:
     name = inp["name"]
     out_dir = Path(inp.get("output_dir", "./crake_output"))
     out_dir.mkdir(parents=True, exist_ok=True)
+    allow_sequence_only = bool(inp.get("allow_sequence_only", False))
 
-    assembly = session.get("last_assembly") or {}
-    validation = session.get("last_validation") or {}
-    primers = session.get("last_primers") or {}
+    assembly_rec = cs.assembly_for_export(allow_sequence_only=allow_sequence_only)
+    assembly = assembly_rec.to_dict()
+    validation = cs.validation or {}
+    primers = cs.primers or {}
 
     paths: dict[str, str] = {}
     sequence = assembly.get("product_sequence", "")
@@ -338,10 +353,9 @@ def _handle_export_files(inp: dict, session: dict) -> dict:
         except Exception as exc:
             paths["map_error"] = str(exc)
 
-        # Update seqviz with annotated GenBank data (richer than fetch result)
         seqviz = _genbank_to_seqviz(gb_path)
         if seqviz:
-            session["last_seqviz"] = seqviz
+            cs.seqviz = seqviz
 
     primer_pairs = primers.get("primer_pairs", [])
     if primer_pairs:
@@ -352,6 +366,7 @@ def _handle_export_files(inp: dict, session: dict) -> dict:
     md_path = out_dir / "protocol.md"
     write_protocol_md(assembly, primers, validation, name, md_path)
     paths["protocol"] = str(md_path)
+    paths["provenance"] = assembly_rec.provenance.value
 
-    session["export_paths"] = paths
+    cs.export_paths = paths
     return paths

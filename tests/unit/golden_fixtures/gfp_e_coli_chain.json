@@ -1,0 +1,60 @@
+{
+  "optimize": {
+    "original_sequence": "ATGGTGAGCAAGGGCGAGGAGCTGTTCACCGGGGTGGTGCCCATCCTGGTCGAGCTGGACGGCGACGTAAACGGCCACAAGTTCAGCGTGTCCGGCGAGGGCGAGGGCGATGCCACCTACGGCAAGCTGACCCTGAAGTTCATCTGCACCACCGGCAAGCTGCCCGTGCCCTGGCCCACCCTCGTGACCACCCTGACCTACGGCGTGCAGTGCTTCAGCCGCTACCCCGACCACATGAAGCAGCACGACTTCTTCAAGTCCGCCATGCCCGAAGGCTACGTCCAGGAGCGCACCATCTTCTTCAAGATCCGCCACAACATCGAGGACGGCAGCGTGCAGCTCGCCGGCCACCTCGCCCTCAACTTCGAGATCAGCGAGTTCATCTACAAGGCTAAGATCCGCGAGCACAATCTGCTGGAGTACAACTTCAACAGCCACAATGTGTACATCACGGCCGACAAGCAGAAGAACGGCATCAAGGTGAACTTCAAGATCCGCCACAACATCGAGGACGGCAGCGTGCAGCTCGCCGGCCACTAA",
+    "optimized_sequence": "<seq len=540>",
+    "host": "e_coli",
+    "species_table": "e_coli",
+    "length_bp": 540,
+    "gc_before": 60.74,
+    "gc_after": 47.96,
+    "analysis": {
+      "length_bp": 540,
+      "gc_content_percent": 47.96,
+      "at_content_percent": 52.04,
+      "base_counts": {
+        "A": 155,
+        "T": 126,
+        "G": 142,
+        "C": 117,
+        "N": 0
+      }
+    }
+  },
+  "validate_keys": [
+    "gc_analysis",
+    "length_bp",
+    "name",
+    "orfs",
+    "passed_checks",
+    "restriction_sites",
+    "topology",
+    "warnings"
+  ],
+  "validate_passed": true,
+  "validate_length": 540,
+  "primers": {
+    "template_length": 540,
+    "primer_pairs": [
+      {
+        "rank": 0,
+        "forward_len": 20,
+        "reverse_len": 20
+      },
+      {
+        "rank": 1,
+        "forward_len": 20,
+        "reverse_len": 20
+      },
+      {
+        "rank": 2,
+        "forward_len": 20,
+        "reverse_len": 20
+      }
+    ],
+    "warning": null,
+    "overhangs_applied": {
+      "forward": "",
+      "reverse": ""
+    }
+  }
+}

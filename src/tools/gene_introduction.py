@@ -19,7 +19,6 @@ from src.tools.knowledge import (
 )
 from src.tools.sequence_design import optimize_codons
 
-
 _VALID_HOSTS = {"e_coli", "yeast", "plant_nuclear", "agrobacterium"}
 
 # Keywords that signal a desired expression regulation type.

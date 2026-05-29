@@ -70,9 +70,14 @@ COMMANDS: dict[str, Command] = {
             usage="/validate",
         ),
         Command(
+            name="annotate",
+            description="Restriction enzyme map for the loaded sequence",
+            usage="/annotate",
+        ),
+        Command(
             name="export",
             description="Export GenBank, FASTA, SVG map, primers CSV, and protocol",
-            usage="/export <name>",
+            usage="/export <name> [--allow-sequence-only]",
         ),
         Command(
             name="load",

@@ -255,12 +255,29 @@ TOOL_DEFINITIONS: list[dict] = [
         },
     },
     {
+        "name": "annotate_sequence",
+        "description": (
+            "Annotate restriction enzyme sites in a sequence or summarize features from a GenBank file."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "sequence": {"type": "string"},
+                "path": {"type": "string", "description": "GenBank/FASTA path (alternative to sequence)"},
+                "topology": {
+                    "type": "string",
+                    "enum": ["linear", "circular"],
+                    "default": "linear",
+                },
+            },
+        },
+    },
+    {
         "name": "export_files",
         "description": (
             "Export the current design to lab-ready files: "
             "annotated GenBank (.gb), FASTA (.fa), plasmid map (.svg), "
-            "primer order sheet (.csv), and wet-lab protocol (.md). "
-            "Call this after validate_plasmid."
+            "primer order sheet (.csv), and wet-lab protocol (.md) with assembly provenance."
         ),
         "input_schema": {
             "type": "object",
@@ -272,6 +289,11 @@ TOOL_DEFINITIONS: list[dict] = [
                 "output_dir": {
                     "type": "string",
                     "default": "./crake_output",
+                },
+                "allow_sequence_only": {
+                    "type": "boolean",
+                    "default": False,
+                    "description": "Export loaded sequence without simulated assembly",
                 },
             },
             "required": ["name"],

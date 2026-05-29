@@ -8,6 +8,7 @@ we test the biological correctness of the constants by:
 from __future__ import annotations
 
 import re
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------

@@ -16,18 +16,28 @@ cp .env.example .env   # NCBI_EMAIL required for live fetch tests you run locall
 Run the full suite before opening a PR:
 
 ```bash
-uv run pytest
+uv run ruff check .
+uv run pytest --cov=src/agent --cov=src/session --cov-fail-under=85
 ```
 
 Tests mock NCBI by default; no network required for CI.
+
+Update golden fixtures when intentional output changes:
+
+```bash
+CRAKE_UPDATE_GOLDEN=1 uv run pytest tests/golden/ -q
+```
 
 ## Adding a slash command
 
 1. Define the command in `src/agent/commands.py` (`COMMANDS` + help text).
 2. Parse args and build tool input in `src/agent/command_runner.py` (`_build_tool_input`).
 3. Implement or reuse logic in `src/tools/` and wire in `src/agent/tool_dispatch.py`.
-4. Add schema entry in `src/agent/tool_definitions.py` if it is a new tool name.
-5. Add unit tests under `tests/unit/`.
+4. Update `ConstructSession` in `src/session/construct.py` if the command changes workflow state.
+5. Add schema entry in `src/agent/tool_definitions.py` if it is a new tool name.
+6. Add unit tests under `tests/unit/`.
+
+Session and export changes must note **provenance** impact in the PR description.
 
 ## Code style
 

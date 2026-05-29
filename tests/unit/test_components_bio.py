@@ -6,7 +6,6 @@ so pure-logic values are extracted from the source text using regex and exec().
 from __future__ import annotations
 
 import re
-import textwrap
 from pathlib import Path
 
 _COMPONENTS_SRC = (

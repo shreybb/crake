@@ -1,7 +1,7 @@
 # Genetics Expert Review — 2026-03-22
 
-Reviewed by: Genetics Expert agent
-Scope: Full codebase audit — knowledge base accuracy, tool implementations, agent system prompt
+Reviewed via: structured genetics review checklist (human + assisted review)
+Scope: Knowledge base accuracy, tool implementations, validation heuristics
 
 ---
 

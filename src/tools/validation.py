@@ -2,19 +2,13 @@
 """
 Validate a plasmid construct: ORF check, GC content, restriction map.
 
-Usage:
-    python src/tools/validation.py --sequence ATCG...
-    python src/tools/validation.py --file construct.gb
+CLI: ``crake cmd "/validate"`` (after loading a sequence).
 """
 from __future__ import annotations
-import argparse
-import json
-import sys
-from pathlib import Path
 
 from Bio import SeqIO
+from Bio.Restriction import Analysis, CommOnly
 from Bio.Seq import Seq
-from Bio.Restriction import CommOnly, Analysis
 
 
 def find_orfs(sequence: str, min_length: int = 100) -> list[dict]:
@@ -128,28 +122,3 @@ def validate_plasmid(
         "warnings": warnings,
         "passed_checks": len(warnings) == 0,
     }
-
-
-def main() -> None:
-    parser = argparse.ArgumentParser(description="Validate a plasmid construct")
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("--sequence", help="Raw DNA sequence")
-    group.add_argument("--file", help="GenBank (.gb) file")
-    parser.add_argument("--min-orf", type=int, default=100,
-                        help="Minimum ORF length in amino acids (default 100)")
-    args = parser.parse_args()
-
-    if args.file:
-        record = SeqIO.read(args.file, "genbank")
-        sequence = str(record.seq)
-        name = record.name
-    else:
-        sequence = args.sequence
-        name = "construct"
-
-    result = validate_plasmid(sequence, name)
-    print(json.dumps(result, indent=2))
-
-
-if __name__ == "__main__":
-    main()

@@ -1,13 +1,9 @@
 """Additional unit tests for agent tool_dispatch private helpers."""
 from __future__ import annotations
 
-from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
-import pytest
-
-from src.agent.tool_dispatch import _feat_color, _result_to_seqviz, _genbank_to_seqviz, dispatch
-
+from src.agent.tool_dispatch import _feat_color, _genbank_to_seqviz, _result_to_seqviz, dispatch
 
 # ---------------------------------------------------------------------------
 # _feat_color
@@ -230,7 +226,6 @@ class TestSearchGeneException:
 
     def test_esearch_exception_returns_error(self):
         from src.tools.fetch_sequence import search_gene
-        from unittest.mock import patch
 
         with patch(
             "src.tools.fetch_sequence.Entrez.esearch",
@@ -360,7 +355,6 @@ class TestDispatchFindTargetSitesTopology:
     """Verify topology is forwarded to find_restriction_edit_sites (Issue L fix)."""
 
     def test_circular_topology_forwarded_to_restriction_method(self):
-        from unittest.mock import patch, MagicMock
         with patch("src.agent.tool_dispatch.find_restriction_edit_sites") as mock_fn:
             mock_fn.return_value = []
             dispatch("find_target_sites", {
@@ -372,7 +366,6 @@ class TestDispatchFindTargetSitesTopology:
             assert kwargs.get("topology") == "circular"
 
     def test_linear_topology_forwarded_to_restriction_method(self):
-        from unittest.mock import patch
         with patch("src.agent.tool_dispatch.find_restriction_edit_sites") as mock_fn:
             mock_fn.return_value = []
             dispatch("find_target_sites", {
@@ -384,7 +377,6 @@ class TestDispatchFindTargetSitesTopology:
             assert kwargs.get("topology") == "linear"
 
     def test_topology_defaults_to_linear_when_not_provided(self):
-        from unittest.mock import patch
         with patch("src.agent.tool_dispatch.find_restriction_edit_sites") as mock_fn:
             mock_fn.return_value = []
             dispatch("find_target_sites", {
@@ -404,7 +396,6 @@ class TestDispatchCrisprPamForwarding:
     """
 
     def test_default_pam_is_ngg(self):
-        from unittest.mock import patch
         with patch("src.agent.tool_dispatch.find_crispr_pam_sites") as mock_fn:
             mock_fn.return_value = []
             result = dispatch("find_target_sites", {
@@ -416,7 +407,6 @@ class TestDispatchCrisprPamForwarding:
 
     def test_custom_pam_forwarded(self):
         """Cas12a TTTV PAM must reach find_crispr_pam_sites."""
-        from unittest.mock import patch
         with patch("src.agent.tool_dispatch.find_crispr_pam_sites") as mock_fn:
             mock_fn.return_value = []
             dispatch("find_target_sites", {
@@ -431,7 +421,6 @@ class TestDispatchCrisprPamForwarding:
 
     def test_pam_returned_in_result(self):
         """Result dict must include the pam that was used."""
-        from unittest.mock import patch
         with patch("src.agent.tool_dispatch.find_crispr_pam_sites") as mock_fn:
             mock_fn.return_value = []
             result = dispatch("find_target_sites", {

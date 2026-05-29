@@ -2,16 +2,9 @@
 """
 Design PCR primers for a template sequence.
 
-Usage:
-    python src/tools/primer_design.py --template ATCG... [--overhang-f GCGC] [--overhang-r TATA]
-    python src/tools/primer_design.py --template ATCG... --method gibson --backbone-end XXXX --backbone-start YYYY
-
-Outputs JSON with forward and reverse primers, Tm values.
+CLI: ``crake cmd "/primers"`` or ``/primers ATTB1 ATTB2`` (after loading a sequence).
 """
 from __future__ import annotations
-import argparse
-import json
-import sys
 
 import primer3
 
@@ -99,28 +92,3 @@ def gc_content(seq: str) -> float:
 def melting_temperature(seq: str) -> float:
     """Nearest-neighbor Tm via primer3-py."""
     return round(primer3.calc_tm(seq), 1)
-
-
-def main() -> None:
-    parser = argparse.ArgumentParser(description="Design PCR primers")
-    parser.add_argument("--template", required=True, help="Template DNA sequence")
-    parser.add_argument("--overhang-f", default="", help="5' overhang for forward primer (Gibson/GG)")
-    parser.add_argument("--overhang-r", default="", help="5' overhang for reverse primer (Gibson/GG)")
-    parser.add_argument("--opt-tm", type=float, default=60.0, help="Optimal Tm (default 60°C)")
-    parser.add_argument("--min-size", type=int, default=100, help="Min product size bp")
-    parser.add_argument("--max-size", type=int, default=None, help="Max product size bp")
-    args = parser.parse_args()
-
-    result = design_primers(
-        template=args.template,
-        overhang_fwd=args.overhang_f,
-        overhang_rev=args.overhang_r,
-        opt_tm=args.opt_tm,
-        product_min_size=args.min_size,
-        product_max_size=args.max_size,
-    )
-    print(json.dumps(result, indent=2))
-
-
-if __name__ == "__main__":
-    main()

@@ -2,31 +2,13 @@
 """
 Identify edit sites within a genomic sequence.
 
-Usage:
-    python src/tools/target_site.py --sequence ATCG... --method restriction
-    python src/tools/target_site.py --sequence ATCG... --method homologous --position 500
-    python src/tools/target_site.py --sequence ATCG... --method crispr
-    python src/tools/target_site.py --file locus.gb --method restriction
-
-Methods:
-    restriction  — find unique restriction enzyme sites (single-cutter preferred)
-    homologous   — extract left/right homology arms around a given position
-    crispr       — scan for SpCas9 NGG PAM sites on both strands
-
-Outputs JSON.  The ``left_arm`` / ``right_arm`` in each site feed directly into:
-    assembly --method gibson --parts <left_arm_file> <insert_file> <right_arm_file>
-    primer_design --template <left_arm>
+CLI: ``crake cmd "/targets crispr"`` or ``/targets restriction`` (after loading a sequence).
 """
 from __future__ import annotations
 
-import argparse
-import json
 import re
-import sys
-from pathlib import Path
 
-from Bio import SeqIO
-from Bio.Restriction import CommOnly, Analysis
+from Bio.Restriction import Analysis, CommOnly
 from Bio.Seq import Seq
 
 DEFAULT_ARM_LENGTH = 500  # bp of flanking sequence extracted on each side
@@ -196,96 +178,3 @@ def find_crispr_pam_sites(
 def recommend_edit_site(sites: list[dict]) -> dict | None:
     """Return the first (best-ranked) site from the list, or None."""
     return sites[0] if sites else None
-
-
-def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Identify edit sites in a genomic DNA sequence"
-    )
-    seq_group = parser.add_mutually_exclusive_group(required=True)
-    seq_group.add_argument("--sequence", help="Raw DNA sequence string")
-    seq_group.add_argument("--file", help="GenBank (.gb/.gbk) or FASTA (.fa/.fasta) file")
-
-    parser.add_argument(
-        "--method",
-        required=True,
-        choices=["restriction", "homologous", "crispr"],
-        help="Edit strategy to use",
-    )
-    parser.add_argument(
-        "--position",
-        type=int,
-        default=None,
-        help="Desired edit position (required for --method homologous)",
-    )
-    parser.add_argument(
-        "--arm-length",
-        type=int,
-        default=DEFAULT_ARM_LENGTH,
-        help=f"Homology arm length in bp (default {DEFAULT_ARM_LENGTH})",
-    )
-    parser.add_argument(
-        "--pam",
-        default="NGG",
-        help="PAM sequence for CRISPR scanning (default NGG for SpCas9)",
-    )
-    parser.add_argument(
-        "--topology",
-        default="linear",
-        choices=["linear", "circular"],
-        help="Sequence topology for restriction scanning (default linear; use circular for plasmids)",
-    )
-    parser.add_argument(
-        "--allow-multi-cut",
-        action="store_true",
-        help="Include restriction enzymes that cut more than once (restriction method only)",
-    )
-    args = parser.parse_args()
-
-    if args.file:
-        p = Path(args.file)
-        fmt = "genbank" if p.suffix in (".gb", ".gbk") else "fasta"
-        record = SeqIO.read(str(p), fmt)
-        sequence = str(record.seq).upper()
-        seq_name = record.name
-    else:
-        sequence = args.sequence.upper()
-        seq_name = "input"
-
-    result: dict = {
-        "name": seq_name,
-        "input_length_bp": len(sequence),
-        "method": args.method,
-    }
-
-    if args.method == "restriction":
-        sites = find_restriction_edit_sites(
-            sequence,
-            require_unique=not args.allow_multi_cut,
-            arm_length=args.arm_length,
-            topology=args.topology,
-        )
-        result["target_sites"] = sites
-        result["recommended_site"] = recommend_edit_site(sites)
-        result["site_count"] = len(sites)
-
-    elif args.method == "homologous":
-        if args.position is None:
-            print(json.dumps({"error": "--position required for --method homologous"}))
-            sys.exit(1)
-        site = extract_homology_arms(sequence, args.position, args.arm_length)
-        result["target_sites"] = [site]
-        result["recommended_site"] = site
-
-    elif args.method == "crispr":
-        sites = find_crispr_pam_sites(sequence, pam=args.pam, arm_length=args.arm_length)
-        result["target_sites"] = sites
-        result["recommended_site"] = recommend_edit_site(sites)
-        result["site_count"] = len(sites)
-        result["pam"] = args.pam
-
-    print(json.dumps(result, indent=2))
-
-
-if __name__ == "__main__":
-    main()

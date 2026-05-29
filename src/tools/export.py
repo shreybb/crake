@@ -2,15 +2,9 @@
 """
 Export pipeline artifacts to files ready for wet-lab use.
 
-Usage:
-    python src/tools/export.py \
-        --assembly assembly.json \
-        --validation validation.json \
-        --primers primers.json \
-        --name pMyConstruct \
-        --output-dir ./output/
+CLI: ``crake cmd "/export pMyConstruct"`` or ``crake session export session.json``.
 
-Produces in --output-dir:
+Produces in the output directory:
     <name>.gb          Annotated GenBank (opens in SnapGene, ApE, Benchling, etc.)
     <name>.fa          FASTA sequence
     <name>_map.svg     Circular/linear plasmid map
@@ -19,18 +13,15 @@ Produces in --output-dir:
 """
 from __future__ import annotations
 
-import argparse
 import csv
-import json
-import sys
 from datetime import date
 from pathlib import Path
 
 from Bio import SeqIO
+from Bio.Restriction import CommOnly as _CommOnly
 from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, SimpleLocation
 from Bio.SeqRecord import SeqRecord
-from Bio.Restriction import CommOnly as _CommOnly
 
 # Per-enzyme site length and 5′ cut offset.
 # BioPython Analysis.full() returns the cut position (1-based), not the start of
@@ -171,12 +162,32 @@ def write_protocol_md(
     gc = validation_json.get("gc_analysis", {}).get("overall_gc_percent", "?")
     pairs = primer_json.get("primer_pairs", [])
 
+    provenance = assembly_json.get("provenance", "simulated")
+    prov_label = (
+        "In-silico assembly simulated"
+        if provenance == "simulated"
+        else "Sequence-only (assembly not simulated)"
+    )
+
     lines: list[str] = [
         f"# Cloning Protocol: {name}",
         f"_Generated {date.today().isoformat()} by Crake_",
         "",
+        "## Provenance",
+        f"- **Export type**: {prov_label}",
+        f"- **Assembly method**: {method.replace('_', ' ').title()}",
+    ]
+    if provenance != "simulated":
+        lines += [
+            "",
+            "> **Warning:** Assembly was not simulated in Crake. "
+            "Verify overlaps, restriction sites, and final construct sequence "
+            "in silico (e.g. SnapGene, Benchling) before ordering primers or DNA.",
+        ]
+
+    lines += [
+        "",
         "## Construct Summary",
-        f"- **Method**: {method.replace('_', ' ').title()}",
         f"- **Topology**: {topology}",
         f"- **Expected size**: {length} bp",
         f"- **GC content**: {gc}%",
@@ -268,6 +279,10 @@ def _protocol_steps(method: str) -> str:
             "4. Plate on selective media; pick 4–8 colonies.\n"
             "5. Verify by colony PCR and Sanger sequencing."
         ),
+        "sequence_only": (
+            "_No assembly simulation was run._ Design and verify cloning strategy "
+            "(Gibson overlaps, restriction sites, or other method) before PCR and ordering."
+        ),
     }
     return steps.get(method, f"_Protocol for method '{method}' — refer to manufacturer instructions._")
 
@@ -297,75 +312,3 @@ def write_plasmid_map(genbank_path: Path, output_path: Path) -> Path:
     plt.close("all")
 
     return Path(output_path)
-
-
-# ---------------------------------------------------------------------------
-# CLI
-# ---------------------------------------------------------------------------
-
-def _load_json(path: str | None) -> dict:
-    if not path:
-        return {}
-    p = Path(path)
-    if not p.exists():
-        print(f"Warning: {path} not found — skipping", file=sys.stderr)
-        return {}
-    return json.loads(p.read_text())
-
-
-def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Export Crake pipeline outputs to lab-ready files"
-    )
-    parser.add_argument("--assembly", help="Path to assembly.json")
-    parser.add_argument("--validation", help="Path to validation.json")
-    parser.add_argument("--primers", help="Path to primers.json")
-    parser.add_argument("--name", required=True, help="Construct name (e.g. pMyGene)")
-    parser.add_argument(
-        "--output-dir", required=True, help="Directory to write output files"
-    )
-    args = parser.parse_args()
-
-    out_dir = Path(args.output_dir)
-    out_dir.mkdir(parents=True, exist_ok=True)
-
-    assembly = _load_json(args.assembly)
-    validation = _load_json(args.validation)
-    primers = _load_json(args.primers)
-
-    results: dict[str, str] = {}
-
-    sequence = assembly.get("product_sequence", "")
-
-    if sequence and assembly:
-        gb_path = out_dir / f"{args.name}.gb"
-        write_genbank(assembly, validation, args.name, gb_path)
-        results["genbank"] = str(gb_path)
-
-        fa_path = out_dir / f"{args.name}.fa"
-        write_fasta(sequence, args.name, fa_path)
-        results["fasta"] = str(fa_path)
-
-        try:
-            svg_path = out_dir / f"{args.name}_map.svg"
-            write_plasmid_map(gb_path, svg_path)
-            results["map"] = str(svg_path)
-        except Exception as exc:
-            results["map_error"] = str(exc)
-
-    primer_pairs = primers.get("primer_pairs", [])
-    if primer_pairs:
-        csv_path = out_dir / "primers.csv"
-        write_primers_csv(primer_pairs, csv_path)
-        results["primers_csv"] = str(csv_path)
-
-    if assembly or validation or primers:
-        md_path = out_dir / "protocol.md"
-        write_protocol_md(assembly, primers, validation, args.name, md_path)
-        results["protocol"] = str(md_path)
-
-    print(json.dumps(results, indent=2))
-
-
-if __name__ == "__main__":
-    main()

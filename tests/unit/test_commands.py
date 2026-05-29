@@ -35,6 +35,10 @@ class TestValidateCommand:
     def test_known_command_ok(self):
         validate_command("fetch")
 
+    def test_annotate_command_registered(self):
+        validate_command("annotate")
+        assert "annotate" in COMMANDS
+
 
 class TestHelpMarkdown:
     def test_mentions_no_llm(self):

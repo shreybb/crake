@@ -3,10 +3,7 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-import pytest
-
-from src.tools.sequence_design import optimize_codons, analyze_sequence
-
+from src.tools.sequence_design import analyze_sequence, optimize_codons
 
 # Minimal valid CDS (length divisible by 3, starts with ATG)
 MINI_CDS = "ATGGAATTCAAATGA"  # 15 bp, translates to MEFS*

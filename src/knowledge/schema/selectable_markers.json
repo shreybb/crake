@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": {
+    "type": "object",
+    "additionalProperties": {
+      "type": "object",
+      "required": ["description"],
+      "properties": {
+        "description": { "type": "string" },
+        "host": { "oneOf": [{ "type": "string" }, { "type": "array", "items": { "type": "string" } }] },
+        "resistance": { "type": "string" },
+        "selection_agent": { "type": "string" }
+      },
+      "additionalProperties": true
+    }
+  }
+}

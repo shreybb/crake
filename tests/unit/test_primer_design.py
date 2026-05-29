@@ -1,12 +1,9 @@
 """Unit tests for primer_design tool."""
 from __future__ import annotations
 
-from unittest.mock import patch, MagicMock
-
-import pytest
+from unittest.mock import patch
 
 from src.tools.primer_design import design_primers, gc_content, melting_temperature
-
 
 # A real 300-bp template (based on GFP partial sequence) for primer3 to work with.
 TEMPLATE = (
