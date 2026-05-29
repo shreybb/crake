@@ -29,7 +29,7 @@ cp .env.example .env   # set NCBI_EMAIL for gene search / fetch
 
 ## Configuration
 
-Copy `.env.example` to `.env` and set `NCBI_EMAIL` to a valid address. NCBI [requires](https://www.ncbi.nlm.nih.gov/home/about/policies/) this for Entrez access. Optionally set `NCBI_API_KEY` for higher rate limits.
+Copy `.env.example` to `.env` and set `NCBI_EMAIL` to a valid address. NCBI [requires](https://www.ncbi.nlm.nih.gov/home/about/policies/) this for Entrez access. The Streamlit app and CLI tools load `.env` automatically. Optionally set `NCBI_API_KEY` for higher rate limits.
 
 ---
 

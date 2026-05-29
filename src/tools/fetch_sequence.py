@@ -22,8 +22,12 @@ import sys
 import time
 import urllib.request
 
+from dotenv import load_dotenv
+
 from Bio import Entrez, SeqIO
 from Bio.SeqRecord import SeqRecord
+
+load_dotenv()
 
 _INVALID_NCBI_EMAILS = frozenset({"", "crake@localhost", "you@example.com"})
 

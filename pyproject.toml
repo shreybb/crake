@@ -25,6 +25,7 @@ dependencies = [
     "pandas>=2.3.3",
     "primer3-py>=2.3.0",
     "pydna>=5.5.3",
+    "python-dotenv>=1.0.0",
     "snapgene-reader>=0.1.23",
     "streamlit>=1.55.0",
     "streamlit-seqviz>=0.0.5",
