@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
-from src.agent.command_runner import execute_command
+from src.agent.command_runner import execute_command, format_result_message
 
 
 class TestExecuteCommand:
@@ -36,6 +36,18 @@ class TestExecuteCommand:
             mock_dispatch.return_value = {"sequence_type": "protein"}
             execute_command("fetch", "P42212", {})
         assert mock_dispatch.call_args[0][1]["db"] == "uniprot"
+
+    def test_introduce_gene_message_uses_vector_key(self):
+        result = {
+            "gene": "GFP",
+            "target_host": "yeast",
+            "cassette_description": "cassette",
+            "optimized_sequence": "ATG",
+            "vector": {"name": "pYES2"},
+        }
+        msg = format_result_message("introduce_gene", result)
+        assert "pYES2" in msg
+        assert "?" not in msg.split("Vector:")[-1][:5]
 
     def test_targets_crispr_forwards_pam(self):
         session = {"last_sequence": {"sequence": "ATCG" * 50, "topology": "linear"}}

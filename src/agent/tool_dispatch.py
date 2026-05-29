@@ -304,9 +304,12 @@ def _handle_introduce_gene(inp: dict, session: dict) -> dict:
         session["last_sequence"] = {
             "gene_name": result["gene"],
             "sequence": result["optimized_sequence"],
+            "length_bp": len(result["optimized_sequence"]),
             "organism": result["source_organism"],
             "suggested_host": result["target_host"],
+            "topology": "linear",
         }
+        session["last_seqviz"] = _result_to_seqviz(session["last_sequence"])
     return result
 
 

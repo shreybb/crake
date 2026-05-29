@@ -306,7 +306,7 @@ def format_result_message(tool_name: str, result: dict[str, Any]) -> str:
             f"**{result.get('gene')}** → `{result.get('target_host')}`\n\n"
             f"{result.get('cassette_description', '')}\n\n"
             f"Optimised CDS: {len(result.get('optimized_sequence', ''))} bp. "
-            f"Vector: **{result.get('recommended_backbone', {}).get('name', '?')}**."
+            f"Vector: **{result.get('vector', {}).get('name', '?')}**."
         )
 
     if tool_name == "export_files":

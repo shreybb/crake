@@ -359,6 +359,9 @@ class TestIntroduceGeneDispatch:
         )
         assert "last_gene_introduction" in session
         assert session["last_sequence"]["sequence"] == _GFP_CDS
+        assert session["last_sequence"]["topology"] == "linear"
+        assert session["last_seqviz"] is not None
+        assert session["last_seqviz"]["seq"] == _GFP_CDS
 
 
 # ---------------------------------------------------------------------------
