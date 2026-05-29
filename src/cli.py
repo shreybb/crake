@@ -82,7 +82,7 @@ def run_cmd(
     """Execute a slash command (ephemeral session unless --session-out)."""
     from src.agent.commands import parse_input, validate_command
 
-    state: dict = {}
+    state: dict = _session_dict(session_out) if session_out and session_out.is_file() else {}
     cmd_name, args = parse_input(command)
     if not cmd_name:
         raise typer.BadParameter("Command must start with /")
@@ -94,6 +94,35 @@ def run_cmd(
     if session_out:
         session_out.write_text(json.dumps(state, indent=2, default=str))
         typer.echo(f"Session written to {session_out}", err=True)
+
+
+@app.command("hero")
+def hero(
+    output_dir: Path = typer.Option(
+        Path("./crake_output/hero_demo"),
+        "--output-dir",
+        "-o",
+        help="Directory for GenBank, FASTA, map, primers, and protocol",
+    ),
+    data_dir: Optional[Path] = typer.Option(
+        None,
+        "--data-dir",
+        help="Directory containing gfp_cds.fa (default: examples/hero)",
+    ),
+    name: str = typer.Option("pHeroGFP", "--name", "-n", help="Construct name for export"),
+) -> None:
+    """Offline demo: load GFP CDS, optimize for E. coli, validate, primers, export."""
+    from src.hero_workflow import run_hero_workflow
+
+    manifest = run_hero_workflow(
+        output_dir,
+        data_dir=data_dir,
+        construct_name=name,
+    )
+    typer.echo(f"Hero workflow complete → {output_dir.resolve()}")
+    typer.echo(f"  Construct: {manifest['construct_name']} ({manifest['sequence_length_bp']} bp)")
+    typer.echo(f"  Provenance: {manifest['provenance']}")
+    typer.echo(f"  Files: {', '.join(manifest['files'])}")
 
 
 @app.command("version")

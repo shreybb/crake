@@ -39,7 +39,7 @@ class TestOptimizeCodons:
         mock_problem.sequence = MINI_CDS
 
         with _mock_dnachisel(mock_problem):
-            result = optimize_codons(MINI_CDS, "plant_nuclear")
+            optimize_codons(MINI_CDS, "plant_nuclear")
 
         assert mock_problem.resolve_constraints.called
 

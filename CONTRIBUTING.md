@@ -25,7 +25,8 @@ Tests mock NCBI by default; no network required for CI.
 Update golden fixtures when intentional output changes:
 
 ```bash
-CRAKE_UPDATE_GOLDEN=1 uv run pytest tests/golden/ -q
+CRAKE_UPDATE_GOLDEN=1 uv run pytest tests/unit/test_golden_gfp_chain.py -q
+CRAKE_UPDATE_GOLDEN=1 uv run pytest tests/integration/test_hero_workflow.py -q
 ```
 
 ## Adding a slash command
@@ -43,7 +44,7 @@ Session and export changes must note **provenance** impact in the PR description
 
 - Match existing patterns: small functions, dict-shaped tool results, `ValueError` for user-facing errors.
 - Avoid new dependencies unless they clearly replace manual code.
-- Do not commit secrets, `.env`, or personal `.mcp.json`.
+- Do not commit secrets or `.env` files.
 
 ## Biology changes
 

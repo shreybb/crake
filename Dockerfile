@@ -6,7 +6,7 @@ RUN pip install --no-cache-dir uv
 
 COPY pyproject.toml uv.lock README.md ./
 COPY src ./src
-COPY app.py main.py ./
+COPY app.py ./
 
 RUN uv sync --frozen --no-dev
 

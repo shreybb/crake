@@ -27,4 +27,3 @@ docs/assets/demo-workflow.png
 .env
 .env.local
 .env.*.local
-.mcp.json

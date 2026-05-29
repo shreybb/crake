@@ -5,10 +5,10 @@ import base64
 import re
 from pathlib import Path
 
-_ACCESSION_RE = re.compile(r'^[A-Z]{1,3}\d{5,9}(\.\d+)?$')
-
 import pandas as pd
 import streamlit as st
+
+_ACCESSION_RE = re.compile(r"^[A-Z]{1,3}\d{5,9}(\.\d+)?$")
 
 try:
     from streamlit_seqviz import streamlit_seqviz as _seqviz_component

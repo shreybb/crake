@@ -21,13 +21,12 @@ See [scope.md](scope.md) for the v1 product boundary.
 | Area | Notes |
 |------|--------|
 | Golden Gate assembly | No simulator; protocol stub only |
-| Benchling integration | Optional MCP — [integrations/benchling-mcp.md](integrations/benchling-mcp.md) |
+| Benchling / LIMS integration | Manual file exchange only |
 | Additional hosts | Unsupported organisms warn and approximate |
 
 ## Non-goals
 
 - In-app LLM chat
-- Internal multi-agent orchestration
 - Multi-user / auth / LIMS deployment
 
 Contributions welcome for deferred items — see [CONTRIBUTING.md](../CONTRIBUTING.md).

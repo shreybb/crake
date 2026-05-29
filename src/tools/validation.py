@@ -6,7 +6,6 @@ CLI: ``crake cmd "/validate"`` (after loading a sequence).
 """
 from __future__ import annotations
 
-from Bio import SeqIO
 from Bio.Restriction import Analysis, CommOnly
 from Bio.Seq import Seq
 

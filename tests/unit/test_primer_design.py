@@ -166,7 +166,6 @@ class TestDesignPrimers:
     def test_max_gc_is_70(self):
         """Confirm that primer3 is invoked with PRIMER_MAX_GC=70 (not 65)."""
         captured = {}
-        original = __import__("primer3")
 
         def capture_call(seq_args, global_args):
             captured["global_args"] = global_args

@@ -1,0 +1,17 @@
+{
+  "construct_name": "pHeroGFP",
+  "files": [
+    "pHeroGFP.fa",
+    "pHeroGFP.gb",
+    "pHeroGFP_map.svg",
+    "primers.csv",
+    "protocol.md"
+  ],
+  "optimize_gc_after": 47.96,
+  "optimize_host": "e_coli",
+  "primer_pair_count": 3,
+  "provenance": "not_run",
+  "sequence_length_bp": 540,
+  "sequence_sha256": "4800b41437204b8390a92e319ae9f66080044a61d5c97265f2703e4a16ca5bcc",
+  "validate_passed": true
+}

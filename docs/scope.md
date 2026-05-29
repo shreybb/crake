@@ -21,9 +21,8 @@ Crake is a **deterministic cloning assistant** for four expression hosts. It orc
 | Area | Status |
 |------|--------|
 | Golden Gate assembly | Deferred — protocol stub only in export |
-| Benchling / in-app MCP sync | Optional external integration — see [integrations/benchling-mcp.md](integrations/benchling-mcp.md) |
-| In-app LLM chat | Not planned — slash commands and external agents may call `tool_dispatch` |
-| Multi-agent orchestration | Removed from public tree |
+| Benchling / LIMS sync | Manual import/export only (GenBank/FASTA) |
+| In-app LLM chat | Not planned — slash commands and `crake` CLI call `tool_dispatch` directly |
 | Multi-user deployment / auth | Single-user local or demo Docker only |
 | Broad organism support | Unsupported hosts get a warning and closest-host fallback |
 

@@ -1,4 +1,6 @@
-# Genetics Expert Review — 2026-03-22
+# Genetics review checklist — 2026-03-22
+
+> Historical audit log from pre-0.2.0 development. Some file paths (e.g. `src/domain/`) refer to removed code; see [architecture.md](../architecture.md) for the current design.
 
 Reviewed via: structured genetics review checklist (human + assisted review)
 Scope: Knowledge base accuracy, tool implementations, validation heuristics

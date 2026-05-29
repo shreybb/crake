@@ -96,9 +96,9 @@ class TestFindOrfsNegativeStrand:
         rc = str(Seq(gfp).reverse_complement())
         orfs = find_orfs(rc, min_length=50)
         # The RC should contain the ORF on strand -1
-        strands = [o["strand"] for o in orfs]
         # Should find ORFs (may be on strand 1 in reverse complement context)
         assert isinstance(orfs, list)
+        assert all(o["strand"] in (1, -1) for o in orfs)
 
     def test_negative_strand_coordinate_adjustment(self):
         # Build a sequence where the reverse complement has a sizeable ORF

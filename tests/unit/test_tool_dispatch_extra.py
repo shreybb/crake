@@ -398,7 +398,7 @@ class TestDispatchCrisprPamForwarding:
     def test_default_pam_is_ngg(self):
         with patch("src.agent.tool_dispatch.find_crispr_pam_sites") as mock_fn:
             mock_fn.return_value = []
-            result = dispatch("find_target_sites", {
+            dispatch("find_target_sites", {
                 "sequence": "ATCGATCGATCGATCGATCG",
                 "method": "crispr",
             }, {})
