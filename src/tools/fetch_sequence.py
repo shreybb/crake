@@ -86,6 +86,12 @@ def infer_host(organism: str) -> str:
     return "e_coli"
 
 
+def _topology_from_record(record: SeqRecord) -> str:
+    """Normalize GenBank topology annotation to ``circular`` or ``linear``."""
+    raw = str(record.annotations.get("topology", "linear")).lower()
+    return "circular" if raw == "circular" else "linear"
+
+
 def _extract_cds(record: SeqRecord) -> tuple[str, str]:
     """Return (sequence, seq_type) from a GenBank record.
 
@@ -124,17 +130,19 @@ def fetch_by_accession(
         record = SeqIO.read(handle, parse_fmt)
         handle.close()
 
+        topology = "linear"
         if db == "nucleotide":
             if full_sequence:
                 sequence, seq_type = str(record.seq).upper(), "genomic"
             else:
                 sequence, seq_type = _extract_cds(record)
             organism = record.annotations.get("organism", "unknown")
+            topology = _topology_from_record(record)
         else:
             sequence, seq_type = str(record.seq).upper(), "protein"
             organism = "unknown"
 
-        return {
+        result = {
             "accession": record.id,
             "gene_name": record.name,
             "organism": organism,
@@ -145,6 +153,9 @@ def fetch_by_accession(
             "db": f"ncbi_{db}",
             "suggested_host": infer_host(organism),
         }
+        if db == "nucleotide":
+            result["topology"] = topology
+        return result
     except Exception as exc:
         return {"error": str(exc), "accession": accession}
 

@@ -11,6 +11,7 @@ from src.tools.fetch_sequence import (
     ncbi_email_error,
     search_gene,
     _extract_cds,
+    _topology_from_record,
 )
 
 
@@ -163,8 +164,40 @@ class TestFetchByAccession:
         record = _make_gb_record("ATCG", "Escherichia coli", "X00001", NPTII_CDS)
         with self._mock_efetch(), self._mock_read(record):
             result = fetch_by_accession("X00001")
-        for key in ("accession", "gene_name", "organism", "sequence", "suggested_host"):
+        for key in (
+            "accession",
+            "gene_name",
+            "organism",
+            "sequence",
+            "suggested_host",
+            "topology",
+        ):
             assert key in result
+
+    def test_topology_circular_from_genbank(self):
+        record = _make_gb_record("ATCG", "Escherichia coli", "pBR322", NPTII_CDS)
+        record.annotations["topology"] = "circular"
+        with self._mock_efetch(), self._mock_read(record):
+            result = fetch_by_accession("pBR322")
+        assert result["topology"] == "circular"
+
+    def test_topology_defaults_linear_when_missing(self):
+        record = _make_gb_record("ATCG", "Arabidopsis thaliana", "AT1G01020", GFP_CDS)
+        with self._mock_efetch(), self._mock_read(record):
+            result = fetch_by_accession("AT1G01020")
+        assert result["topology"] == "linear"
+
+
+class TestTopologyFromRecord:
+    def test_circular_passthrough(self):
+        record = _make_gb_record("ATCG", "E. coli")
+        record.annotations["topology"] = "circular"
+        assert _topology_from_record(record) == "circular"
+
+    def test_unknown_topology_becomes_linear(self):
+        record = _make_gb_record("ATCG", "E. coli")
+        record.annotations["topology"] = "unknown"
+        assert _topology_from_record(record) == "linear"
 
 
 # ---------------------------------------------------------------------------
