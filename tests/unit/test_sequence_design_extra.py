@@ -83,7 +83,27 @@ class TestOptimizeCodons:
         with _mock_dnachisel(mock_problem):
             result = optimize_codons(MINI_CDS, "agrobacterium")
 
-        assert result.get("species_table") == "Arabidopsis thaliana"
+        assert result.get("species_table") == "3702"
+
+
+class TestOptimizeCodonsIntegration:
+    """Real DnaChisel runs (no mocks) — catches broken codon table names."""
+
+    def test_e_coli_optimize_runs(self):
+        result = optimize_codons(MINI_CDS, "e_coli")
+        assert "error" not in result
+        assert result["species_table"] == "e_coli"
+        assert len(result["optimized_sequence"]) == len(MINI_CDS)
+
+    def test_yeast_optimize_runs(self):
+        result = optimize_codons(MINI_CDS, "yeast")
+        assert "error" not in result
+        assert result["species_table"] == "s_cerevisiae_4932"
+
+    def test_plant_host_uses_arabidopsis_taxon_table(self):
+        result = optimize_codons(MINI_CDS, "plant_nuclear")
+        assert "error" not in result
+        assert result["species_table"] == "3702"
 
 
 class TestAnalyzeSequenceExtra:

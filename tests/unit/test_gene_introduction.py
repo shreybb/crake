@@ -50,7 +50,7 @@ def _fake_optimize_codons_ok(sequence, host):
         "original_sequence": sequence,
         "optimized_sequence": sequence.replace("GGC", "GGT"),
         "host": host,
-        "species_table": "Saccharomyces cerevisiae",
+        "species_table": "s_cerevisiae_4932",
     }
 
 
@@ -123,7 +123,7 @@ class TestYeastCodonOptimisation:
             result = _oc(_GFP_CDS, "yeast")
 
         # The species_table must reflect yeast, not e_coli
-        assert result.get("species_table") == "Saccharomyces cerevisiae"
+        assert result.get("species_table") == "s_cerevisiae_4932"
 
     def test_invalid_sequence_length_returns_error(self):
         from src.tools.sequence_design import optimize_codons as _oc

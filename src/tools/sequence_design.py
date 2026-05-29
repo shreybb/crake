@@ -53,14 +53,15 @@ def optimize_codons(sequence: str, host: str) -> dict:
     if not seq_upper.startswith("ATG"):
         return {"error": "Sequence must start with ATG (Met start codon). Provide a complete CDS."}
 
-    # Map host names to python_codon_tables species names
+    # Map Crake hosts to python_codon_tables names (bundled CSVs or NCBI taxon IDs).
+    # plant/agrobacterium use taxon 3702 (Arabidopsis thaliana) — T-DNA expresses in plant cells.
     host_map = {
-        "e_coli": "Escherichia coli general",
-        "yeast": "Saccharomyces cerevisiae",
-        "plant_nuclear": "Arabidopsis thaliana",
-        "agrobacterium": "Arabidopsis thaliana",  # optimize for plant nuclear expression
+        "e_coli": "e_coli",
+        "yeast": "s_cerevisiae_4932",
+        "plant_nuclear": "3702",
+        "agrobacterium": "3702",
     }
-    species = host_map.get(host, "Escherichia coli general")
+    species = host_map.get(host, "e_coli")
 
     problem = DnaOptimizationProblem(
         sequence=sequence,
