@@ -91,6 +91,39 @@ class TestToolDispatch:
         dispatch("suggest_parts", {"host": "agrobacterium"}, {})
         mock_fn.assert_called_once_with("agrobacterium")
 
+    def test_failed_assembly_does_not_overwrite_last_assembly(self, mocker):
+        mocker.patch(
+            "src.agent.tool_dispatch.simulate_gibson",
+            return_value={"success": False, "error": "no overlap"},
+        )
+        session = {
+            "last_assembly": {
+                "success": True,
+                "product_sequence": "ATCGATCG",
+                "topology": "circular",
+            }
+        }
+        dispatch("simulate_assembly", {"fragments": ["A", "B"], "method": "gibson"}, session)
+        assert session["last_assembly"]["product_sequence"] == "ATCGATCG"
+
+    def test_successful_assembly_updates_last_assembly(self, mocker):
+        mocker.patch(
+            "src.agent.tool_dispatch.simulate_gibson",
+            return_value={
+                "success": True,
+                "product_sequence": "NEWSEQ",
+                "topology": "circular",
+            },
+        )
+        session = {
+            "last_assembly": {
+                "success": True,
+                "product_sequence": "OLDSEQ",
+            }
+        }
+        dispatch("simulate_assembly", {"fragments": ["A", "B"], "method": "gibson"}, session)
+        assert session["last_assembly"]["product_sequence"] == "NEWSEQ"
+
     def test_simulate_assembly_routes_gibson(self, mocker):
         mock_gibson = mocker.patch(
             "src.agent.tool_dispatch.simulate_gibson",

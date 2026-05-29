@@ -221,11 +221,13 @@ def _build_tool_input(cmd_name: str, args: str, session: dict) -> tuple[str, dic
                 },
                 session,
             )
-        if not session.get("last_assembly"):
+        prior_asm = session.get("last_assembly") or {}
+        if not prior_asm.get("success"):
             session["last_assembly"] = {
                 "product_sequence": seq,
                 "topology": seq_data.get("topology", "circular"),
                 "method": "direct",
+                "success": True,
             }
         return "export_files", {"name": name}
 

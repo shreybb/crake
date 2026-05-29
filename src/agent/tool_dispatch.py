@@ -276,7 +276,8 @@ def _handle_simulate_assembly(inp: dict, session: dict) -> dict:
         enzymes = inp.get("enzymes", [])
         result = simulate_restriction_ligation(fragments, enzymes)
 
-    session["last_assembly"] = result
+    if result.get("success"):
+        session["last_assembly"] = result
     return result
 
 
