@@ -47,9 +47,16 @@ class TestLoadSequence:
 
     def test_load_missing_fasta_raises(self, tmp_path):
         # non-existent path should be treated as raw sequence
-        # (Path.exists() returns False, so falls into raw string branch)
         rec = _load_sequence("AAAACCCCGGGGTTTT")
         assert len(rec) == 16
+
+    def test_long_dna_string_not_treated_as_path(self):
+        """macOS rejects Path.exists() on strings longer than ~255 chars."""
+        long_cds = "ATG" + "GCT" * 200 + "TAA"
+        assert len(long_cds) > 255
+        rec = _load_sequence(long_cds)
+        assert len(rec) == len(long_cds)
+        assert str(rec.seq).startswith("ATG")
 
 
 # ---------------------------------------------------------------------------
