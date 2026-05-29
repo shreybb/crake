@@ -216,6 +216,17 @@ def _handle_suggest_parts(inp: dict, session: dict) -> dict:
 def _handle_optimize_codons(inp: dict, session: dict) -> dict:
     result = _optimize_codons(inp["sequence"], inp["host"])
     session["last_optimization"] = result
+    if "error" not in result and result.get("optimized_sequence"):
+        prior = session.get("last_sequence") or {}
+        updated = {
+            **prior,
+            "sequence": result["optimized_sequence"],
+            "length_bp": len(result["optimized_sequence"]),
+        }
+        if not updated.get("gene_name"):
+            updated["gene_name"] = prior.get("gene_name") or "optimized"
+        session["last_sequence"] = updated
+        session["last_seqviz"] = _result_to_seqviz(updated)
     return result
 
 

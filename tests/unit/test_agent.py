@@ -51,6 +51,38 @@ class TestToolDispatch:
         dispatch("optimize_codons", {"sequence": "ATGATG", "host": "plant_nuclear"}, {})
         mock_fn.assert_called_once_with("ATGATG", "plant_nuclear")
 
+    def test_optimize_codons_updates_last_sequence_on_success(self, mocker):
+        mocker.patch(
+            "src.agent.tool_dispatch._optimize_codons",
+            return_value={
+                "optimized_sequence": "ATGCCC",
+                "gc_before": 50.0,
+                "gc_after": 48.0,
+            },
+        )
+        session = {
+            "last_sequence": {
+                "gene_name": "GFP",
+                "sequence": "ATGAAA",
+                "organism": "test",
+                "topology": "linear",
+            }
+        }
+        dispatch("optimize_codons", {"sequence": "ATGAAA", "host": "e_coli"}, session)
+        assert session["last_sequence"]["sequence"] == "ATGCCC"
+        assert session["last_sequence"]["gene_name"] == "GFP"
+        assert session["last_seqviz"] is not None
+        assert session["last_seqviz"]["seq"] == "ATGCCC"
+
+    def test_optimize_codons_error_leaves_last_sequence_unchanged(self, mocker):
+        mocker.patch(
+            "src.agent.tool_dispatch._optimize_codons",
+            return_value={"error": "failed", "original_sequence": "ATGAAA"},
+        )
+        session = {"last_sequence": {"sequence": "ATGAAA", "gene_name": "GFP"}}
+        dispatch("optimize_codons", {"sequence": "ATGAAA", "host": "e_coli"}, session)
+        assert session["last_sequence"]["sequence"] == "ATGAAA"
+
     def test_suggest_parts_passes_host(self, mocker):
         mock_fn = mocker.patch(
             "src.agent.tool_dispatch._suggest_parts",
