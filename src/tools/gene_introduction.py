@@ -8,6 +8,7 @@ High-level function `introduce_gene` ties together:
 
 Returns a structured JSON-serialisable result ready for the agent to present.
 """
+
 from __future__ import annotations
 
 from src.tools.fetch_sequence import search_gene
@@ -24,8 +25,18 @@ _VALID_HOSTS = {"e_coli", "yeast", "plant_nuclear", "agrobacterium"}
 # Keywords that signal a desired expression regulation type.
 _CONSTITUTIVE_KEYWORDS = {"constitutive", "constant", "stable", "gpd", "tdh3", "tef1", "adh1"}
 _INDUCIBLE_KEYWORDS = {
-    "inducible", "induction", "induced", "galactose", "gal1", "gal10",
-    "iptg", "arabinose", "copper", "cup1", "methionine", "tetracycline",
+    "inducible",
+    "induction",
+    "induced",
+    "galactose",
+    "gal1",
+    "gal10",
+    "iptg",
+    "arabinose",
+    "copper",
+    "cup1",
+    "methionine",
+    "tetracycline",
 }
 
 
@@ -127,10 +138,10 @@ _YEAST_MARKER_STRAIN = {
 # Auxotrophic markers use SC dropout named after the NUTRIENT omitted (SC-URA, not SC-URA3).
 # Dominant antibiotic markers use rich media (YPD) + antibiotic — no SC dropout applies.
 _YEAST_SELECTION_MEDIA = {
-    "URA3":  "SC-URA (synthetic complete medium lacking uracil)",
-    "LEU2":  "SC-LEU (lacking leucine)",
-    "HIS3":  "SC-HIS (lacking histidine)",
-    "TRP1":  "SC-TRP (lacking tryptophan)",
+    "URA3": "SC-URA (synthetic complete medium lacking uracil)",
+    "LEU2": "SC-LEU (lacking leucine)",
+    "HIS3": "SC-HIS (lacking histidine)",
+    "TRP1": "SC-TRP (lacking tryptophan)",
     "kanMX": "YPD + G418 (200–400 mg/L)",
     "hygMX": "YPD + Hygromycin B (300 mg/L)",
 }
@@ -139,8 +150,7 @@ _YEAST_SELECTION_MEDIA = {
 def _build_next_steps(host: str, vector_name: str, marker_name: str) -> list[str]:
     if host == "yeast":
         strain_note = _YEAST_MARKER_STRAIN.get(
-            marker_name,
-            f"strain auxotrophic for {marker_name} (or use a dominant marker strain)"
+            marker_name, f"strain auxotrophic for {marker_name} (or use a dominant marker strain)"
         )
         selection_media = _YEAST_SELECTION_MEDIA.get(
             marker_name,
@@ -213,8 +223,7 @@ def introduce_gene(
     if target_host not in _VALID_HOSTS:
         return {
             "error": (
-                f"Unsupported target_host '{target_host}'. "
-                f"Valid options: {sorted(_VALID_HOSTS)}"
+                f"Unsupported target_host '{target_host}'. Valid options: {sorted(_VALID_HOSTS)}"
             ),
             "gene": gene_name,
             "target_host": target_host,

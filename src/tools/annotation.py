@@ -4,6 +4,7 @@ Annotate features in a DNA sequence using BioPython restriction analysis.
 
 CLI: ``crake cmd "/annotate"`` (after loading a sequence).
 """
+
 from __future__ import annotations
 
 from Bio import SeqIO
@@ -32,11 +33,13 @@ def find_restriction_sites(
     sites = []
     for enzyme, positions in results.items():
         if positions:
-            sites.append({
-                "enzyme": str(enzyme),
-                "positions": positions,
-                "cut_count": len(positions),
-            })
+            sites.append(
+                {
+                    "enzyme": str(enzyme),
+                    "positions": positions,
+                    "cut_count": len(positions),
+                }
+            )
     return sorted(sites, key=lambda x: x["enzyme"])
 
 
@@ -45,15 +48,16 @@ def annotate_from_genbank(filepath: str) -> dict:
     record = SeqIO.read(filepath, "genbank")
     features = []
     for feat in record.features:
-        features.append({
-            "type": feat.type,
-            "location": str(feat.location),
-            "start": int(feat.location.start),
-            "end": int(feat.location.end),
-            "strand": feat.location.strand,
-            "qualifiers": {k: v[0] if len(v) == 1 else v
-                           for k, v in feat.qualifiers.items()},
-        })
+        features.append(
+            {
+                "type": feat.type,
+                "location": str(feat.location),
+                "start": int(feat.location.start),
+                "end": int(feat.location.end),
+                "strand": feat.location.strand,
+                "qualifiers": {k: v[0] if len(v) == 1 else v for k, v in feat.qualifiers.items()},
+            }
+        )
     return {
         "name": record.name,
         "description": record.description,

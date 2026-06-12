@@ -1,4 +1,5 @@
 """Export protocol includes assembly provenance."""
+
 from __future__ import annotations
 
 from src.tools.export import write_protocol_md

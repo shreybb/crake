@@ -1,4 +1,5 @@
 """Table-driven slash command parser tests."""
+
 from __future__ import annotations
 
 import pytest
@@ -37,9 +38,7 @@ class TestBuildToolInput:
             "last_sequence": {"sequence": "ATGAAATGA", "topology": "linear"},
             "last_validation": {"passed_checks": True},
         }
-        tool, inp = _build_tool_input(
-            "export", "--allow-sequence-only pTest", session
-        )
+        tool, inp = _build_tool_input("export", "--allow-sequence-only pTest", session)
         assert tool == "export_files"
         assert inp["name"] == "pTest"
         assert inp["allow_sequence_only"] is True

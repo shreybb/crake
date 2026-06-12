@@ -7,6 +7,7 @@ The `dispatch` function is the single entry point.  It:
 
 No Streamlit imports — fully testable without a running app.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -81,23 +82,23 @@ def dispatch(tool_name: str, tool_input: dict, session: dict | ConstructSession)
 # ---------------------------------------------------------------------------
 
 _FEAT_COLORS: dict[str, str] = {
-    "CDS":           "#4ADE80",
-    "gene":          "#86EFAC",
-    "promoter":      "#818CF8",
-    "terminator":    "#F87171",
-    "misc_binding":  "#FCD34D",
-    "rep_origin":    "#C084FC",
-    "regulatory":    "#FB923C",
-    "5'UTR":         "#67E8F9",
-    "3'UTR":         "#67E8F9",
-    "misc_feature":  "#94A3B8",
-    "primer_bind":   "#38BDF8",
-    "LTR":           "#A78BFA",
-    "enhancer":      "#FF6B6B",
-    "exon":          "#10B981",
-    "intron":        "#6B7280",
-    "sig_peptide":   "#F472B6",
-    "mat_peptide":   "#34D399",
+    "CDS": "#4ADE80",
+    "gene": "#86EFAC",
+    "promoter": "#818CF8",
+    "terminator": "#F87171",
+    "misc_binding": "#FCD34D",
+    "rep_origin": "#C084FC",
+    "regulatory": "#FB923C",
+    "5'UTR": "#67E8F9",
+    "3'UTR": "#67E8F9",
+    "misc_feature": "#94A3B8",
+    "primer_bind": "#38BDF8",
+    "LTR": "#A78BFA",
+    "enhancer": "#FF6B6B",
+    "exon": "#10B981",
+    "intron": "#6B7280",
+    "sig_peptide": "#F472B6",
+    "mat_peptide": "#34D399",
 }
 _DEFAULT_FEAT_COLOR = "#818CF8"
 
@@ -122,13 +123,15 @@ def _result_to_seqviz(result: dict) -> dict | None:
         else:
             feat_name = feat_type or "feature"
         feat_name = feat_name[:48]
-        annotations.append({
-            "name": feat_name,
-            "start": f["start"],
-            "end": f["end"],
-            "direction": f.get("strand", 1),
-            "color": _feat_color(feat_type),
-        })
+        annotations.append(
+            {
+                "name": feat_name,
+                "start": f["start"],
+                "end": f["end"],
+                "direction": f.get("strand", 1),
+                "color": _feat_color(feat_type),
+            }
+        )
     return {"name": name, "seq": seq, "annotations": annotations}
 
 
@@ -156,13 +159,15 @@ def _genbank_to_seqviz(gb_path: Path) -> dict | None:
                 label = raw_label
             else:
                 label = feat.type
-            annotations.append({
-                "name": label,
-                "start": int(feat.location.start),
-                "end": int(feat.location.end),
-                "direction": feat.location.strand if feat.location.strand is not None else 1,
-                "color": _feat_color(feat.type),
-            })
+            annotations.append(
+                {
+                    "name": label,
+                    "start": int(feat.location.start),
+                    "end": int(feat.location.end),
+                    "direction": feat.location.strand if feat.location.strand is not None else 1,
+                    "color": _feat_color(feat.type),
+                }
+            )
         return {"name": name, "seq": str(record.seq), "annotations": annotations}
     except Exception:
         return None
@@ -171,6 +176,7 @@ def _genbank_to_seqviz(gb_path: Path) -> dict | None:
 # ---------------------------------------------------------------------------
 # Handlers
 # ---------------------------------------------------------------------------
+
 
 def _handle_search_gene(inp: dict, cs: ConstructSession) -> dict:
     result = _search_gene(

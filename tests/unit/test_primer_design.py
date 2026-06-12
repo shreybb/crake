@@ -1,4 +1,5 @@
 """Unit tests for primer_design tool."""
+
 from __future__ import annotations
 
 from unittest.mock import patch
@@ -18,6 +19,7 @@ TEMPLATE = (
 # ---------------------------------------------------------------------------
 # gc_content
 # ---------------------------------------------------------------------------
+
 
 class TestGcContent:
     def test_pure_gc(self):
@@ -44,6 +46,7 @@ class TestGcContent:
 # melting_temperature
 # ---------------------------------------------------------------------------
 
+
 class TestMeltingTemperature:
     def test_returns_float(self):
         tm = melting_temperature("ATGCATGCATGCATGC")
@@ -63,6 +66,7 @@ class TestMeltingTemperature:
 # ---------------------------------------------------------------------------
 # design_primers
 # ---------------------------------------------------------------------------
+
 
 class TestDesignPrimers:
     def test_returns_template_length(self):

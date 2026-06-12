@@ -1,4 +1,5 @@
 """Additional unit tests for sequence_design tool (codon optimization)."""
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock, patch

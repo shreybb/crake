@@ -1,4 +1,5 @@
 """Typed construct workflow session — single source of session truth."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -238,7 +239,11 @@ class ConstructSession:
 
     def assembly_for_export(self, allow_sequence_only: bool = False) -> AssemblyRecord:
         """Build assembly payload for export_files."""
-        if self.assembly and self.assembly.success and self.assembly.provenance == AssemblyProvenance.SIMULATED:
+        if (
+            self.assembly
+            and self.assembly.success
+            and self.assembly.provenance == AssemblyProvenance.SIMULATED
+        ):
             return self.assembly
         seq = self.require_sequence()
         if not allow_sequence_only:
@@ -257,7 +262,11 @@ class ConstructSession:
     def workflow_stage(self) -> WorkflowStage:
         if self.export_paths:
             return WorkflowStage.EXPORTED
-        if self.assembly and self.assembly.success and self.assembly.provenance == AssemblyProvenance.SIMULATED:
+        if (
+            self.assembly
+            and self.assembly.success
+            and self.assembly.provenance == AssemblyProvenance.SIMULATED
+        ):
             return WorkflowStage.ASSEMBLED
         if self.validation:
             return WorkflowStage.VALIDATED

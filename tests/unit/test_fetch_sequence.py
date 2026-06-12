@@ -1,4 +1,5 @@
 """Unit tests for fetch_sequence tool."""
+
 from io import StringIO
 from unittest.mock import MagicMock, patch
 
@@ -24,6 +25,7 @@ def _valid_ncbi_email(monkeypatch):
 # ---------------------------------------------------------------------------
 # Helpers: minimal BioPython-like fakes
 # ---------------------------------------------------------------------------
+
 
 def _make_gb_record(seq: str, organism: str, name: str = "ABC123", cds_seq: str = "") -> MagicMock:
     """Return a mock SeqRecord with optional CDS feature."""
@@ -57,6 +59,7 @@ NPTII_CDS = "ATGATTGAACAAGATGGATTGCACGCAGG"  # short mock
 # ---------------------------------------------------------------------------
 # infer_host
 # ---------------------------------------------------------------------------
+
 
 class TestInferHost:
     def test_agrobacterium_organism(self):
@@ -103,6 +106,7 @@ class TestInferHost:
 # _extract_cds
 # ---------------------------------------------------------------------------
 
+
 class TestExtractCds:
     def test_extracts_cds_when_present(self):
         record = _make_gb_record("GGGGGG", "E. coli", cds_seq=GFP_CDS)
@@ -119,6 +123,7 @@ class TestExtractCds:
 # ---------------------------------------------------------------------------
 # fetch_by_accession — mocked NCBI
 # ---------------------------------------------------------------------------
+
 
 class TestFetchByAccession:
     def _mock_read(self, record):
@@ -153,9 +158,7 @@ class TestFetchByAccession:
         assert result["suggested_host"] == "e_coli"
 
     def test_returns_error_on_exception(self):
-        with patch(
-            "src.tools.fetch_sequence.Entrez.efetch", side_effect=Exception("timeout")
-        ):
+        with patch("src.tools.fetch_sequence.Entrez.efetch", side_effect=Exception("timeout")):
             result = fetch_by_accession("BAD_ACC")
         assert "error" in result
         assert result["accession"] == "BAD_ACC"
@@ -203,6 +206,7 @@ class TestTopologyFromRecord:
 # ---------------------------------------------------------------------------
 # search_gene — mocked NCBI
 # ---------------------------------------------------------------------------
+
 
 class TestSearchGene:
     def _mock_esearch(self, ids=("12345",)):
@@ -277,6 +281,7 @@ UNIPROT_FASTA = (
 # ---------------------------------------------------------------------------
 # NCBI email validation
 # ---------------------------------------------------------------------------
+
 
 class TestNcbiEmail:
     def test_missing_email_returns_error(self, monkeypatch):

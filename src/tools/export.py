@@ -11,6 +11,7 @@ Produces in the output directory:
     primers.csv        IDT / Eurofins bulk-order CSV
     protocol.md        Wet-lab instruction sheet
 """
+
 from __future__ import annotations
 
 import csv
@@ -36,6 +37,7 @@ _ENZYME_CUT_OFFSET: dict[str, int] = {str(e): e.charac[0] for e in _CommOnly}
 # ---------------------------------------------------------------------------
 # GenBank export
 # ---------------------------------------------------------------------------
+
 
 def write_genbank(
     assembly_json: dict,
@@ -99,6 +101,7 @@ def write_genbank(
 # FASTA export
 # ---------------------------------------------------------------------------
 
+
 def write_fasta(sequence: str, name: str, output_path: Path) -> Path:
     """Write a single-entry FASTA file."""
     record = SeqRecord(Seq(sequence), id=name, description="")
@@ -133,18 +136,21 @@ def write_primers_csv(primer_pairs: list[dict], output_path: Path) -> Path:
                 if not seq:
                     continue
                 abbrev = "FWD" if direction == "forward" else "REV"
-                writer.writerow({
-                    "Name": f"Primer_{rank + 1}_{abbrev}",
-                    "Sequence": seq,
-                    "Scale": _DEFAULT_SCALE,
-                    "Purification": _DEFAULT_PURIFICATION,
-                })
+                writer.writerow(
+                    {
+                        "Name": f"Primer_{rank + 1}_{abbrev}",
+                        "Sequence": seq,
+                        "Scale": _DEFAULT_SCALE,
+                        "Purification": _DEFAULT_PURIFICATION,
+                    }
+                )
     return out
 
 
 # ---------------------------------------------------------------------------
 # Protocol Markdown
 # ---------------------------------------------------------------------------
+
 
 def write_protocol_md(
     assembly_json: dict,
@@ -200,9 +206,7 @@ def write_protocol_md(
 
     lines += ["", "## Primers"]
     if pairs:
-        lines.append(
-            "| # | Direction | Sequence | Tm (°C) | GC% | Length |"
-        )
+        lines.append("| # | Direction | Sequence | Tm (°C) | GC% | Length |")
         lines.append("|---|-----------|----------|---------|-----|--------|")
         for pair in pairs:
             rank = pair.get("rank", 0) + 1
@@ -224,9 +228,7 @@ def write_protocol_md(
         lines.append("| Enzyme | Positions | Count |")
         lines.append("|--------|-----------|-------|")
         for site in rsites[:15]:
-            lines.append(
-                f"| {site['enzyme']} | {site['positions']} | {site['count']} |"
-            )
+            lines.append(f"| {site['enzyme']} | {site['positions']} | {site['count']} |")
     else:
         lines.append("_No restriction site data provided._")
 
@@ -284,12 +286,15 @@ def _protocol_steps(method: str) -> str:
             "(Gibson overlaps, restriction sites, or other method) before PCR and ordering."
         ),
     }
-    return steps.get(method, f"_Protocol for method '{method}' — refer to manufacturer instructions._")
+    return steps.get(
+        method, f"_Protocol for method '{method}' — refer to manufacturer instructions._"
+    )
 
 
 # ---------------------------------------------------------------------------
 # Plasmid map (SVG)
 # ---------------------------------------------------------------------------
+
 
 def write_plasmid_map(genbank_path: Path, output_path: Path) -> Path:
     """Render an annotated plasmid map as SVG using dna-features-viewer.
@@ -299,6 +304,7 @@ def write_plasmid_map(genbank_path: Path, output_path: Path) -> Path:
     linear ones — both render correctly with plain .plot().
     """
     import matplotlib
+
     matplotlib.use("Agg")  # non-interactive backend for headless server use
     import matplotlib.pyplot as plt
     from dna_features_viewer import BiopythonTranslator

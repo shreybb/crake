@@ -1,4 +1,5 @@
 """Unit tests for target_site tool."""
+
 from src.tools.target_site import (
     _gc_percent,
     _has_homopolymer,
@@ -93,6 +94,7 @@ class TestFindRestrictionEditSites:
     def test_topology_circular_passes_linear_false_to_analysis(self):
         """BioPython Analysis must receive linear=False for circular sequences."""
         from unittest.mock import MagicMock, patch
+
         mock_analysis_instance = MagicMock()
         mock_analysis_instance.full.return_value = {}
 
@@ -107,6 +109,7 @@ class TestFindRestrictionEditSites:
     def test_topology_linear_passes_linear_true_to_analysis(self):
         """BioPython Analysis must receive linear=True for linear sequences."""
         from unittest.mock import MagicMock, patch
+
         mock_analysis_instance = MagicMock()
         mock_analysis_instance.full.return_value = {}
 
@@ -195,7 +198,7 @@ class TestFindCrisprPamSites:
         assert len(sites) <= 20
 
     def test_ranked_by_gc_proximity_to_55(self):
-        rich = ("GCGCATCGATCGGCATCGATAGG" * 3 + "ATCG" * 50)
+        rich = "GCGCATCGATCGGCATCGATAGG" * 3 + "ATCG" * 50
         sites = find_crispr_pam_sites(rich)
         if len(sites) >= 2:
             diffs = [abs(s["gc_percent"] - 55.0) for s in sites]
@@ -229,8 +232,7 @@ class TestCrisprCutPosition:
         for site in fwd_sites:
             expected = site["position"] + 17
             assert site["cut_position"] == expected, (
-                f"Forward strand cut_position {site['cut_position']} "
-                f"!= position+17 ({expected})"
+                f"Forward strand cut_position {site['cut_position']} != position+17 ({expected})"
             )
 
     def test_reverse_strand_cut_is_6nt_into_mapped_site(self):
@@ -245,8 +247,7 @@ class TestCrisprCutPosition:
         for site in rev_sites:
             expected = site["position"] + 6
             assert site["cut_position"] == expected, (
-                f"Reverse strand cut_position {site['cut_position']} "
-                f"!= position+6 ({expected})"
+                f"Reverse strand cut_position {site['cut_position']} != position+6 ({expected})"
             )
 
     def test_cut_position_differs_from_position(self):

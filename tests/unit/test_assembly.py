@@ -1,4 +1,5 @@
 """Unit tests for assembly simulation."""
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
@@ -24,6 +25,7 @@ FRAG_B = OVERLAP + UNIQUE_B + UNIQUE_A[:20]
 # ---------------------------------------------------------------------------
 # _load_sequence
 # ---------------------------------------------------------------------------
+
 
 class TestLoadSequence:
     def test_raw_string_returns_dseqrecord(self):
@@ -57,6 +59,7 @@ class TestLoadSequence:
 # ---------------------------------------------------------------------------
 # simulate_gibson
 # ---------------------------------------------------------------------------
+
 
 class TestSimulateGibson:
     def test_success_returns_expected_keys(self):
@@ -139,6 +142,7 @@ class TestSimulateGibson:
 # ---------------------------------------------------------------------------
 # simulate_restriction_ligation
 # ---------------------------------------------------------------------------
+
 
 class TestSimulateRestrictionLigation:
     def test_no_digestion_returns_failure(self):

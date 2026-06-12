@@ -1,4 +1,5 @@
 """Crake — Bioluminescence theme CSS injection."""
+
 from __future__ import annotations
 
 import streamlit as st
@@ -1351,4 +1352,5 @@ _PALETTE_SCRIPT = """
 def inject_command_palette() -> None:
     """Inject the slash-command autocomplete palette via a 0-height component iframe."""
     import streamlit.components.v1 as components
+
     components.html(_PALETTE_SCRIPT, height=0, scrolling=False)

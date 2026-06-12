@@ -4,6 +4,7 @@ Validate a plasmid construct: ORF check, GC content, restriction map.
 
 CLI: ``crake cmd "/validate"`` (after loading a sequence).
 """
+
 from __future__ import annotations
 
 from Bio.Restriction import Analysis, CommOnly
@@ -34,14 +35,16 @@ def find_orfs(sequence: str, min_length: int = 100) -> list[dict]:
                     end_nt = frame + stop_pos * 3 + 3
                     if strand == -1:
                         start_nt, end_nt = len(sequence) - end_nt, len(sequence) - start_nt
-                    orfs.append({
-                        "strand": strand,
-                        "frame": frame,
-                        "start_nt": start_nt,
-                        "end_nt": end_nt,
-                        "length_aa": length_aa,
-                        "length_bp": length_aa * 3,
-                    })
+                    orfs.append(
+                        {
+                            "strand": strand,
+                            "frame": frame,
+                            "start_nt": start_nt,
+                            "end_nt": end_nt,
+                            "length_aa": length_aa,
+                            "length_bp": length_aa * 3,
+                        }
+                    )
                 aa_start = m_pos + 1
     return sorted(orfs, key=lambda x: -x["length_aa"])
 
@@ -51,19 +54,21 @@ def gc_windows(sequence: str, window: int = 100) -> dict:
     seq = sequence.upper()
     issues = []
     for i in range(0, len(seq) - window, window // 2):
-        chunk = seq[i:i + window]
+        chunk = seq[i : i + window]
         gc = (chunk.count("G") + chunk.count("C")) / len(chunk) * 100
         if gc > 70 or gc < 30:
-            issues.append({
-                "start": i,
-                "end": i + window,
-                "gc_percent": round(gc, 1),
-                "flag": "high_gc" if gc > 70 else "low_gc",
-            })
+            issues.append(
+                {
+                    "start": i,
+                    "end": i + window,
+                    "gc_percent": round(gc, 1),
+                    "flag": "high_gc" if gc > 70 else "low_gc",
+                }
+            )
     return {
-        "overall_gc_percent": round(
-            (seq.count("G") + seq.count("C")) / len(seq) * 100, 2
-        ) if seq else 0,
+        "overall_gc_percent": round((seq.count("G") + seq.count("C")) / len(seq) * 100, 2)
+        if seq
+        else 0,
         "flagged_windows": issues,
     }
 
@@ -83,11 +88,13 @@ def restriction_map(sequence: str, linear: bool = False) -> list[dict]:
     sites = []
     for enzyme, positions in results.items():
         if positions:
-            sites.append({
-                "enzyme": str(enzyme),
-                "positions": positions,
-                "count": len(positions),
-            })
+            sites.append(
+                {
+                    "enzyme": str(enzyme),
+                    "positions": positions,
+                    "count": len(positions),
+                }
+            )
     return sorted(sites, key=lambda x: x["enzyme"])
 
 

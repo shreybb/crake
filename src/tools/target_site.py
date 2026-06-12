@@ -4,6 +4,7 @@ Identify edit sites within a genomic sequence.
 
 CLI: ``crake cmd "/targets crispr"`` or ``/targets restriction`` (after loading a sequence).
 """
+
 from __future__ import annotations
 
 import re
@@ -16,7 +17,7 @@ DEFAULT_ARM_LENGTH = 500  # bp of flanking sequence extracted on each side
 # Minimum guide GC for a viable CRISPR site
 _CRISPR_GC_MIN = 40.0
 _CRISPR_GC_MAX = 70.0
-_CRISPR_MAX_SITES = 20   # cap returned CRISPR sites
+_CRISPR_MAX_SITES = 20  # cap returned CRISPR sites
 
 
 def find_restriction_edit_sites(
@@ -52,15 +53,17 @@ def find_restriction_edit_sites(
         if require_unique and len(positions) != 1:
             continue
         pos = positions[0]
-        sites.append({
-            "enzyme": str(enzyme),
-            "position": pos,
-            "overhang_bp": enzyme.ovhg,
-            "cut_count": len(positions),
-            "left_arm": sequence[max(0, pos - arm_length): pos].upper(),
-            "right_arm": sequence[pos: pos + arm_length].upper(),
-            "arm_length_bp": arm_length,
-        })
+        sites.append(
+            {
+                "enzyme": str(enzyme),
+                "position": pos,
+                "overhang_bp": enzyme.ovhg,
+                "cut_count": len(positions),
+                "left_arm": sequence[max(0, pos - arm_length) : pos].upper(),
+                "right_arm": sequence[pos : pos + arm_length].upper(),
+                "arm_length_bp": arm_length,
+            }
+        )
 
     return sorted(sites, key=lambda x: x["position"])
 
@@ -157,18 +160,20 @@ def find_crispr_pam_sites(
                 cut_position = pos + 17
 
             guide_rna = guide.replace("T", "U")
-            sites.append({
-                "strand": strand,
-                "position": pos,
-                "cut_position": cut_position,   # actual SpCas9 blunt-cut locus (forward-strand coord)
-                "protospacer": guide,            # DNA sequence (order as oligo)
-                "guide_rna": guide_rna,          # RNA sequence (T→U; for sgRNA synthesis)
-                "pam": full_site[20:],
-                "gc_percent": gc,
-                "left_arm": seq_upper[max(0, pos - arm_length): pos],
-                "right_arm": seq_upper[pos: pos + arm_length],
-                "arm_length_bp": arm_length,
-            })
+            sites.append(
+                {
+                    "strand": strand,
+                    "position": pos,
+                    "cut_position": cut_position,  # actual SpCas9 blunt-cut locus (forward-strand coord)
+                    "protospacer": guide,  # DNA sequence (order as oligo)
+                    "guide_rna": guide_rna,  # RNA sequence (T→U; for sgRNA synthesis)
+                    "pam": full_site[20:],
+                    "gc_percent": gc,
+                    "left_arm": seq_upper[max(0, pos - arm_length) : pos],
+                    "right_arm": seq_upper[pos : pos + arm_length],
+                    "arm_length_bp": arm_length,
+                }
+            )
 
     # Rank by GC closest to 55% (optimal for SpCas9 efficiency)
     sites.sort(key=lambda x: abs(x["gc_percent"] - 55.0))

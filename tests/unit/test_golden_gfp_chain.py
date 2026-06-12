@@ -1,4 +1,5 @@
 """Golden regression: optimize → validate → primers on fixed GFP CDS."""
+
 from __future__ import annotations
 
 import json

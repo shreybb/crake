@@ -4,6 +4,7 @@ Design PCR primers for a template sequence.
 
 CLI: ``crake cmd "/primers"`` or ``/primers ATTB1 ATTB2`` (after loading a sequence).
 """
+
 from __future__ import annotations
 
 import primer3
@@ -44,25 +45,27 @@ def design_primers(
     for i in range(num_returned):
         fwd_seq = result[f"PRIMER_LEFT_{i}_SEQUENCE"]
         rev_seq = result[f"PRIMER_RIGHT_{i}_SEQUENCE"]
-        pairs.append({
-            "rank": i,
-            "forward": {
-                "binding_region": fwd_seq,
-                "full_sequence": overhang_fwd + fwd_seq,
-                "tm_celsius": round(result[f"PRIMER_LEFT_{i}_TM"], 1),
-                "gc_percent": round(result[f"PRIMER_LEFT_{i}_GC_PERCENT"], 1),
-                "length": len(overhang_fwd + fwd_seq),
-            },
-            "reverse": {
-                "binding_region": rev_seq,
-                "full_sequence": overhang_rev + rev_seq,
-                "tm_celsius": round(result[f"PRIMER_RIGHT_{i}_TM"], 1),
-                "gc_percent": round(result[f"PRIMER_RIGHT_{i}_GC_PERCENT"], 1),
-                "length": len(overhang_rev + rev_seq),
-            },
-            "product_size_bp": result[f"PRIMER_PAIR_{i}_PRODUCT_SIZE"],
-            "penalty": round(result[f"PRIMER_PAIR_{i}_PENALTY"], 3),
-        })
+        pairs.append(
+            {
+                "rank": i,
+                "forward": {
+                    "binding_region": fwd_seq,
+                    "full_sequence": overhang_fwd + fwd_seq,
+                    "tm_celsius": round(result[f"PRIMER_LEFT_{i}_TM"], 1),
+                    "gc_percent": round(result[f"PRIMER_LEFT_{i}_GC_PERCENT"], 1),
+                    "length": len(overhang_fwd + fwd_seq),
+                },
+                "reverse": {
+                    "binding_region": rev_seq,
+                    "full_sequence": overhang_rev + rev_seq,
+                    "tm_celsius": round(result[f"PRIMER_RIGHT_{i}_TM"], 1),
+                    "gc_percent": round(result[f"PRIMER_RIGHT_{i}_GC_PERCENT"], 1),
+                    "length": len(overhang_rev + rev_seq),
+                },
+                "product_size_bp": result[f"PRIMER_PAIR_{i}_PRODUCT_SIZE"],
+                "penalty": round(result[f"PRIMER_PAIR_{i}_PENALTY"], 3),
+            }
+        )
 
     warning = None
     if not pairs:

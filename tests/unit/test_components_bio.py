@@ -3,14 +3,13 @@
 Cannot import components.py directly (it triggers Streamlit at module level),
 so pure-logic values are extracted from the source text using regex and exec().
 """
+
 from __future__ import annotations
 
 import re
 from pathlib import Path
 
-_COMPONENTS_SRC = (
-    Path(__file__).parent.parent.parent / "src" / "ui" / "components.py"
-).read_text()
+_COMPONENTS_SRC = (Path(__file__).parent.parent.parent / "src" / "ui" / "components.py").read_text()
 
 
 def _extract_host_map() -> dict:
@@ -54,6 +53,7 @@ _INDUCIBLE_RE = _extract_inducible_pattern()
 # Issue T: sidebar launcher must expose agrobacterium host
 # ---------------------------------------------------------------------------
 
+
 class TestHostDisplayMap:
     def test_agrobacterium_key_present(self):
         """Agrobacterium must be reachable from the GUI launcher (Issue T)."""
@@ -65,9 +65,7 @@ class TestHostDisplayMap:
 
     def test_agrobacterium_label_mentions_plant(self):
         """Display label should indicate plant context to avoid confusion."""
-        label = next(
-            (k for k, v in _HOST_MAP.items() if v == "agrobacterium"), None
-        )
+        label = next((k for k, v in _HOST_MAP.items() if v == "agrobacterium"), None)
         assert label is not None
         assert "plant" in label.lower() or "agrobacterium" in label.lower()
 
@@ -87,6 +85,7 @@ class TestHostDisplayMap:
 # ---------------------------------------------------------------------------
 # Issue U: inducible keyword regex must not match trans-activators or enzymes
 # ---------------------------------------------------------------------------
+
 
 class TestInducibleKeywordsRegex:
     # Things that SHOULD trigger the callout
@@ -121,9 +120,9 @@ class TestInducibleKeywordsRegex:
 
     def test_gal7_does_not_match(self):
         """GAL7 encodes galactose-1-phosphate uridylyltransferase — a metabolic enzyme."""
-        assert not _INDUCIBLE_RE.search(
-            "The GAL7 deletion strain cannot grow on galactose"
-        ), "GAL7 should not trigger inducible callout — it is a metabolic enzyme"
+        assert not _INDUCIBLE_RE.search("The GAL7 deletion strain cannot grow on galactose"), (
+            "GAL7 should not trigger inducible callout — it is a metabolic enzyme"
+        )
 
     def test_galactose_repressed_does_not_match(self):
         """galactose-repressed is biologically wrong for GAL promoters.
@@ -131,9 +130,7 @@ class TestInducibleKeywordsRegex:
         removed to avoid false callouts when a researcher describes galactose
         metabolism (e.g. 'ARG1 is galactose-repressed').
         """
-        assert not _INDUCIBLE_RE.search(
-            "ARG1 expression is galactose-repressed in rich media"
-        ), (
+        assert not _INDUCIBLE_RE.search("ARG1 expression is galactose-repressed in rich media"), (
             "galactose-repressed should not trigger the inducible callout — "
             "GAL promoters are galactose-ACTIVATED; the term was removed to avoid "
             "false positives for non-GAL galactose-regulated genes"

@@ -1,4 +1,5 @@
 """Crake Typer CLI — same dispatch layer as the Streamlit app."""
+
 from __future__ import annotations
 
 import json

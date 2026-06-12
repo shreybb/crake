@@ -1,4 +1,5 @@
 """Hero workflow: offline GFP → e_coli → export bundle (golden manifest)."""
+
 from __future__ import annotations
 
 import json

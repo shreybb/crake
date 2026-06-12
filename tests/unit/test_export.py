@@ -1,4 +1,5 @@
 """Unit tests for export tool."""
+
 import csv
 
 import pytest
@@ -81,6 +82,7 @@ def tmp(tmp_path):
 # write_fasta
 # ---------------------------------------------------------------------------
 
+
 class TestWriteFasta:
     def test_creates_file(self, tmp):
         out = tmp / "out.fa"
@@ -102,6 +104,7 @@ class TestWriteFasta:
 # ---------------------------------------------------------------------------
 # write_genbank
 # ---------------------------------------------------------------------------
+
 
 class TestWriteGenbank:
     def test_creates_file(self, tmp):
@@ -152,7 +155,8 @@ class TestWriteGenbank:
         write_genbank(ASSEMBLY_JSON, validation_with_not1, "pTest", out)
         record = SeqIO.read(str(out), "genbank")
         not1_features = [
-            f for f in record.features
+            f
+            for f in record.features
             if f.type == "misc_binding" and "NotI" in str(f.qualifiers.get("note", ""))
         ]
         assert len(not1_features) == 1
@@ -166,7 +170,8 @@ class TestWriteGenbank:
         write_genbank(ASSEMBLY_JSON, VALIDATION_JSON, "pTest", out)
         record = SeqIO.read(str(out), "genbank")
         ecori_features = [
-            f for f in record.features
+            f
+            for f in record.features
             if f.type == "misc_binding" and "EcoRI" in str(f.qualifiers.get("note", ""))
         ]
         assert len(ecori_features) == 1
@@ -190,8 +195,13 @@ class TestWriteGenbank:
         sequence = "AAAAAGAATTCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
         from Bio.Restriction import Analysis, EcoRI
         from Bio.Seq import Seq as BioSeq
+
         cut_pos = Analysis([EcoRI], BioSeq(sequence), linear=True).full()[EcoRI][0]
-        assembly = {**ASSEMBLY_JSON, "product_sequence": sequence, "product_length_bp": len(sequence)}
+        assembly = {
+            **ASSEMBLY_JSON,
+            "product_sequence": sequence,
+            "product_length_bp": len(sequence),
+        }
         validation = {
             **VALIDATION_JSON,
             "restriction_sites": [{"enzyme": "EcoRI", "positions": [cut_pos], "count": 1}],
@@ -204,14 +214,15 @@ class TestWriteGenbank:
         feat = ecori_feats[0]
         # Feature must be positioned over the actual GAATTC recognition sequence
         start = int(feat.location.start)
-        assert sequence[start:start + 6] == "GAATTC", (
-            f"Feature at {start} spans '{sequence[start:start+6]}', expected 'GAATTC'"
+        assert sequence[start : start + 6] == "GAATTC", (
+            f"Feature at {start} spans '{sequence[start : start + 6]}', expected 'GAATTC'"
         )
 
 
 # ---------------------------------------------------------------------------
 # write_primers_csv
 # ---------------------------------------------------------------------------
+
 
 class TestWritePrimersCsv:
     def test_creates_file(self, tmp):
@@ -256,6 +267,7 @@ class TestWritePrimersCsv:
 # write_protocol_md
 # ---------------------------------------------------------------------------
 
+
 class TestWriteProtocolMd:
     def test_creates_file(self, tmp):
         out = tmp / "protocol.md"
@@ -298,6 +310,7 @@ class TestWriteProtocolMd:
 # ---------------------------------------------------------------------------
 # write_plasmid_map
 # ---------------------------------------------------------------------------
+
 
 class TestWritePlasmidMap:
     def test_creates_svg_file(self, tmp):

@@ -2,6 +2,7 @@
 
 Each entry describes parameters accepted by :func:`src.agent.tool_dispatch.dispatch`.
 """
+
 from __future__ import annotations
 
 TOOL_DEFINITIONS: list[dict] = [
@@ -15,7 +16,10 @@ TOOL_DEFINITIONS: list[dict] = [
             "type": "object",
             "properties": {
                 "gene_name": {"type": "string", "description": "Gene name, e.g. 'GFP' or 'rbcL'"},
-                "organism": {"type": "string", "description": "Source organism, e.g. 'Zostera marina'"},
+                "organism": {
+                    "type": "string",
+                    "description": "Source organism, e.g. 'Zostera marina'",
+                },
                 "full_sequence": {
                     "type": "boolean",
                     "description": "Return full genomic record instead of CDS only (for target_site use)",
@@ -263,7 +267,10 @@ TOOL_DEFINITIONS: list[dict] = [
             "type": "object",
             "properties": {
                 "sequence": {"type": "string"},
-                "path": {"type": "string", "description": "GenBank/FASTA path (alternative to sequence)"},
+                "path": {
+                    "type": "string",
+                    "description": "GenBank/FASTA path (alternative to sequence)",
+                },
                 "topology": {
                     "type": "string",
                     "enum": ["linear", "circular"],

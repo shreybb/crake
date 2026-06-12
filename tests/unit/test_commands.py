@@ -1,4 +1,5 @@
 """Unit tests for src/agent/commands.py and command_runner.py."""
+
 from __future__ import annotations
 
 import pytest

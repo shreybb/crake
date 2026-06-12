@@ -1,4 +1,5 @@
 """Load and query the knowledge base JSON files."""
+
 from __future__ import annotations
 
 from src.knowledge import (

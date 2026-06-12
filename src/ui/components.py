@@ -1,4 +1,5 @@
 """Streamlit rendering components for the Crake UI."""
+
 from __future__ import annotations
 
 import base64
@@ -12,6 +13,7 @@ _ACCESSION_RE = re.compile(r"^[A-Z]{1,3}\d{5,9}(\.\d+)?$")
 
 try:
     from streamlit_seqviz import streamlit_seqviz as _seqviz_component
+
     _SEQVIZ_AVAILABLE = True
 except ImportError:
     _SEQVIZ_AVAILABLE = False
@@ -21,6 +23,7 @@ except ImportError:
 # Header
 # ---------------------------------------------------------------------------
 
+
 def _build_gene_pill_html(gene_name: str, gene_organism: str | None) -> str:
     if _ACCESSION_RE.match(gene_name):
         display = f"Accession {gene_name}"
@@ -28,10 +31,7 @@ def _build_gene_pill_html(gene_name: str, gene_organism: str | None) -> str:
         display = gene_name[:24] + ("…" if len(gene_name) > 24 else "")
     org_label = f" — {gene_organism}" if gene_organism else ""
     tip = f' title="{display}{org_label}"'
-    return (
-        f'<span class="crake-pill"{tip}>'
-        f'<span class="crake-pip pip-blue"></span>{display}</span>'
-    )
+    return f'<span class="crake-pill"{tip}><span class="crake-pip pip-blue"></span>{display}</span>'
 
 
 def _build_validation_pill_html(validation_valid: bool) -> str:
@@ -51,24 +51,32 @@ def _build_activity_html(message_count: int, tool_call_count: int) -> str:
         '<span class="crake-kbd-hint" title="Type / to see all commands">'
         '<kbd class="crake-kbd">/</kbd>'
         '<span class="crake-kbd-label">commands</span>'
-        '</span>'
+        "</span>"
     )
     msgs = (
-        f'<span class="crake-stat" title="{message_count} conversation turns">'
-        f'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" '
-        f'stroke="currentColor" stroke-width="2" style="opacity:.45">'
-        f'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'
-        f'<span style="color:#3A7080;">{message_count}</span></span>'
-    ) if message_count > 0 else ""
+        (
+            f'<span class="crake-stat" title="{message_count} conversation turns">'
+            f'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" '
+            f'stroke="currentColor" stroke-width="2" style="opacity:.45">'
+            f'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'
+            f'<span style="color:#3A7080;">{message_count}</span></span>'
+        )
+        if message_count > 0
+        else ""
+    )
     tools = (
-        f'<span class="crake-stat" title="{tool_call_count} tool calls made this session">'
-        f'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" '
-        f'stroke="currentColor" stroke-width="2" style="opacity:.45">'
-        f'<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77'
-        f'a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91'
-        f'a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>'
-        f'<span style="color:#3A7080;">{tool_call_count}</span></span>'
-    ) if tool_call_count > 0 else ""
+        (
+            f'<span class="crake-stat" title="{tool_call_count} tool calls made this session">'
+            f'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" '
+            f'stroke="currentColor" stroke-width="2" style="opacity:.45">'
+            f'<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77'
+            f"a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91"
+            f'a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>'
+            f'<span style="color:#3A7080;">{tool_call_count}</span></span>'
+        )
+        if tool_call_count > 0
+        else ""
+    )
     return kbd_hint + msgs + tools
 
 
@@ -113,10 +121,10 @@ def render_header(
         f'  <div class="crake-logo-wrap">'
         f'    <div class="crake-logo-mark">🧬</div>'
         f'    <span class="crake-wordmark">Cra<b>ke</b></span>'
-        f'  </div>'
+        f"  </div>"
         f'  <div class="crake-header-status">{pills_html}</div>'
         f'  <div class="crake-header-stats">{stats_html}</div>'
-        f'</div>',
+        f"</div>",
         unsafe_allow_html=True,
     )
 
@@ -126,18 +134,34 @@ def render_header(
 # ---------------------------------------------------------------------------
 
 _STEPS = [
-    ("01", "🔍", "Find a Gene",
-     "Search NCBI by natural language, fetch by accession, or load a local SnapGene / GenBank / FASTA file.",
-     "/genesearch GFP Aequorea victoria"),
-    ("02", "🧩", "Design the Construct",
-     "Get vector backbone, promoter, terminator, and selectable marker suggestions matched to your host.",
-     "/suggest agrobacterium"),
-    ("03", "⚗️", "Optimize & Edit",
-     "Codon-optimise for your expression host, find CRISPR PAM sites, restriction targets, and design PCR primers.",
-     "/optimize plant_nuclear"),
-    ("04", "📦", "Validate & Export",
-     "Check ORFs, GC windows, and restriction map. Export annotated GenBank, FASTA, SVG map, CSV, and a protocol.",
-     "/export pMyConstruct"),
+    (
+        "01",
+        "🔍",
+        "Find a Gene",
+        "Search NCBI by natural language, fetch by accession, or load a local SnapGene / GenBank / FASTA file.",
+        "/genesearch GFP Aequorea victoria",
+    ),
+    (
+        "02",
+        "🧩",
+        "Design the Construct",
+        "Get vector backbone, promoter, terminator, and selectable marker suggestions matched to your host.",
+        "/suggest agrobacterium",
+    ),
+    (
+        "03",
+        "⚗️",
+        "Optimize & Edit",
+        "Codon-optimise for your expression host, find CRISPR PAM sites, restriction targets, and design PCR primers.",
+        "/optimize plant_nuclear",
+    ),
+    (
+        "04",
+        "📦",
+        "Validate & Export",
+        "Check ORFs, GC windows, and restriction map. Export annotated GenBank, FASTA, SVG map, CSV, and a protocol.",
+        "/export pMyConstruct",
+    ),
 ]
 
 _EXAMPLES = [
@@ -149,28 +173,27 @@ _EXAMPLES = [
 
 
 _COMMANDS_TABLE = [
-    ("/introduce-gene &lt;gene&gt; in &lt;org&gt; into &lt;host&gt;",
-     "End-to-end pipeline: fetch CDS → codon-optimise → suggest parts → validate"),
-    ("/genesearch &lt;query&gt;",  "Find a gene sequence by natural language or species name"),
-    ("/fetch &lt;accession&gt;",   "Retrieve a sequence directly by NCBI accession"),
-    ("/load &lt;path&gt;",         "Import a local .dna, .gb, or .fasta file"),
-    ("/suggest &lt;host&gt;",      "Get vector backbone and part recommendations for a host"),
-    ("/targets &lt;method&gt;",    "Find CRISPR PAM sites or restriction enzyme cut sites"),
-    ("/optimize &lt;host&gt;",     "Codon-optimise the loaded sequence for expression"),
-    ("/primers [fwd] [rev]",       "Design PCR primers, optionally with overhangs"),
-    ("/assemble &lt;method&gt;",   "Simulate Gibson or restriction-ligation assembly"),
-    ("/validate",                  "Check ORFs, GC content, and restriction map"),
-    ("/export &lt;name&gt;",       "Write GenBank, FASTA, SVG map, CSV, and protocol"),
+    (
+        "/introduce-gene &lt;gene&gt; in &lt;org&gt; into &lt;host&gt;",
+        "End-to-end pipeline: fetch CDS → codon-optimise → suggest parts → validate",
+    ),
+    ("/genesearch &lt;query&gt;", "Find a gene sequence by natural language or species name"),
+    ("/fetch &lt;accession&gt;", "Retrieve a sequence directly by NCBI accession"),
+    ("/load &lt;path&gt;", "Import a local .dna, .gb, or .fasta file"),
+    ("/suggest &lt;host&gt;", "Get vector backbone and part recommendations for a host"),
+    ("/targets &lt;method&gt;", "Find CRISPR PAM sites or restriction enzyme cut sites"),
+    ("/optimize &lt;host&gt;", "Codon-optimise the loaded sequence for expression"),
+    ("/primers [fwd] [rev]", "Design PCR primers, optionally with overhangs"),
+    ("/assemble &lt;method&gt;", "Simulate Gibson or restriction-ligation assembly"),
+    ("/validate", "Check ORFs, GC content, and restriction map"),
+    ("/export &lt;name&gt;", "Write GenBank, FASTA, SVG map, CSV, and protocol"),
 ]
 
 
 def render_intro() -> None:
     """Minimal, uniform welcome screen shown before any conversation starts."""
     rows = "".join(
-        f'<tr>'
-        f'<td class="cmd-key">{cmd}</td>'
-        f'<td class="cmd-desc">{desc}</td>'
-        f'</tr>'
+        f'<tr><td class="cmd-key">{cmd}</td><td class="cmd-desc">{desc}</td></tr>'
         for cmd, desc in _COMMANDS_TABLE
     )
     st.markdown(
@@ -179,9 +202,9 @@ def render_intro() -> None:
         '  <div class="crake-intro-hero">'
         '    <div class="crake-intro-title"><span>Crake</span></div>'
         '    <p class="crake-intro-sub">'
-        '      Plasmid design workbench. From sequence discovery to a lab-ready construct.'
-        '    </p>'
-        '  </div>'
+        "      Plasmid design workbench. From sequence discovery to a lab-ready construct."
+        "    </p>"
+        "  </div>"
         '  <div class="crake-pipeline-card">'
         '    <div class="crake-pipeline-badge">Featured pipeline</div>'
         '    <div class="crake-pipeline-title">🧬 Introduce a Gene</div>'
@@ -193,20 +216,20 @@ def render_intro() -> None:
         '      <span class="crake-pipeline-step">Suggest parts</span>'
         '      <span class="crake-pipeline-arrow">→</span>'
         '      <span class="crake-pipeline-step">Validate</span>'
-        '    </div>'
+        "    </div>"
         '    <div class="crake-pipeline-desc">'
-        '      Use the <b>sidebar form</b> or the slash command below. '
-        '      Supported hosts: <code>E. coli</code> · <code>Yeast</code> · <code>Plant</code>'
-        '    </div>'
+        "      Use the <b>sidebar form</b> or the slash command below. "
+        "      Supported hosts: <code>E. coli</code> · <code>Yeast</code> · <code>Plant</code>"
+        "    </div>"
         '    <code class="crake-pipeline-example">'
-        '      /introduce-gene GFP in Aequorea victoria into yeast goal: constitutive'
-        '    </code>'
-        '  </div>'
+        "      /introduce-gene GFP in Aequorea victoria into yeast goal: constitutive"
+        "    </code>"
+        "  </div>"
         f'  <table class="crake-cmd-table">{rows}</table>'
         '  <div class="crake-intro-footer" style="margin-top:32px;">'
-        '    <span>Type a slash command above — see the table for syntax</span>'
-        '  </div>'
-        '</div>',
+        "    <span>Type a slash command above — see the table for syntax</span>"
+        "  </div>"
+        "</div>",
         unsafe_allow_html=True,
     )
 
@@ -233,21 +256,21 @@ _HINT_COMMANDS = [
 def render_command_hints() -> None:
     """Compact command reference shown below the empty chat."""
     rows = "".join(
-        f'<tr>'
+        f"<tr>"
         f'<td style="padding:6px 18px 6px 0;white-space:nowrap;vertical-align:middle;">'
         f'<code style="background:rgba(0,229,160,0.06);border:1px solid rgba(0,229,160,0.14);'
-        f'border-radius:5px;padding:3px 9px;font-size:12px;color:#00E5A0;'
+        f"border-radius:5px;padding:3px 9px;font-size:12px;color:#00E5A0;"
         f'font-family:Fira Code,JetBrains Mono,monospace;display:inline-block;">{cmd}</code></td>'
         f'<td style="padding:6px 0;font-size:13px;color:#3A7080;vertical-align:middle;">{desc}</td>'
-        f'</tr>'
+        f"</tr>"
         for cmd, desc in _HINT_COMMANDS
     )
     st.markdown(
         f'<div class="crake-cmd-wrap">'
         f'<div class="crake-cmd-label">Commands</div>'
         f'<table style="border-collapse:collapse;width:100%;table-layout:auto;">'
-        f'{rows}</table>'
-        f'</div>',
+        f"{rows}</table>"
+        f"</div>",
         unsafe_allow_html=True,
     )
 
@@ -262,7 +285,7 @@ def render_sidebar_history(conversations: list[dict]) -> str | None:
     if not conversations:
         st.sidebar.markdown(
             '<div class="crake-sb-empty">No saved conversations yet.<br>'
-            'Use <b>Save chat</b> in the main view.</div>',
+            "Use <b>Save chat</b> in the main view.</div>",
             unsafe_allow_html=True,
         )
         return None
@@ -286,7 +309,10 @@ def render_sidebar_history(conversations: list[dict]) -> str | None:
         if st.sidebar.button("Load →", key=f"load_{convo['file']}", use_container_width=True):
             to_load = str(convo["file"])
 
-        st.sidebar.markdown('<div style="height:1px;background:#112030;margin:8px 0;"></div>', unsafe_allow_html=True)
+        st.sidebar.markdown(
+            '<div style="height:1px;background:#112030;margin:8px 0;"></div>',
+            unsafe_allow_html=True,
+        )
 
     return to_load
 
@@ -319,8 +345,8 @@ def render_sidebar_gene_launcher() -> dict | None:
     )
     st.sidebar.markdown(
         '<div style="font-size:11px;color:#3A7080;margin-bottom:8px;line-height:1.5;">'
-        'End-to-end pipeline: fetch CDS → codon-optimise → suggest parts → validate'
-        '</div>',
+        "End-to-end pipeline: fetch CDS → codon-optimise → suggest parts → validate"
+        "</div>",
         unsafe_allow_html=True,
     )
     with st.sidebar.form("gene_launch_form", clear_on_submit=True):
@@ -358,9 +384,9 @@ _INDUCIBLE_KEYWORDS = re.compile(
     # and are excluded to avoid false positives.
     # "galactose-repressed" is biologically inverted (GAL promoters are
     # galactose-activated / glucose-repressed) and has been removed.
-    r'\b(GAL1|GAL10|PGAL1|glucose[- ]repressed'
-    r'|inducible.*promoter|promoter.*inducible|tetO|araBAD|lac[OPI]|IPTG[- ]inducible'
-    r'|anhydrotetracycline)\b',
+    r"\b(GAL1|GAL10|PGAL1|glucose[- ]repressed"
+    r"|inducible.*promoter|promoter.*inducible|tetO|araBAD|lac[OPI]|IPTG[- ]inducible"
+    r"|anhydrotetracycline)\b",
     re.IGNORECASE,
 )
 
@@ -370,11 +396,11 @@ def _build_inducible_callout_html() -> str:
         '<div class="crake-inducible-callout">'
         '<span class="crake-inducible-icon">⚠</span>'
         '<span class="crake-inducible-text">'
-        '<b>Inducible promoter detected</b> — requires an inducer molecule; '
-        'not active under standard growth conditions. '
-        'Use a constitutive promoter if continuous expression is needed.'
-        '</span>'
-        '</div>'
+        "<b>Inducible promoter detected</b> — requires an inducer molecule; "
+        "not active under standard growth conditions. "
+        "Use a constitutive promoter if continuous expression is needed."
+        "</span>"
+        "</div>"
     )
 
 
@@ -398,7 +424,7 @@ def render_chat_history(
             '<div class="crake-chat-empty">'
             '<div class="crake-chat-empty-icon">🧬</div>'
             '<div class="crake-chat-empty-text">Your conversation will appear here</div>'
-            '</div>',
+            "</div>",
             unsafe_allow_html=True,
         )
         return
@@ -422,7 +448,7 @@ def render_chat_history(
                 f'<div class="crake-msg-user-row">'
                 f'  <div class="crake-role-user">You</div>'
                 f'  <div class="crake-msg-user">{content}</div>'
-                f'</div>',
+                f"</div>",
                 unsafe_allow_html=True,
             )
 
@@ -436,32 +462,30 @@ def render_chat_history(
                     else ""
                 )
                 badges_html = "".join(
-                    f'<span class="crake-tool-badge">⚙ {b}</span>'
-                    for b in tool_badges
+                    f'<span class="crake-tool-badge">⚙ {b}</span>' for b in tool_badges
                 )
                 separator = "<br>" if badges_html and text else ""
                 st.markdown(
                     f'<div class="crake-msg-ai-row">'
                     f'  <div class="crake-role-ai">Crake</div>'
                     f'  <div class="crake-msg-ai">'
-                    f'    {badges_html}{separator}{text}'
-                    f'    {inducible_callout}'
-                    f'  </div>'
-                    f'</div>',
+                    f"    {badges_html}{separator}{text}"
+                    f"    {inducible_callout}"
+                    f"  </div>"
+                    f"</div>",
                     unsafe_allow_html=True,
                 )
                 # Show validation warnings inline directly below the message
                 # that ran validate_plasmid
                 if "validate_plasmid" in tool_badges and val_warnings:
                     warnings_items = "".join(
-                        f'<li class="crake-val-warning-item">{w}</li>'
-                        for w in val_warnings
+                        f'<li class="crake-val-warning-item">{w}</li>' for w in val_warnings
                     )
                     st.markdown(
                         f'<div class="crake-val-warning-block">'
                         f'  <div class="crake-val-warning-title">⚠ Validation warnings</div>'
                         f'  <ul class="crake-val-warning-list">{warnings_items}</ul>'
-                        f'</div>',
+                        f"</div>",
                         unsafe_allow_html=True,
                     )
 
@@ -496,6 +520,7 @@ def _extract_tool_badges(content) -> list[str]:
 # Data panel (tabs wrapper)
 # ---------------------------------------------------------------------------
 
+
 def _render_top_viewer(seqviz_data: dict | None, export_paths: dict) -> None:
     """Render the interactive seqviz component or SVG fallback at the top of the data panel."""
     has_seqviz = bool(seqviz_data and seqviz_data.get("seq") and _SEQVIZ_AVAILABLE)
@@ -506,7 +531,12 @@ def _render_top_viewer(seqviz_data: dict | None, export_paths: dict) -> None:
             name=seqviz_data["name"],
             seq=seqviz_data["seq"],
             annotations=seqviz_data["annotations"],
-            style={"height": "280px", "background": "#070D15", "borderRadius": "10px", "padding": "4px"},
+            style={
+                "height": "280px",
+                "background": "#070D15",
+                "borderRadius": "10px",
+                "padding": "4px",
+            },
             highlights=[],
             enzymes=["EcoRI", "PstI", "BamHI", "HindIII", "NcoI", "NotI", "XhoI"],
         )
@@ -522,7 +552,7 @@ def _render_top_viewer(seqviz_data: dict | None, export_paths: dict) -> None:
             f'<div style="text-align:center;padding:8px 0;">'
             f'<img src="data:image/svg+xml;base64,{b64}" '
             f'style="max-width:100%;border-radius:10px;background:#070D15;padding:8px;">'
-            f'</div>',
+            f"</div>",
             unsafe_allow_html=True,
         )
     else:
@@ -573,6 +603,7 @@ def render_data_panel(
 # Sequence tab
 # ---------------------------------------------------------------------------
 
+
 def _render_optimization_metrics(optimization_result: dict) -> None:
     """Render the codon-optimisation before/after metrics row."""
     gc_before = optimization_result["gc_before"]
@@ -580,13 +611,18 @@ def _render_optimization_metrics(optimization_result: dict) -> None:
     delta = round(gc_after - gc_before, 1)
     st.markdown('<div style="margin-top:12px"></div>', unsafe_allow_html=True)
     o1, o2, o3 = st.columns(3)
-    o1.metric("GC Before Optim.", f"{gc_before:.1f}%",
-              help="GC content before codon optimisation")
-    o2.metric("GC After Optim.", f"{gc_after:.1f}%", delta=f"{delta:+.1f}%",
-              help="GC content after optimisation — closer to 50% is generally better")
-    o3.metric("Optimised Host",
-              optimization_result.get("host", "—").replace("_", " ").title(),
-              help="Host organism whose codon table was used for optimisation")
+    o1.metric("GC Before Optim.", f"{gc_before:.1f}%", help="GC content before codon optimisation")
+    o2.metric(
+        "GC After Optim.",
+        f"{gc_after:.1f}%",
+        delta=f"{delta:+.1f}%",
+        help="GC content after optimisation — closer to 50% is generally better",
+    )
+    o3.metric(
+        "Optimised Host",
+        optimization_result.get("host", "—").replace("_", " ").title(),
+        help="Host organism whose codon table was used for optimisation",
+    )
 
 
 def _render_gene_info(sequence_result: dict) -> None:
@@ -595,7 +631,7 @@ def _render_gene_info(sequence_result: dict) -> None:
         '<div style="margin:16px 0 8px;">'
         '<span style="font-size:11px;font-weight:700;text-transform:uppercase;'
         'letter-spacing:0.1em;color:#3A7080;">Gene info</span>'
-        '</div>',
+        "</div>",
         unsafe_allow_html=True,
     )
     organism = sequence_result.get("organism", "—")
@@ -605,7 +641,7 @@ def _render_gene_info(sequence_result: dict) -> None:
         f'<span style="font-size:11.5px;color:#3A7080;text-transform:uppercase;'
         f'letter-spacing:.06em;font-weight:600;">Name</span><br>'
         f'<span style="font-size:15px;color:#C8E8F0;font-weight:500;">'
-        f'{sequence_result.get("gene_name", "—")}</span>',
+        f"{sequence_result.get('gene_name', '—')}</span>",
         unsafe_allow_html=True,
     )
     i2.markdown(
@@ -634,12 +670,17 @@ def render_sequence(
         host = sequence_result.get("suggested_host", "—").replace("_", " ").title()
 
         c1, c2, c3 = st.columns(3)
-        c1.metric("Length", f"{len(seq):,} bp",
-                  help="Total base pairs in the loaded sequence")
-        c2.metric("GC Content", f"{gc:.1f}%",
-                  help="Percentage of G+C bases. Typical range 40–60%; extremes reduce expression")
-        c3.metric("Recommended Host", host,
-                  help="Suggested cloning/expression host inferred from the source organism")
+        c1.metric("Length", f"{len(seq):,} bp", help="Total base pairs in the loaded sequence")
+        c2.metric(
+            "GC Content",
+            f"{gc:.1f}%",
+            help="Percentage of G+C bases. Typical range 40–60%; extremes reduce expression",
+        )
+        c3.metric(
+            "Recommended Host",
+            host,
+            help="Suggested cloning/expression host inferred from the source organism",
+        )
 
         if optimization_result and "gc_before" in optimization_result:
             _render_optimization_metrics(optimization_result)
@@ -653,7 +694,7 @@ def render_sequence(
                 f'<div style="margin-top:16px;font-size:11px;font-weight:700;text-transform:uppercase;'
                 f'letter-spacing:0.1em;color:#3A7080;margin-bottom:8px;">Sequence preview '
                 f'<span style="font-weight:400;text-transform:none;letter-spacing:0;">'
-                f'(first 600 bp{type_label})</span></div>',
+                f"(first 600 bp{type_label})</span></div>",
                 unsafe_allow_html=True,
             )
             st.code(seq[:600] + ("…" if len(seq) > 600 else ""), language=None)
@@ -666,6 +707,7 @@ def render_sequence(
 # Plasmid map tab
 # ---------------------------------------------------------------------------
 
+
 def render_plasmid_map(
     map_svg_path: str | None,
     tab,
@@ -673,7 +715,7 @@ def render_plasmid_map(
 ) -> None:
     with tab:
         has_seqviz = bool(seqviz_data and seqviz_data.get("seq") and _SEQVIZ_AVAILABLE)
-        has_svg    = bool(map_svg_path and Path(map_svg_path).exists())
+        has_svg = bool(map_svg_path and Path(map_svg_path).exists())
 
         if not has_seqviz and not has_svg:
             _empty_state(
@@ -702,7 +744,7 @@ def render_plasmid_map(
                 st.markdown(
                     '<div style="margin-top:16px;font-size:11px;font-weight:700;'
                     'text-transform:uppercase;letter-spacing:.1em;color:#3A7080;">'
-                    'Annotated map (static)</div>',
+                    "Annotated map (static)</div>",
                     unsafe_allow_html=True,
                 )
             svg_data = Path(map_svg_path).read_text()
@@ -712,7 +754,7 @@ def render_plasmid_map(
                 f'<img src="data:image/svg+xml;base64,{b64}" '
                 f'style="max-width:660px;width:100%;border-radius:10px;'
                 f'background:#070D15;padding:8px;">'
-                f'</div>',
+                f"</div>",
                 unsafe_allow_html=True,
             )
 
@@ -720,6 +762,7 @@ def render_plasmid_map(
 # ---------------------------------------------------------------------------
 # Primers tab
 # ---------------------------------------------------------------------------
+
 
 def render_primers(primers_result: dict, tab) -> None:
     with tab:
@@ -732,14 +775,16 @@ def render_primers(primers_result: dict, tab) -> None:
         for pair in pairs:
             for direction in ("forward", "reverse"):
                 p = pair.get(direction, {})
-                rows.append({
-                    "Pair": pair.get("rank", 0) + 1,
-                    "Direction": direction.capitalize(),
-                    "Sequence": p.get("full_sequence") or p.get("binding_region", ""),
-                    "Tm (°C)": p.get("tm_celsius", "—"),
-                    "GC %": p.get("gc_percent", "—"),
-                    "Length": p.get("length", "—"),
-                })
+                rows.append(
+                    {
+                        "Pair": pair.get("rank", 0) + 1,
+                        "Direction": direction.capitalize(),
+                        "Sequence": p.get("full_sequence") or p.get("binding_region", ""),
+                        "Tm (°C)": p.get("tm_celsius", "—"),
+                        "GC %": p.get("gc_percent", "—"),
+                        "Length": p.get("length", "—"),
+                    }
+                )
 
         st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
 
@@ -754,6 +799,7 @@ def render_primers(primers_result: dict, tab) -> None:
 # ---------------------------------------------------------------------------
 # Validation tab
 # ---------------------------------------------------------------------------
+
 
 def render_validation(validation_result: dict, tab) -> None:
     with tab:
@@ -808,6 +854,7 @@ def render_validation(validation_result: dict, tab) -> None:
 # Downloads tab
 # ---------------------------------------------------------------------------
 
+
 def render_downloads(export_paths: dict, tab) -> None:
     with tab:
         if not export_paths:
@@ -838,11 +885,12 @@ def render_downloads(export_paths: dict, tab) -> None:
 # Shared helpers
 # ---------------------------------------------------------------------------
 
+
 def _empty_state(message: str, icon: str = "·") -> None:
     st.markdown(
         f'<div style="padding:40px 24px;text-align:center;">'
         f'<div style="font-size:32px;margin-bottom:10px;opacity:.3;">{icon}</div>'
         f'<p style="color:#3A7080;font-size:13.5px;margin:0;">{message}</p>'
-        f'</div>',
+        f"</div>",
         unsafe_allow_html=True,
     )

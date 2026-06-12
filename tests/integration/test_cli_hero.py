@@ -1,4 +1,5 @@
 """CLI tests: crake hero and crake cmd session chain."""
+
 from __future__ import annotations
 
 import hashlib
@@ -15,9 +16,7 @@ runner = CliRunner()
 
 def _fasta_sha256(path: Path) -> str:
     seq = "".join(
-        ln.strip()
-        for ln in path.read_text().splitlines()
-        if not ln.startswith(">")
+        ln.strip() for ln in path.read_text().splitlines() if not ln.startswith(">")
     ).upper()
     return hashlib.sha256(seq.encode()).hexdigest()
 

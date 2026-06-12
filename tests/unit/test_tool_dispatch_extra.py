@@ -1,4 +1,5 @@
 """Additional unit tests for agent tool_dispatch private helpers."""
+
 from __future__ import annotations
 
 from unittest.mock import patch
@@ -8,6 +9,7 @@ from src.agent.tool_dispatch import _feat_color, _genbank_to_seqviz, _result_to_
 # ---------------------------------------------------------------------------
 # _feat_color
 # ---------------------------------------------------------------------------
+
 
 class TestFeatColor:
     def test_known_type_returns_configured_color(self):
@@ -29,56 +31,67 @@ class TestFeatColor:
 # _result_to_seqviz
 # ---------------------------------------------------------------------------
 
+
 class TestResultToSeqviz:
     def test_returns_none_for_empty_sequence(self):
         result = _result_to_seqviz({"sequence": "", "gene_name": "test"})
         assert result is None
 
     def test_returns_none_for_protein_sequence(self):
-        result = _result_to_seqviz({
-            "sequence": "MVSK",
-            "sequence_type": "protein",
-            "gene_name": "GFP",
-        })
+        result = _result_to_seqviz(
+            {
+                "sequence": "MVSK",
+                "sequence_type": "protein",
+                "gene_name": "GFP",
+            }
+        )
         assert result is None
 
     def test_returns_dict_for_dna_sequence(self):
-        result = _result_to_seqviz({
-            "sequence": "ATCGATCG",
-            "gene_name": "test_gene",
-        })
+        result = _result_to_seqviz(
+            {
+                "sequence": "ATCGATCG",
+                "gene_name": "test_gene",
+            }
+        )
         assert result is not None
         assert result["seq"] == "ATCGATCG"
 
     def test_name_truncated_to_30_chars(self):
         long_name = "A" * 50
-        result = _result_to_seqviz({
-            "sequence": "ATCGATCG",
-            "gene_name": long_name,
-        })
+        result = _result_to_seqviz(
+            {
+                "sequence": "ATCGATCG",
+                "gene_name": long_name,
+            }
+        )
         assert len(result["name"]) <= 30
 
     def test_accession_used_when_no_gene_name(self):
-        result = _result_to_seqviz({
-            "sequence": "ATCGATCG",
-            "accession": "ACC001",
-        })
+        result = _result_to_seqviz(
+            {
+                "sequence": "ATCGATCG",
+                "accession": "ACC001",
+            }
+        )
         assert result["name"] == "ACC001"
 
     def test_features_converted_to_annotations(self):
-        result = _result_to_seqviz({
-            "sequence": "ATCGATCGATCGATCG",
-            "gene_name": "test",
-            "features": [
-                {
-                    "type": "CDS",
-                    "name": "gfp",
-                    "start": 0,
-                    "end": 12,
-                    "strand": 1,
-                },
-            ],
-        })
+        result = _result_to_seqviz(
+            {
+                "sequence": "ATCGATCGATCGATCG",
+                "gene_name": "test",
+                "features": [
+                    {
+                        "type": "CDS",
+                        "name": "gfp",
+                        "start": 0,
+                        "end": 12,
+                        "strand": 1,
+                    },
+                ],
+            }
+        )
         assert len(result["annotations"]) == 1
         ann = result["annotations"][0]
         assert ann["start"] == 0
@@ -86,45 +99,51 @@ class TestResultToSeqviz:
         assert ann["direction"] == 1
 
     def test_feature_name_includes_type_prefix_when_different(self):
-        result = _result_to_seqviz({
-            "sequence": "ATCGATCGATCG",
-            "gene_name": "test",
-            "features": [
-                {
-                    "type": "promoter",
-                    "name": "T7",
-                    "start": 0,
-                    "end": 6,
-                    "strand": 1,
-                },
-            ],
-        })
+        result = _result_to_seqviz(
+            {
+                "sequence": "ATCGATCGATCG",
+                "gene_name": "test",
+                "features": [
+                    {
+                        "type": "promoter",
+                        "name": "T7",
+                        "start": 0,
+                        "end": 6,
+                        "strand": 1,
+                    },
+                ],
+            }
+        )
         ann = result["annotations"][0]
         assert "promoter" in ann["name"].lower()
 
     def test_feature_with_no_label_uses_type(self):
-        result = _result_to_seqviz({
-            "sequence": "ATCGATCG",
-            "gene_name": "test",
-            "features": [
-                {
-                    "type": "misc_feature",
-                    "name": "",
-                    "start": 0,
-                    "end": 4,
-                    "strand": 1,
-                },
-            ],
-        })
+        result = _result_to_seqviz(
+            {
+                "sequence": "ATCGATCG",
+                "gene_name": "test",
+                "features": [
+                    {
+                        "type": "misc_feature",
+                        "name": "",
+                        "start": 0,
+                        "end": 4,
+                        "strand": 1,
+                    },
+                ],
+            }
+        )
         ann = result["annotations"][0]
         assert ann["name"] == "misc_feature"
 
     def test_empty_features_list(self):
-        result = _result_to_seqviz({
-            "sequence": "ATCGATCG",
-            "gene_name": "test",
-            "features": [],
-        })
+        result = _result_to_seqviz(
+            {
+                "sequence": "ATCGATCG",
+                "gene_name": "test",
+                "features": [],
+            }
+        )
         assert result["annotations"] == []
 
 
@@ -195,6 +214,7 @@ class TestGenBankToSeqviz:
 # dispatch — import_sequence and unknown method paths
 # ---------------------------------------------------------------------------
 
+
 class TestDispatchImportSequence:
     def test_import_sequence_success_updates_session(self, tmp_path):
         fa = tmp_path / "seq.fa"
@@ -214,10 +234,14 @@ class TestDispatchImportSequence:
 class TestDispatchFindTargetSitesUnknownMethod:
     def test_unknown_method_returns_error(self):
         session: dict = {}
-        result = dispatch("find_target_sites", {
-            "sequence": "ATCGATCGATCG",
-            "method": "nonexistent_method",
-        }, session)
+        result = dispatch(
+            "find_target_sites",
+            {
+                "sequence": "ATCGATCGATCG",
+                "method": "nonexistent_method",
+            },
+            session,
+        )
         assert "error" in result
 
 
@@ -240,6 +264,7 @@ class TestSearchGeneException:
 # validate_plasmid topology wiring
 # ---------------------------------------------------------------------------
 
+
 class TestValidatePlasmidTopology:
     def test_default_topology_is_circular(self):
         seq = "ATCG" * 100
@@ -250,10 +275,14 @@ class TestValidatePlasmidTopology:
     def test_linear_topology_is_passed_through(self):
         seq = "ATCG" * 100
         session: dict = {}
-        result = dispatch("validate_plasmid", {
-            "sequence": seq,
-            "topology": "linear",
-        }, session)
+        result = dispatch(
+            "validate_plasmid",
+            {
+                "sequence": seq,
+                "topology": "linear",
+            },
+            session,
+        )
         assert result["topology"] == "linear"
 
     def test_topology_stored_in_last_validation(self):
@@ -267,33 +296,39 @@ class TestValidatePlasmidTopology:
 # gene_introduction yeast next steps
 # ---------------------------------------------------------------------------
 
+
 class TestIntroduceGeneYeastNextSteps:
     def test_yeast_ura3_next_steps_mention_strain_auxotrophy(self):
         from src.tools.gene_introduction import _build_next_steps
+
         steps = _build_next_steps("yeast", "pRS316", "URA3")
         combined = " ".join(steps)
         assert "ura3" in combined.lower(), "URA3 steps must specify ura3Δ strain requirement"
 
     def test_yeast_next_steps_mention_lithium_acetate(self):
         from src.tools.gene_introduction import _build_next_steps
+
         steps = _build_next_steps("yeast", "pRS316", "URA3")
         combined = " ".join(steps)
         assert "lithium acetate" in combined.lower() or "liac" in combined.lower()
 
     def test_yeast_gal1_next_steps_mention_galactose_induction(self):
         from src.tools.gene_introduction import _build_next_steps
+
         steps = _build_next_steps("yeast", "pYES2", "URA3")
         combined = " ".join(steps)
         assert "galactose" in combined.lower()
 
     def test_yeast_dominant_marker_next_steps_mention_any_strain(self):
         from src.tools.gene_introduction import _build_next_steps
+
         steps = _build_next_steps("yeast", "pRS316", "kanMX")
         combined = " ".join(steps)
         assert "any strain" in combined.lower() or "g418" in combined.lower()
 
     def test_ecoli_next_steps_unchanged(self):
         from src.tools.gene_introduction import _build_next_steps
+
         steps = _build_next_steps("e_coli", "pET-28a", "KanR")
         assert len(steps) == 6
         assert "lithium" not in " ".join(steps).lower()
@@ -303,11 +338,13 @@ class TestIntroduceGeneYeastNextSteps:
 # Tool definition schema — enum consistency (Issues K and L)
 # ---------------------------------------------------------------------------
 
+
 class TestToolDefinitionsEnums:
     """Tool schemas must stay in sync with what the Python handlers accept."""
 
     def _get_tool(self, name: str) -> dict:
         from src.agent.tool_definitions import TOOL_DEFINITIONS
+
         for t in TOOL_DEFINITIONS:
             if t["name"] == name:
                 return t
@@ -324,6 +361,7 @@ class TestToolDefinitionsEnums:
     def test_introduce_gene_target_host_enum_matches_valid_hosts(self):
         """introduce_gene schema enum must match _VALID_HOSTS in the Python function."""
         from src.tools.gene_introduction import _VALID_HOSTS
+
         tool = self._get_tool("introduce_gene")
         enum_set = set(tool["input_schema"]["properties"]["target_host"]["enum"])
         assert enum_set == _VALID_HOSTS, (
@@ -357,32 +395,44 @@ class TestDispatchFindTargetSitesTopology:
     def test_circular_topology_forwarded_to_restriction_method(self):
         with patch("src.agent.tool_dispatch.find_restriction_edit_sites") as mock_fn:
             mock_fn.return_value = []
-            dispatch("find_target_sites", {
-                "sequence": "ATCGATCGATCGATCGATCG",
-                "method": "restriction",
-                "topology": "circular",
-            }, {})
+            dispatch(
+                "find_target_sites",
+                {
+                    "sequence": "ATCGATCGATCGATCGATCG",
+                    "method": "restriction",
+                    "topology": "circular",
+                },
+                {},
+            )
             _, kwargs = mock_fn.call_args
             assert kwargs.get("topology") == "circular"
 
     def test_linear_topology_forwarded_to_restriction_method(self):
         with patch("src.agent.tool_dispatch.find_restriction_edit_sites") as mock_fn:
             mock_fn.return_value = []
-            dispatch("find_target_sites", {
-                "sequence": "ATCGATCGATCGATCGATCG",
-                "method": "restriction",
-                "topology": "linear",
-            }, {})
+            dispatch(
+                "find_target_sites",
+                {
+                    "sequence": "ATCGATCGATCGATCGATCG",
+                    "method": "restriction",
+                    "topology": "linear",
+                },
+                {},
+            )
             _, kwargs = mock_fn.call_args
             assert kwargs.get("topology") == "linear"
 
     def test_topology_defaults_to_linear_when_not_provided(self):
         with patch("src.agent.tool_dispatch.find_restriction_edit_sites") as mock_fn:
             mock_fn.return_value = []
-            dispatch("find_target_sites", {
-                "sequence": "ATCGATCGATCGATCGATCG",
-                "method": "restriction",
-            }, {})
+            dispatch(
+                "find_target_sites",
+                {
+                    "sequence": "ATCGATCGATCGATCGATCG",
+                    "method": "restriction",
+                },
+                {},
+            )
             _, kwargs = mock_fn.call_args
             assert kwargs.get("topology") == "linear"
 
@@ -398,10 +448,14 @@ class TestDispatchCrisprPamForwarding:
     def test_default_pam_is_ngg(self):
         with patch("src.agent.tool_dispatch.find_crispr_pam_sites") as mock_fn:
             mock_fn.return_value = []
-            dispatch("find_target_sites", {
-                "sequence": "ATCGATCGATCGATCGATCG",
-                "method": "crispr",
-            }, {})
+            dispatch(
+                "find_target_sites",
+                {
+                    "sequence": "ATCGATCGATCGATCGATCG",
+                    "method": "crispr",
+                },
+                {},
+            )
             _, kwargs = mock_fn.call_args
             assert kwargs.get("pam") == "NGG", "Default PAM must be NGG (SpCas9)"
 
@@ -409,11 +463,15 @@ class TestDispatchCrisprPamForwarding:
         """Cas12a TTTV PAM must reach find_crispr_pam_sites."""
         with patch("src.agent.tool_dispatch.find_crispr_pam_sites") as mock_fn:
             mock_fn.return_value = []
-            dispatch("find_target_sites", {
-                "sequence": "ATCGATCGATCGATCGATCG",
-                "method": "crispr",
-                "pam": "TTTV",
-            }, {})
+            dispatch(
+                "find_target_sites",
+                {
+                    "sequence": "ATCGATCGATCGATCGATCG",
+                    "method": "crispr",
+                    "pam": "TTTV",
+                },
+                {},
+            )
             _, kwargs = mock_fn.call_args
             assert kwargs.get("pam") == "TTTV", (
                 "Cas12a PAM 'TTTV' was not forwarded to find_crispr_pam_sites"
@@ -423,11 +481,15 @@ class TestDispatchCrisprPamForwarding:
         """Result dict must include the pam that was used."""
         with patch("src.agent.tool_dispatch.find_crispr_pam_sites") as mock_fn:
             mock_fn.return_value = []
-            result = dispatch("find_target_sites", {
-                "sequence": "ATCGATCGATCGATCGATCG",
-                "method": "crispr",
-                "pam": "NNGRRT",
-            }, {})
+            result = dispatch(
+                "find_target_sites",
+                {
+                    "sequence": "ATCGATCGATCGATCGATCG",
+                    "method": "crispr",
+                    "pam": "NNGRRT",
+                },
+                {},
+            )
             assert result.get("pam") == "NNGRRT", (
                 "Result should echo back the pam used so the caller knows which nuclease was scanned"
             )
@@ -435,6 +497,7 @@ class TestDispatchCrisprPamForwarding:
     def test_pam_schema_has_ngg_default(self):
         """Tool schema must have pam property with NGG as default."""
         from src.agent.tool_definitions import TOOL_DEFINITIONS
+
         tool = next(t for t in TOOL_DEFINITIONS if t["name"] == "find_target_sites")
         pam_schema = tool["input_schema"]["properties"].get("pam")
         assert pam_schema is not None, "pam property missing from find_target_sites schema"
@@ -443,6 +506,7 @@ class TestDispatchCrisprPamForwarding:
     def test_pam_schema_description_mentions_cas12a(self):
         """Description must mention Cas12a so researchers know they can use it."""
         from src.agent.tool_definitions import TOOL_DEFINITIONS
+
         tool = next(t for t in TOOL_DEFINITIONS if t["name"] == "find_target_sites")
         desc = tool["input_schema"]["properties"]["pam"]["description"]
         assert "Cas12a" in desc or "TTTV" in desc, (

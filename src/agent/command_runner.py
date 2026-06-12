@@ -1,4 +1,5 @@
 """Execute slash commands by calling tool dispatch directly (no LLM)."""
+
 from __future__ import annotations
 
 import json
@@ -28,9 +29,7 @@ def _normalize_host(raw: str) -> str:
         return _HOST_ALIASES[key]
     if key in _VALID_HOSTS:
         return key
-    raise ValueError(
-        f"Unknown host {raw!r}. Use one of: {', '.join(sorted(_VALID_HOSTS))}"
-    )
+    raise ValueError(f"Unknown host {raw!r}. Use one of: {', '.join(sorted(_VALID_HOSTS))}")
 
 
 def _session_sequence(session: dict) -> tuple[str, dict]:
@@ -46,7 +45,9 @@ def _session_sequence(session: dict) -> tuple[str, dict]:
 def _parse_genesearch(args: str) -> dict[str, Any]:
     text = args.strip()
     if not text:
-        raise ValueError("Usage: `/genesearch <gene> in <organism>` — e.g. `/genesearch GFP in Aequorea victoria`")
+        raise ValueError(
+            "Usage: `/genesearch <gene> in <organism>` — e.g. `/genesearch GFP in Aequorea victoria`"
+        )
     if re.search(r"\s+in\s+", text, flags=re.IGNORECASE):
         gene, organism = re.split(r"\s+in\s+", text, maxsplit=1, flags=re.IGNORECASE)
         return {"gene_name": gene.strip(), "organism": organism.strip()}
@@ -67,17 +68,13 @@ def _parse_introduce_gene(args: str) -> dict[str, Any]:
         text = text[: goal_match.start()].strip()
 
     if not re.search(r"\s+into\s+", text, flags=re.IGNORECASE):
-        raise ValueError(
-            "Usage: `/introduce-gene <gene> in <organism> into <host> [goal: <goal>]`"
-        )
+        raise ValueError("Usage: `/introduce-gene <gene> in <organism> into <host> [goal: <goal>]`")
     left, host_raw = re.split(r"\s+into\s+", text, maxsplit=1, flags=re.IGNORECASE)
     target_host = _normalize_host(host_raw.strip().split()[0])
 
     if not re.search(r"\s+in\s+", left, flags=re.IGNORECASE):
         raise ValueError("Include source organism: `... in <organism> into <host>`")
-    gene_name, source_organism = re.split(
-        r"\s+in\s+", left, maxsplit=1, flags=re.IGNORECASE
-    )
+    gene_name, source_organism = re.split(r"\s+in\s+", left, maxsplit=1, flags=re.IGNORECASE)
     gene_name = gene_name.strip()
     source_organism = source_organism.strip()
     if not gene_name:

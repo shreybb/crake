@@ -5,6 +5,7 @@ we test the biological correctness of the constants by:
   1. Grepping the source for the regex pattern string and compiling it ourselves.
   2. Verifying the unsupported-host warning message text.
 """
+
 from __future__ import annotations
 
 import re
@@ -12,6 +13,7 @@ import re
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _read_source() -> str:
     return open("app.py").read()
@@ -48,6 +50,7 @@ def _extract_host_support_msg(source: str) -> str:
 # ---------------------------------------------------------------------------
 # Issue M — _UNSUPPORTED_HOST_RE no longer blocks pichia / kluyveromyces
 # ---------------------------------------------------------------------------
+
 
 class TestUnsupportedHostRegex:
     def setup_method(self):
@@ -89,5 +92,3 @@ class TestUnsupportedHostRegex:
     def test_host_support_msg_mentions_partial_yeast_support(self):
         """Updated message should explain non-cerevisiae yeast partial support."""
         assert "pichia" in self.msg.lower() or "non-cerevisiae" in self.msg.lower()
-
-

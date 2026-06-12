@@ -1,4 +1,5 @@
 """Unit tests for tool_dispatch (no Streamlit, no network)."""
+
 from __future__ import annotations
 
 import pytest
@@ -13,7 +14,9 @@ class TestToolDispatch:
             return_value={"sequence": "ATG", "suggested_host": "agrobacterium"},
         )
         session = {}
-        result = dispatch("search_gene", {"gene_name": "GFP", "organism": "Aequorea victoria"}, session)
+        result = dispatch(
+            "search_gene", {"gene_name": "GFP", "organism": "Aequorea victoria"}, session
+        )
         mock_fn.assert_called_once_with("GFP", "Aequorea victoria", full_sequence=False)
         assert result["sequence"] == "ATG"
 

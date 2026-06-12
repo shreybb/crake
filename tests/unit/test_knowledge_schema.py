@@ -1,4 +1,5 @@
 """Knowledge JSON files must match schemas."""
+
 from __future__ import annotations
 
 from src.knowledge import (

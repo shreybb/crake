@@ -1,4 +1,5 @@
 """Additional unit tests for validation tool."""
+
 from __future__ import annotations
 
 from src.tools.validation import find_orfs, gc_windows, restriction_map, validate_plasmid
@@ -88,6 +89,7 @@ class TestFindOrfsNegativeStrand:
     def test_negative_strand_orf_detected(self):
         # Reverse complement of GFP CDS should have ORF on negative strand
         from Bio.Seq import Seq
+
         gfp = (
             "ATGGTGAGCAAGGGCGAGGAGCTGTTCACCGGGGTGGTGCCCATCCTGGTCGAGCTGGAC"
             "GGCGACGTAAACGGCCACAAGTTCAGCGTGTCCGGCGAGGGCGAGGGCGATGCCACCTAC"
@@ -103,8 +105,11 @@ class TestFindOrfsNegativeStrand:
     def test_negative_strand_coordinate_adjustment(self):
         # Build a sequence where the reverse complement has a sizeable ORF
         from Bio.Seq import Seq
+
         # nptII partial CDS on negative strand
-        cds = "ATGATTGAACAAGATGGATTGCACGCAGG" + "AGT" * 40 + "TAA"  # > 100 aa? no 40*3+29 = 149 bp = ~50 aa
+        cds = (
+            "ATGATTGAACAAGATGGATTGCACGCAGG" + "AGT" * 40 + "TAA"
+        )  # > 100 aa? no 40*3+29 = 149 bp = ~50 aa
         seq = "AAAA" * 50 + str(Seq(cds).reverse_complement()) + "AAAA" * 50
         orfs = find_orfs(seq, min_length=10)
         # We just confirm it runs without error and returns a list
@@ -115,6 +120,7 @@ class TestRestrictionMapTopology:
     def test_restriction_map_linear_flag_forwarded(self):
         """restriction_map must pass linear=True when topology='linear'."""
         from unittest.mock import MagicMock, patch
+
         mock_instance = MagicMock()
         mock_instance.full.return_value = {}
         with patch("src.tools.validation.Analysis") as mock_analysis_cls:
@@ -126,6 +132,7 @@ class TestRestrictionMapTopology:
     def test_restriction_map_circular_flag_forwarded(self):
         """restriction_map must pass linear=False when topology='circular'."""
         from unittest.mock import MagicMock, patch
+
         mock_instance = MagicMock()
         mock_instance.full.return_value = {}
         with patch("src.tools.validation.Analysis") as mock_analysis_cls:
@@ -137,6 +144,7 @@ class TestRestrictionMapTopology:
     def test_validate_plasmid_circular_topology_uses_circular_map(self):
         """validate_plasmid(topology='circular') must call restriction_map with linear=False."""
         from unittest.mock import MagicMock, patch
+
         mock_instance = MagicMock()
         mock_instance.full.return_value = {}
         with patch("src.tools.validation.Analysis") as mock_analysis_cls:
@@ -148,6 +156,7 @@ class TestRestrictionMapTopology:
     def test_validate_plasmid_linear_topology_uses_linear_map(self):
         """validate_plasmid(topology='linear') must call restriction_map with linear=True."""
         from unittest.mock import MagicMock, patch
+
         mock_instance = MagicMock()
         mock_instance.full.return_value = {}
         with patch("src.tools.validation.Analysis") as mock_analysis_cls:

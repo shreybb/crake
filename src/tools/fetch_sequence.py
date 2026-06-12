@@ -4,6 +4,7 @@ Fetch gene sequences from NCBI GenBank or UniProt.
 
 CLI: ``crake cmd "/genesearch GFP in Aequorea victoria"`` or ``/fetch U55762``.
 """
+
 from __future__ import annotations
 
 import os
@@ -46,15 +47,42 @@ def _apply_ncbi_email() -> None:
 
 
 _PLANT_KEYWORDS = {
-    "arabidopsis", "thaliana", "tobacco", "nicotiana", "rice", "oryza",
-    "maize", "zea", "tomato", "solanum", "soybean", "glycine", "wheat",
-    "triticum", "potato", "cotton", "gossypium", "brassica", "poplar",
-    "populus", "agrobacterium", "tumefaciens", "rhizobiaceae",
+    "arabidopsis",
+    "thaliana",
+    "tobacco",
+    "nicotiana",
+    "rice",
+    "oryza",
+    "maize",
+    "zea",
+    "tomato",
+    "solanum",
+    "soybean",
+    "glycine",
+    "wheat",
+    "triticum",
+    "potato",
+    "cotton",
+    "gossypium",
+    "brassica",
+    "poplar",
+    "populus",
+    "agrobacterium",
+    "tumefaciens",
+    "rhizobiaceae",
 }
 
 _YEAST_KEYWORDS = {
-    "saccharomyces", "cerevisiae", "yeast", "schizosaccharomyces", "pombe",
-    "pichia", "pastoris", "kluyveromyces", "yarrowia", "candida",
+    "saccharomyces",
+    "cerevisiae",
+    "yeast",
+    "schizosaccharomyces",
+    "pombe",
+    "pichia",
+    "pastoris",
+    "kluyveromyces",
+    "yarrowia",
+    "candida",
 }
 
 
@@ -158,9 +186,7 @@ def search_gene(gene_name: str, organism: str, full_sequence: bool = False) -> d
     if err := ncbi_email_error():
         return {"error": err, "gene": gene_name, "organism": organism}
     _apply_ncbi_email()
-    precise = (
-        f'"{gene_name}"[Gene Name] AND "{organism}"[Organism] AND CDS[Feature Key]'
-    )
+    precise = f'"{gene_name}"[Gene Name] AND "{organism}"[Organism] AND CDS[Feature Key]'
     broad = f"{gene_name}[All Fields] AND {organism}[Organism]"
 
     for query in (precise, broad):

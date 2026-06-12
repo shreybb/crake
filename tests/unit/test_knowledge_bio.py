@@ -1,4 +1,5 @@
 """Biological accuracy tests for the knowledge base JSON files."""
+
 from __future__ import annotations
 
 import json
@@ -14,6 +15,7 @@ def _load(name: str) -> dict:
 # ---------------------------------------------------------------------------
 # Issue P — pRS 2-micron vectors copy number consistency
 # ---------------------------------------------------------------------------
+
 
 class Test2MicronCopyNumber:
     """All 2-micron-origin yeast vectors must cite the same copy-number range.
@@ -33,9 +35,7 @@ class Test2MicronCopyNumber:
         assert "15" not in notes, (
             f"{vector_name} notes still reference 15 copies/cell — update to 20–40"
         )
-        assert "20" in notes, (
-            f"{vector_name} notes must state copy number (~20–40 copies/cell)"
-        )
+        assert "20" in notes, f"{vector_name} notes must state copy number (~20–40 copies/cell)"
 
     def test_pRS416_copy_number_consistent(self):
         self._assert_consistent_copy_number("pRS416")
@@ -52,22 +52,22 @@ class Test2MicronCopyNumber:
     def test_pYES2_copy_number_matches_pRS4xx(self):
         """pYES2 (2-micron) copy number must agree with pRS 2-micron range."""
         pyes2 = self.backbones["pYES2"]
-        assert "20" in pyes2.get("notes", ""), \
+        assert "20" in pyes2.get("notes", ""), (
             "pYES2 notes must state copy number in the 20–40 range"
+        )
 
     def test_2micron_vectors_all_high_copy(self):
-        two_micron = [
-            k for k, v in self.backbones.items()
-            if v.get("ori") == "2-micron"
-        ]
+        two_micron = [k for k, v in self.backbones.items() if v.get("ori") == "2-micron"]
         for name in two_micron:
-            assert self.backbones[name]["copy_number"] == "high", \
+            assert self.backbones[name]["copy_number"] == "high", (
                 f"{name} must be copy_number='high'"
+            )
 
 
 # ---------------------------------------------------------------------------
 # Promoter expression_type consistency
 # ---------------------------------------------------------------------------
+
 
 class TestPromoterExpressionType:
     def setup_method(self):
@@ -79,14 +79,12 @@ class TestPromoterExpressionType:
 
     def test_all_promoters_have_expression_type(self):
         for p in self.all_promoters:
-            assert "expression_type" in p, \
-                f"Promoter '{p['name']}' is missing 'expression_type'"
+            assert "expression_type" in p, f"Promoter '{p['name']}' is missing 'expression_type'"
 
     def test_inducible_promoters_have_inducer(self):
         for p in self.all_promoters:
             if p.get("expression_type") == "inducible":
-                assert "inducer" in p, \
-                    f"Inducible promoter '{p['name']}' is missing 'inducer'"
+                assert "inducer" in p, f"Inducible promoter '{p['name']}' is missing 'inducer'"
 
     def test_MET25_is_repressible_not_inducible(self):
         """MET25 is methionine-repressible, not inducible — a common point of confusion."""
@@ -100,18 +98,20 @@ class TestPromoterExpressionType:
 # Binary vector T-DNA borders
 # ---------------------------------------------------------------------------
 
+
 class TestBinaryVectors:
     def test_all_plant_binary_vectors_have_tdna_borders(self):
         data = _load("backbones.json")
         for name, attrs in data.get("plant_binary", {}).items():
-            assert attrs.get("t_dna_borders") is True, \
+            assert attrs.get("t_dna_borders") is True, (
                 f"Binary vector '{name}' must have t_dna_borders=true"
+            )
 
     def test_plant_binary_vectors_have_two_selection_markers(self):
         """Binary vectors need both a plant and a bacterial selectable marker."""
         data = _load("backbones.json")
         for name, attrs in data.get("plant_binary", {}).items():
-            assert "plant_selection" in attrs, \
-                f"Binary vector '{name}' missing plant_selection"
-            assert "bacterial_selection" in attrs, \
+            assert "plant_selection" in attrs, f"Binary vector '{name}' missing plant_selection"
+            assert "bacterial_selection" in attrs, (
                 f"Binary vector '{name}' missing bacterial_selection"
+            )

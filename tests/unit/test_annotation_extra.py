@@ -1,4 +1,5 @@
 """Additional unit tests for annotation tool (annotate_from_genbank)."""
+
 from __future__ import annotations
 
 from src.tools.annotation import annotate_from_genbank, find_restriction_sites
@@ -99,6 +100,7 @@ class TestFindRestrictionSitesTopology:
     def test_default_is_circular(self):
         """linear=False (circular) should be the default."""
         from unittest.mock import MagicMock, patch
+
         mock_instance = MagicMock()
         mock_instance.full.return_value = {}
         with patch("src.tools.annotation.Analysis") as mock_cls:
@@ -110,6 +112,7 @@ class TestFindRestrictionSitesTopology:
     def test_linear_true_forwarded(self):
         """Explicit linear=True must reach BioPython Analysis."""
         from unittest.mock import MagicMock, patch
+
         mock_instance = MagicMock()
         mock_instance.full.return_value = {}
         with patch("src.tools.annotation.Analysis") as mock_cls:

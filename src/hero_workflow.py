@@ -2,6 +2,7 @@
 
 No network, no Streamlit. Used by ``crake hero`` and CI golden tests.
 """
+
 from __future__ import annotations
 
 import hashlib

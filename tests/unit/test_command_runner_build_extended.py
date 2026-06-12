@@ -1,4 +1,5 @@
 """Extended _build_tool_input coverage."""
+
 from __future__ import annotations
 
 from unittest.mock import patch

@@ -1,4 +1,5 @@
 """Dispatch tests for annotate_sequence."""
+
 from __future__ import annotations
 
 from src.agent.tool_dispatch import dispatch

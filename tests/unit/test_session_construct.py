@@ -1,4 +1,5 @@
 """Tests for ConstructSession."""
+
 from __future__ import annotations
 
 from src.session.construct import (
@@ -31,12 +32,14 @@ class TestConstructSession:
         cs = ConstructSession(
             sequence=LoadedSequence(sequence="ATGAAATGA", gene_name="gfp", source="fetch"),
         )
-        cs.promote_optimized({
-            "optimized_sequence": "ATGCCC",
-            "gc_before": 50,
-            "gc_after": 55,
-            "host": "e_coli",
-        })
+        cs.promote_optimized(
+            {
+                "optimized_sequence": "ATGCCC",
+                "gc_before": 50,
+                "gc_after": 55,
+                "host": "e_coli",
+            }
+        )
         assert cs.sequence is not None
         assert cs.sequence.sequence == "ATGCCC"
         assert cs.workflow_stage() == WorkflowStage.OPTIMIZED
@@ -65,10 +68,12 @@ class TestConstructSession:
         assert rec.method == "sequence_only"
 
     def test_assembly_from_legacy_dict(self):
-        rec = AssemblyRecord.from_dict({
-            "success": True,
-            "method": "gibson",
-            "product_sequence": "ATGC",
-        })
+        rec = AssemblyRecord.from_dict(
+            {
+                "success": True,
+                "method": "gibson",
+                "product_sequence": "ATGC",
+            }
+        )
         assert rec is not None
         assert rec.provenance == AssemblyProvenance.SIMULATED

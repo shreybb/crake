@@ -4,6 +4,7 @@ Design and optimize a gene expression cassette.
 
 CLI: ``crake cmd "/suggest e_coli"`` or ``/optimize yeast`` (after loading a sequence).
 """
+
 from __future__ import annotations
 
 from .knowledge import (
@@ -22,7 +23,9 @@ def analyze_sequence(sequence: str) -> dict:
     return {
         "length_bp": length,
         "gc_content_percent": round(gc / length * 100, 2) if length else 0,
-        "at_content_percent": round((seq.count("A") + seq.count("T")) / length * 100, 2) if length else 0,
+        "at_content_percent": round((seq.count("A") + seq.count("T")) / length * 100, 2)
+        if length
+        else 0,
         "base_counts": {
             "A": seq.count("A"),
             "T": seq.count("T"),

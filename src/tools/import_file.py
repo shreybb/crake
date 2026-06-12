@@ -9,6 +9,7 @@ Supported formats:
 
 CLI: ``crake cmd "/load /path/to/plasmid.gb"``.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -34,13 +35,15 @@ def _seqrecord_to_result(record: SeqRecord, source_path: str) -> dict:
             if feat.qualifiers
             else feat.type
         )
-        features.append({
-            "name": name,
-            "type": feat.type,
-            "start": int(feat.location.start),
-            "end": int(feat.location.end),
-            "strand": feat.location.strand if feat.location.strand is not None else 1,
-        })
+        features.append(
+            {
+                "name": name,
+                "type": feat.type,
+                "start": int(feat.location.start),
+                "end": int(feat.location.end),
+                "strand": feat.location.strand if feat.location.strand is not None else 1,
+            }
+        )
 
     return {
         "accession": record.id or Path(source_path).stem,
@@ -79,13 +82,16 @@ def import_sequence(path: str) -> dict:
             return _import_genbank(p)
         if suffix in (".fa", ".fasta"):
             return _import_fasta(p)
-        return {"error": f"Unsupported file type '{suffix}'. Use .dna, .gb, .genbank, .fa, or .fasta"}
+        return {
+            "error": f"Unsupported file type '{suffix}'. Use .dna, .gb, .genbank, .fa, or .fasta"
+        }
     except Exception as exc:
         return {"error": str(exc), "path": path}
 
 
 def _import_snapgene(path: Path) -> dict:
     from snapgene_reader import snapgene_file_to_seqrecord
+
     record = snapgene_file_to_seqrecord(str(path))
     return _seqrecord_to_result(record, str(path))
 

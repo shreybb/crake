@@ -4,6 +4,7 @@ Simulate DNA assembly using pydna.
 
 CLI: ``crake cmd "/assemble gibson backbone.fa"`` (after loading the insert sequence).
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -39,9 +40,7 @@ def _load_sequence(path_or_seq: str) -> Dseqrecord:
                 records = list(SeqIO.parse(str(p), fmt))
                 if not records:
                     raise ValueError(f"No sequences found in {p}")
-                return Dseqrecord(
-                    str(records[0].seq), name=records[0].name or p.stem
-                )
+                return Dseqrecord(str(records[0].seq), name=records[0].name or p.stem)
         except OSError:
             pass
     if _is_raw_dna(stripped):

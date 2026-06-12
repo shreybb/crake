@@ -1,4 +1,5 @@
 """Tests for direct slash-command execution."""
+
 from __future__ import annotations
 
 from unittest.mock import patch

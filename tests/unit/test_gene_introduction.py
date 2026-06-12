@@ -2,6 +2,7 @@
 
 All NCBI and DNA-Chisel calls are mocked — no network or compute required.
 """
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
@@ -63,6 +64,7 @@ def _fake_search_gene_error(gene_name, source_organism, full_sequence=False):
 # Knowledge base — yeast entries
 # ---------------------------------------------------------------------------
 
+
 class TestYeastKnowledge:
     def test_suggest_backbone_yeast_returns_results(self):
         results = suggest_backbone("yeast")
@@ -103,6 +105,7 @@ class TestYeastKnowledge:
 # Codon optimisation — yeast path
 # ---------------------------------------------------------------------------
 
+
 class TestYeastCodonOptimisation:
     def test_yeast_in_host_map(self):
         """optimize_codons must not fall back to e_coli for yeast sequences."""
@@ -124,6 +127,7 @@ class TestYeastCodonOptimisation:
 
     def test_invalid_sequence_length_returns_error(self):
         from src.tools.sequence_design import optimize_codons as _oc
+
         result = _oc("ATCG", "yeast")  # length 4 — not divisible by 3
         assert "error" in result
 
@@ -132,16 +136,24 @@ class TestYeastCodonOptimisation:
 # introduce_gene — happy path (yeast)
 # ---------------------------------------------------------------------------
 
+
 class TestIntroduceGeneYeast:
     @patch("src.tools.gene_introduction.optimize_codons", side_effect=_fake_optimize_codons_ok)
     @patch("src.tools.gene_introduction.search_gene", side_effect=_fake_search_gene_ok)
     def test_returns_all_required_keys(self, mock_search, mock_opt):
         result = introduce_gene("GFP", "Aequorea victoria", "yeast")
         required_keys = {
-            "gene", "source_organism", "target_host",
-            "original_sequence", "optimized_sequence",
-            "vector", "promoter", "terminator", "marker",
-            "cassette_description", "next_steps",
+            "gene",
+            "source_organism",
+            "target_host",
+            "original_sequence",
+            "optimized_sequence",
+            "vector",
+            "promoter",
+            "terminator",
+            "marker",
+            "cassette_description",
+            "next_steps",
         }
         assert required_keys.issubset(result.keys()), (
             f"Missing keys: {required_keys - result.keys()}"
@@ -170,7 +182,9 @@ class TestIntroduceGeneYeast:
     @patch("src.tools.gene_introduction.optimize_codons", side_effect=_fake_optimize_codons_ok)
     @patch("src.tools.gene_introduction.search_gene", side_effect=_fake_search_gene_ok)
     def test_expression_goal_included_in_cassette_description(self, mock_search, mock_opt):
-        result = introduce_gene("GFP", "Aequorea victoria", "yeast", expression_goal="bioluminescence")
+        result = introduce_gene(
+            "GFP", "Aequorea victoria", "yeast", expression_goal="bioluminescence"
+        )
         assert "bioluminescence" in result["cassette_description"]
 
     @patch("src.tools.gene_introduction.optimize_codons", side_effect=_fake_optimize_codons_ok)
@@ -183,6 +197,7 @@ class TestIntroduceGeneYeast:
 # ---------------------------------------------------------------------------
 # introduce_gene — e_coli path
 # ---------------------------------------------------------------------------
+
 
 class TestIntroduceGeneEColi:
     @patch("src.tools.gene_introduction.optimize_codons", side_effect=_fake_optimize_codons_ok)
@@ -197,6 +212,7 @@ class TestIntroduceGeneEColi:
 # introduce_gene — error handling
 # ---------------------------------------------------------------------------
 
+
 class TestIntroduceGeneErrors:
     def test_invalid_host_returns_error(self):
         result = introduce_gene("GFP", "Aequorea victoria", "invalid_host")
@@ -206,6 +222,7 @@ class TestIntroduceGeneErrors:
     def test_agrobacterium_in_valid_hosts_set(self):
         """Issue I fix: agrobacterium must be in _VALID_HOSTS so plant T-DNA workflows work."""
         from src.tools.gene_introduction import _VALID_HOSTS
+
         assert "agrobacterium" in _VALID_HOSTS
 
     @patch("src.tools.gene_introduction.search_gene", side_effect=_fake_search_gene_error)
@@ -227,12 +244,16 @@ class TestIntroduceGeneErrors:
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 class TestHelpers:
     def test_build_cassette_description_contains_parts(self):
         desc = _build_cassette_description(
-            gene="GFP", host="yeast",
-            promoter_name="GAL1", terminator_name="CYC1tt",
-            vector_name="pYES2", marker_name="URA3",
+            gene="GFP",
+            host="yeast",
+            promoter_name="GAL1",
+            terminator_name="CYC1tt",
+            vector_name="pYES2",
+            marker_name="URA3",
             expression_goal="fluorescence",
         )
         assert "GAL1" in desc
@@ -295,10 +316,12 @@ class TestYeastSelectionMedia:
 # Tool dispatch integration
 # ---------------------------------------------------------------------------
 
+
 class TestIntroduceGeneDispatch:
     @patch("src.agent.tool_dispatch._introduce_gene")
     def test_dispatch_routes_to_introduce_gene(self, mock_fn):
         from src.agent.tool_dispatch import dispatch
+
         mock_fn.return_value = {
             "gene": "GFP",
             "optimized_sequence": _GFP_CDS,
@@ -332,6 +355,7 @@ class TestIntroduceGeneDispatch:
     @patch("src.agent.tool_dispatch._introduce_gene")
     def test_dispatch_stores_result_in_session(self, mock_fn):
         from src.agent.tool_dispatch import dispatch
+
         mock_fn.return_value = {
             "gene": "GFP",
             "optimized_sequence": _GFP_CDS,
@@ -364,6 +388,7 @@ class TestIntroduceGeneDispatch:
 # ---------------------------------------------------------------------------
 # Promoter expression type inference
 # ---------------------------------------------------------------------------
+
 
 class TestInferExpressionType:
     def test_constitutive_keyword(self):
@@ -430,13 +455,13 @@ class TestPickPromoter:
 # introduce_gene — expression goal drives promoter selection
 # ---------------------------------------------------------------------------
 
+
 class TestIntroduceGenePromoterSelection:
     @patch("src.tools.gene_introduction.optimize_codons", side_effect=_fake_optimize_codons_ok)
     @patch("src.tools.gene_introduction.search_gene", side_effect=_fake_search_gene_ok)
     def test_constitutive_goal_avoids_gal1(self, mock_search, mock_opt):
         result = introduce_gene(
-            "GFP", "Aequorea victoria", "yeast",
-            expression_goal="constitutive expression"
+            "GFP", "Aequorea victoria", "yeast", expression_goal="constitutive expression"
         )
         assert result["promoter"]["name"] != "GAL1", (
             "constitutive expression_goal must not select inducible GAL1"
@@ -446,21 +471,23 @@ class TestIntroduceGenePromoterSelection:
     @patch("src.tools.gene_introduction.search_gene", side_effect=_fake_search_gene_ok)
     def test_constitutive_goal_selects_constitutive_promoter(self, mock_search, mock_opt):
         result = introduce_gene(
-            "GFP", "Aequorea victoria", "yeast",
-            expression_goal="strong constitutive"
+            "GFP", "Aequorea victoria", "yeast", expression_goal="strong constitutive"
         )
-        assert result["promoter"].get("expression_type") == "constitutive" or \
-               result["promoter"].get("constitutive") is True
+        assert (
+            result["promoter"].get("expression_type") == "constitutive"
+            or result["promoter"].get("constitutive") is True
+        )
 
     @patch("src.tools.gene_introduction.optimize_codons", side_effect=_fake_optimize_codons_ok)
     @patch("src.tools.gene_introduction.search_gene", side_effect=_fake_search_gene_ok)
     def test_inducible_goal_selects_inducible_promoter(self, mock_search, mock_opt):
         result = introduce_gene(
-            "GFP", "Aequorea victoria", "yeast",
-            expression_goal="galactose inducible"
+            "GFP", "Aequorea victoria", "yeast", expression_goal="galactose inducible"
         )
-        assert result["promoter"].get("expression_type") == "inducible" or \
-               result["promoter"].get("inducible") is True
+        assert (
+            result["promoter"].get("expression_type") == "inducible"
+            or result["promoter"].get("inducible") is True
+        )
 
     @patch("src.tools.gene_introduction.optimize_codons", side_effect=_fake_optimize_codons_ok)
     @patch("src.tools.gene_introduction.search_gene", side_effect=_fake_search_gene_ok)
@@ -476,7 +503,7 @@ class TestIntroduceGenePromoterSelection:
 _YEAST_BACKBONES = [
     {"name": "pRS316", "copy_number": "low", "ori": "CEN6/ARS4"},
     {"name": "pRS416", "copy_number": "high", "ori": "2-micron"},
-    {"name": "pYES2",  "copy_number": "high", "ori": "2-micron", "promoter": "GAL1"},
+    {"name": "pYES2", "copy_number": "high", "ori": "2-micron", "promoter": "GAL1"},
     {"name": "pESC-HIS", "copy_number": "high", "ori": "2-micron", "promoter": "GAL1/GAL10 dual"},
 ]
 
@@ -527,12 +554,15 @@ class TestPickBackbone:
 # introduce_gene — backbone selection driven by expression goal
 # ---------------------------------------------------------------------------
 
+
 class TestIntroduceGeneBackboneSelection:
     @patch("src.tools.gene_introduction.optimize_codons", side_effect=_fake_optimize_codons_ok)
     @patch("src.tools.gene_introduction.search_gene", side_effect=_fake_search_gene_ok)
     def test_inducible_goal_selects_pyes2_for_yeast(self, mock_search, mock_opt):
         result = introduce_gene(
-            "GFP", "Aequorea victoria", "yeast",
+            "GFP",
+            "Aequorea victoria",
+            "yeast",
             expression_goal="galactose inducible",
         )
         assert result["vector"]["name"] == "pYES2", (
@@ -543,7 +573,9 @@ class TestIntroduceGeneBackboneSelection:
     @patch("src.tools.gene_introduction.search_gene", side_effect=_fake_search_gene_ok)
     def test_constitutive_goal_avoids_pyes2_for_yeast(self, mock_search, mock_opt):
         result = introduce_gene(
-            "GFP", "Aequorea victoria", "yeast",
+            "GFP",
+            "Aequorea victoria",
+            "yeast",
             expression_goal="constitutive expression",
         )
         assert result["vector"]["name"] != "pYES2", (
@@ -554,6 +586,7 @@ class TestIntroduceGeneBackboneSelection:
 # ---------------------------------------------------------------------------
 # Agrobacterium host path (Issue I fix)
 # ---------------------------------------------------------------------------
+
 
 class TestAgrobacteriumHost:
     """After Issue I fix, agrobacterium is a valid introduce_gene host."""
@@ -580,9 +613,9 @@ class TestAgrobacteriumHost:
         result = introduce_gene("nptII", "Agrobacterium tumefaciens", "agrobacterium")
         steps_text = " ".join(result["next_steps"])
         # Protocol must include plant infection step
-        assert any(kw in steps_text.lower() for kw in ("infect", "leaf", "infiltration", "t-dna")), (
-            "Agrobacterium next steps must include plant infection / T-DNA step"
-        )
+        assert any(
+            kw in steps_text.lower() for kw in ("infect", "leaf", "infiltration", "t-dna")
+        ), "Agrobacterium next steps must include plant infection / T-DNA step"
 
     @patch("src.tools.gene_introduction.optimize_codons", side_effect=_fake_optimize_codons_ok)
     @patch("src.tools.gene_introduction.search_gene", side_effect=_fake_search_gene_ok)
@@ -615,6 +648,7 @@ class TestBuildNextStepsPlant:
 # ATG start codon validation in optimize_codons
 # ---------------------------------------------------------------------------
 
+
 class TestOptimizeCodonsAtgValidation:
     def test_sequence_not_starting_with_atg_returns_error(self):
         result = optimize_codons("GCGGCGGCG", "e_coli")  # in-frame but no ATG
@@ -623,6 +657,7 @@ class TestOptimizeCodonsAtgValidation:
 
     def test_sequence_starting_with_atg_passes_validation(self):
         from unittest.mock import MagicMock, patch
+
         mock_instance = MagicMock()
         mock_instance.sequence = _GFP_CDS
         mock_module = MagicMock()

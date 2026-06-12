@@ -1,4 +1,5 @@
 """Unit tests for import_file tool."""
+
 from __future__ import annotations
 
 from unittest.mock import patch
@@ -33,8 +34,9 @@ ORIGIN
 """
 
 
-def _make_seqrecord(seq: str = "ATCGATCG", name: str = "TEST",
-                    organism: str = "synthetic", topology: str = "linear") -> SeqRecord:
+def _make_seqrecord(
+    seq: str = "ATCGATCG", name: str = "TEST", organism: str = "synthetic", topology: str = "linear"
+) -> SeqRecord:
     record = SeqRecord(
         Seq(seq),
         id=name,
@@ -49,6 +51,7 @@ def _make_seqrecord(seq: str = "ATCGATCG", name: str = "TEST",
 # ---------------------------------------------------------------------------
 # import_sequence — error paths
 # ---------------------------------------------------------------------------
+
 
 class TestImportSequenceErrors:
     def test_missing_file_returns_error(self, tmp_path):
@@ -78,6 +81,7 @@ class TestImportSequenceErrors:
 # import_sequence — FASTA
 # ---------------------------------------------------------------------------
 
+
 class TestImportFasta:
     def test_fasta_import_returns_sequence(self, tmp_path):
         fa = tmp_path / "seq.fa"
@@ -102,6 +106,7 @@ class TestImportFasta:
 # ---------------------------------------------------------------------------
 # import_sequence — GenBank
 # ---------------------------------------------------------------------------
+
 
 class TestImportGenbank:
     def test_genbank_import_returns_sequence(self, tmp_path):
@@ -135,12 +140,23 @@ class TestImportGenbank:
 # _seqrecord_to_result
 # ---------------------------------------------------------------------------
 
+
 class TestSeqrecordToResult:
     def test_basic_fields_present(self):
         record = _make_seqrecord("ATCGATCG", "GENE1", "Escherichia coli")
         result = _seqrecord_to_result(record, "/fake/path/GENE1.gb")
-        for key in ("accession", "gene_name", "organism", "sequence", "length_bp",
-                    "topology", "features", "db", "source_path", "suggested_host"):
+        for key in (
+            "accession",
+            "gene_name",
+            "organism",
+            "sequence",
+            "length_bp",
+            "topology",
+            "features",
+            "db",
+            "source_path",
+            "suggested_host",
+        ):
             assert key in result
 
     def test_sequence_is_uppercase(self):
@@ -160,6 +176,7 @@ class TestSeqrecordToResult:
 
     def test_features_exclude_source(self):
         from Bio.SeqFeature import SeqFeature, SimpleLocation
+
         record = _make_seqrecord("ATCGATCGATCG")
         source_feat = SeqFeature(SimpleLocation(0, 12, 1), type="source")
         cds_feat = SeqFeature(
@@ -176,6 +193,7 @@ class TestSeqrecordToResult:
 
     def test_feature_with_note_qualifier(self):
         from Bio.SeqFeature import SeqFeature, SimpleLocation
+
         record = _make_seqrecord("ATCGATCGATCG")
         feat = SeqFeature(
             SimpleLocation(0, 6, 1),
@@ -188,6 +206,7 @@ class TestSeqrecordToResult:
 
     def test_feature_strand_none_defaults_to_one(self):
         from Bio.SeqFeature import SeqFeature, SimpleLocation
+
         record = _make_seqrecord("ATCGATCG")
         feat = SeqFeature(SimpleLocation(0, 4, None), type="CDS")
         record.features = [feat]

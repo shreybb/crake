@@ -3,6 +3,7 @@
 Run with:
     uv run streamlit run app.py
 """
+
 from __future__ import annotations
 
 from dotenv import load_dotenv
@@ -62,16 +63,17 @@ def _conversation_to_markdown(messages: list[dict]) -> str:
 def _save_conversation_to_disk(messages: list[dict], session) -> None:
     """Persist conversation + key session data to ~/.crake/conversations/."""
     first_user = next(
-        (m["content"] for m in messages
-         if m.get("role") == "user" and isinstance(m.get("content"), str)),
+        (
+            m["content"]
+            for m in messages
+            if m.get("role") == "user" and isinstance(m.get("content"), str)
+        ),
         "",
     )
     ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     slug = first_user[:30].strip().replace(" ", "_").replace("/", "").replace("\\", "")
     filename = f"{ts}_{slug or 'conversation'}.json"
-    serialisable_msgs = [
-        m for m in messages if isinstance(m.get("content"), str)
-    ]
+    serialisable_msgs = [m for m in messages if isinstance(m.get("content"), str)]
     seqviz = session.get("last_seqviz")
     if seqviz is None and session.get("last_sequence"):
         seqviz = _result_to_seqviz(session["last_sequence"])
@@ -93,13 +95,16 @@ def _load_saved_conversations() -> list[dict]:
     for f in files[:30]:
         try:
             data = json.loads(f.read_text())
-            result.append({
-                "file": f,
-                "name": data.get("name", f.stem),
-                "saved_at": data.get("saved_at", ""),
-            })
+            result.append(
+                {
+                    "file": f,
+                    "name": data.get("name", f.stem),
+                    "saved_at": data.get("saved_at", ""),
+                }
+            )
         except Exception as exc:
             import logging
+
             logging.warning("Failed to load saved conversation %s: %s", f, exc)
     return result
 
@@ -131,8 +136,8 @@ def _restore_conversation(filepath: str) -> None:
 
 # ── Supported hosts for pre-flight validation ──────────────────────────────
 _UNSUPPORTED_HOST_RE = re.compile(
-    r'\b(hansenula|aspergillus|trichoderma|bacillus\s+subtilis'
-    r'|lactobacillus|streptomyces|neurospora|candida\s+albicans|fusarium)\b',
+    r"\b(hansenula|aspergillus|trichoderma|bacillus\s+subtilis"
+    r"|lactobacillus|streptomyces|neurospora|candida\s+albicans|fusarium)\b",
     re.IGNORECASE,
 )
 
@@ -326,9 +331,7 @@ if user_input:
                 result = dispatch(tool_name, tool_input, st.session_state)
                 message = format_result_message(tool_name, result)
             else:
-                tool_name, message, result = execute_command(
-                    cmd_name, args, st.session_state
-                )
+                tool_name, message, result = execute_command(cmd_name, args, st.session_state)
         st.session_state.messages.append({"role": "user", "content": display_input})
         st.session_state.messages.append({"role": "assistant", "content": message})
         st.session_state.tool_calls_log.append({"tool_name": tool_name, "result": result})
@@ -337,8 +340,10 @@ if user_input:
         st.session_state.messages.append({"role": "assistant", "content": str(exc)})
     except Exception as exc:
         st.session_state.messages.append({"role": "user", "content": display_input})
-        st.session_state.messages.append({
-            "role": "assistant",
-            "content": f"Something went wrong: {exc}",
-        })
+        st.session_state.messages.append(
+            {
+                "role": "assistant",
+                "content": f"Something went wrong: {exc}",
+            }
+        )
     st.rerun()
